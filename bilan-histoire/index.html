@@ -1,0 +1,3509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilan Histoire - Révisions Gamifiées</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header avec stats */
+        .header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-box i {
+            font-size: 1.2rem;
+        }
+
+        .xp-bar {
+            width: 150px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2d3, #54a0ff);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* Navigation */
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn .badge {
+            background: #ff6b6b;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Main content */
+        .main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title span {
+            font-size: 1.8rem;
+        }
+
+        /* Définitions - Flashcards */
+        .flashcard-container {
+            perspective: 1000px;
+            margin: 30px auto;
+            max-width: 500px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-word {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .flashcard-hint {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .flashcard-definition {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .flashcard-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .flashcard-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .flashcard-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .flashcard-btn.know {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .flashcard-btn.dont-know {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .flashcard-progress {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Quiz */
+        .quiz-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .quiz-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .quiz-progress-bar {
+            flex: 1;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .quiz-question {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quiz-option {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 18px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quiz-option:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateX(10px);
+        }
+
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-color: transparent;
+        }
+
+        .quiz-option.incorrect {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            border-color: transparent;
+        }
+
+        .quiz-option .option-letter {
+            background: rgba(255,255,255,0.2);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .quiz-feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quiz-feedback.correct {
+            background: rgba(17, 153, 142, 0.3);
+            border: 1px solid #38ef7d;
+        }
+
+        .quiz-feedback.incorrect {
+            background: rgba(235, 51, 73, 0.3);
+            border: 1px solid #f45c43;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .next-btn.show {
+            display: inline-block;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Fiches de révision */
+        .fiche {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .fiche.important {
+            border-left-color: #ff6b6b;
+        }
+
+        .fiche.definition {
+            border-left-color: #48dbfb;
+        }
+
+        .fiche.methode {
+            border-left-color: #feca57;
+        }
+
+        .fiche h3 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fiche p {
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+
+        .fiche ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .fiche li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* Tableau comparatif */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Exercice Document */
+        .doc-exercise {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .doc-image {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .doc-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .doc-question {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .doc-question label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .doc-question input, .doc-question select, .doc-question textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(30, 30, 60, 0.95);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .doc-question select option {
+            background: #1e1e3c;
+            color: #fff;
+            padding: 10px;
+        }
+
+        .doc-question textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .doc-question input:focus, .doc-question select:focus, .doc-question textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Styles pour les select des tableaux */
+        .table-answer, .table-answer2 {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(30, 30, 60, 0.95);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .table-answer:hover, .table-answer2:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .table-answer option, .table-answer2 option {
+            background: #1e1e3c;
+            color: #fff;
+            padding: 10px;
+        }
+
+        .table-answer:focus, .table-answer2:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Résultats */
+        .results-container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results-score {
+            font-size: 5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .results-message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+
+        .results-details {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .result-stat {
+            text-align: center;
+        }
+
+        .result-stat .number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .result-stat .label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Badges */
+        .badges-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .badge-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .badge-item.unlocked {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .badge-item.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .badge-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .badge-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Timer */
+        .timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #feca57;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Streak */
+        .streak {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .streak-fire {
+            font-size: 1.3rem;
+        }
+
+        .streak-count {
+            font-weight: 700;
+            color: #feca57;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .leaderboard-item.me {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .leaderboard-rank {
+            width: 30px;
+            font-weight: 700;
+            color: #feca57;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .leaderboard-score {
+            font-weight: 700;
+        }
+
+        /* Welcome screen */
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff6b6b);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-move 3s linear infinite;
+        }
+
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+
+        .welcome-features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: #fff;
+            padding: 20px 60px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(240, 147, 251, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px rgba(240, 147, 251, 0.5);
+        }
+
+        /* Mode selection */
+        .mode-selection {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .mode-card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            width: 220px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .mode-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .mode-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .mode-desc {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .welcome-title {
+                font-size: 1.8rem;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+
+            .flashcard {
+                height: 300px;
+            }
+
+            .flashcard-word {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Sound toggle */
+        .sound-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .highlight {
+            background: linear-gradient(90deg, rgba(255,107,107,0.3), rgba(254,202,87,0.3));
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Boutons spéciaux navigation */
+        .express-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+            border-color: transparent !important;
+            animation: pulse-express 2s infinite;
+        }
+
+        .defi-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+            border-color: transparent !important;
+        }
+
+        @keyframes pulse-express {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(240, 147, 251, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(240, 147, 251, 0.6); }
+        }
+
+        /* Section Express */
+        .express-card {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.2) 0%, rgba(245, 87, 108, 0.2) 100%);
+            border: 2px solid rgba(240, 147, 251, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .express-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #f093fb;
+        }
+
+        .express-item h4 {
+            color: #f093fb;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .express-item p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .mnemonic {
+            background: linear-gradient(135deg, rgba(84, 160, 255, 0.2) 0%, rgba(0, 210, 211, 0.2) 100%);
+            border: 2px solid rgba(84, 160, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .mnemonic-phrase {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #48dbfb;
+            margin-bottom: 10px;
+        }
+
+        .mnemonic-explain {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Mode Défi Chrono */
+        .defi-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .defi-timer {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .defi-timer.danger {
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .defi-progress {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .defi-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .defi-dot.correct {
+            background: #38ef7d;
+        }
+
+        .defi-dot.wrong {
+            background: #f45c43;
+        }
+
+        .defi-dot.current {
+            background: #fee140;
+            transform: scale(1.3);
+        }
+
+        /* Images documents */
+        .doc-img {
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            object-fit: cover;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .doc-img-placeholder {
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border: 2px dashed rgba(255,255,255,0.3);
+        }
+
+        .doc-img-placeholder span {
+            font-size: 1rem;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+
+        /* Bouton WhatsApp */
+        .whatsapp-btn {
+            background: #25D366;
+            border: none;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: scale(1.05);
+        }
+
+        .whatsapp-icon {
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">📚 Bilan Histoire</div>
+        <div class="stats">
+            <div class="stat-box">
+                <span>⭐</span>
+                <span id="totalXP">0</span> XP
+            </div>
+            <div class="stat-box">
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xpBar" style="width: 0%"></div>
+                </div>
+                <span>Niv. <span id="level">1</span></span>
+            </div>
+            <div class="stat-box streak">
+                <span class="streak-fire">🔥</span>
+                <span class="streak-count" id="streak">0</span>
+            </div>
+            <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <button class="nav-btn active" onclick="showSection('accueil')">
+            <span>🏠</span> Accueil
+        </button>
+        <button class="nav-btn express-btn" onclick="showSection('express')">
+            <span>⚡</span> 5 min Express
+        </button>
+        <button class="nav-btn" onclick="showSection('fiches')">
+            <span>📖</span> Fiches
+        </button>
+        <button class="nav-btn" onclick="showSection('flashcards')">
+            <span>🃏</span> Flashcards
+        </button>
+        <button class="nav-btn" onclick="showSection('quiz')">
+            <span>❓</span> Quiz
+        </button>
+        <button class="nav-btn defi-btn" onclick="showSection('defi')">
+            <span>⏱️</span> Défi Chrono
+        </button>
+        <button class="nav-btn" onclick="showSection('documents')">
+            <span>🔍</span> Documents
+        </button>
+        <button class="nav-btn" onclick="showSection('tableaux')">
+            <span>📊</span> Tableaux
+        </button>
+        <button class="nav-btn" onclick="showSection('badges')">
+            <span>🏆</span> Badges
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- ACCUEIL -->
+        <section id="accueil" class="section active">
+            <div class="welcome-screen">
+                <h1 class="welcome-title">Prêt(e) à réviser ton bilan ? 🚀</h1>
+                <p class="welcome-subtitle">La Préhistoire n'aura plus de secrets pour toi !</p>
+
+                <div class="welcome-features">
+                    <div class="feature-card" style="border: 2px solid #f093fb;">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">5 min Express</div>
+                        <div class="feature-desc">Révision ultra-rapide</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🃏</div>
+                        <div class="feature-title">Flashcards</div>
+                        <div class="feature-desc">6 définitions</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">❓</div>
+                        <div class="feature-title">Quiz</div>
+                        <div class="feature-desc">40+ questions</div>
+                    </div>
+                    <div class="feature-card" style="border: 2px solid #fee140;">
+                        <div class="feature-icon">⏱️</div>
+                        <div class="feature-title">Défi Chrono</div>
+                        <div class="feature-desc">10 questions, 2 min !</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <div class="feature-title">Documents</div>
+                        <div class="feature-desc">3 docs à analyser</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-title">Partage</div>
+                        <div class="feature-desc">Défie tes copains !</div>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="showSection('fiches')">
+                    Commencer les révisions ! 📖
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION EXPRESS - 5 MIN AVANT LE BILAN -->
+        <section id="express" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>⚡</span> 5 Minutes Avant le Bilan</h2>
+                <p style="text-align: center; margin-bottom: 30px; color: #f093fb; font-size: 1.1rem;">
+                    L'essentiel en ultra-résumé ! 🚀
+                </p>
+
+                <!-- Les 6 définitions express -->
+                <div class="express-card">
+                    <h3 style="margin-bottom: 20px;">📘 Les 6 Définitions (version courte)</h3>
+
+                    <div class="express-item">
+                        <h4>Histoire</h4>
+                        <p>= étude du passé avec des <strong>documents ÉCRITS</strong></p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>Préhistoire</h4>
+                        <p>= AVANT l'écriture (avant -3300)</p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>Nomade</h4>
+                        <p>= se DÉPLACE (chasse) → <strong>Paléolithique</strong></p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>Sédentaire</h4>
+                        <p>= RESTE au même endroit (agriculture) → <strong>Néolithique</strong></p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>Paléolithique</h4>
+                        <p>= pierre TAILLÉE, nomade, chasse</p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>Néolithique</h4>
+                        <p>= pierre POLIE, sédentaire, agriculture</p>
+                    </div>
+                </div>
+
+                <!-- Astuces mnémotechniques -->
+                <div class="express-card">
+                    <h3 style="margin-bottom: 20px;">🧠 Astuces pour Retenir</h3>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">🏃 "Paléo = je me PROMÈNE" (Nomade)</div>
+                        <div class="mnemonic-explain">Paléolithique → Nomade → se déPLACE</div>
+                    </div>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">🏠 "Néo = je RESTE" (Sédentaire)</div>
+                        <div class="mnemonic-explain">Néolithique → Sédentaire → RESTE au même endroit</div>
+                    </div>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">🪨 "Paléo-T / Néo-P"</div>
+                        <div class="mnemonic-explain">Paléo = Taillée / Néo = Polie (la pierre)</div>
+                    </div>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">🦴 "HACHE = Habilis-Erectus-Sapiens"</div>
+                        <div class="mnemonic-explain">H = Habilis (outils) / E = Erectus (feu) / S = Sapiens (nous)</div>
+                    </div>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">📅 "1800 LAmarck / 1859 DArwin"</div>
+                        <div class="mnemonic-explain">LA = 1800 / DA = 1859 (évolution)</div>
+                    </div>
+
+                    <div class="mnemonic">
+                        <div class="mnemonic-phrase">🐒 "Pas ancêtre, mais COUSIN !"</div>
+                        <div class="mnemonic-explain">L'Homme ne descend PAS du singe = ancêtre COMMUN</div>
+                    </div>
+                </div>
+
+                <!-- Critique de document express -->
+                <div class="express-card">
+                    <h3 style="margin-bottom: 20px;">🔍 Analyser un Document en 30 sec</h3>
+
+                    <div class="express-item">
+                        <h4>1. EXTERNE (carte d'identité)</h4>
+                        <p><strong>Nature</strong> = C'est quoi ? (image, texte, objet...)<br>
+                        <strong>Origine</strong> = Qui l'a fait ? (artiste, historien...)</p>
+                    </div>
+
+                    <div class="express-item">
+                        <h4>2. INTERNE (contenu)</h4>
+                        <p><strong>De quoi ça parle ?</strong><br>
+                        <strong>Quelle période ?</strong> (Paléo ou Néo)<br>
+                        <strong>Qu'est-ce qu'on apprend ?</strong></p>
+                    </div>
+                </div>
+
+                <!-- Tableau ultra-résumé -->
+                <div class="express-card">
+                    <h3 style="margin-bottom: 20px;">📊 Paléo vs Néo (ULTRA résumé)</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>PALÉO</th>
+                                    <th>NÉO</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Pierre</strong></td>
+                                    <td>Taillée</td>
+                                    <td>Polie</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mode de vie</strong></td>
+                                    <td>Nomade</td>
+                                    <td>Sédentaire</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nourriture</strong></td>
+                                    <td>Chasse</td>
+                                    <td>Agriculture</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Art</strong></td>
+                                    <td>Peintures (Lascaux)</td>
+                                    <td>Menhirs, dolmens</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <p style="font-size: 1.5rem; margin-bottom: 20px;">🍀 Bonne chance pour ton bilan !</p>
+                    <button class="start-btn" onclick="showSection('defi')">
+                        Dernier test chrono ? ⏱️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION DÉFI CHRONO -->
+        <section id="defi" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>⏱️</span> Défi Chrono</h2>
+
+                <div class="defi-container" id="defiStart">
+                    <div style="font-size: 5rem; margin-bottom: 20px;">🔥</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">10 questions en 2 minutes !</h3>
+                    <p style="opacity: 0.8; margin-bottom: 30px;">
+                        Es-tu prêt(e) à relever le défi ?<br>
+                        Réponds le plus vite possible !
+                    </p>
+                    <button class="start-btn" onclick="startDefi()">
+                        Lancer le défi ! 🚀
+                    </button>
+                </div>
+
+                <div class="defi-container" id="defiGame" style="display: none;">
+                    <div class="defi-timer" id="defiTimer">2:00</div>
+
+                    <div class="defi-progress" id="defiProgress">
+                        <!-- Points de progression générés dynamiquement -->
+                    </div>
+
+                    <div class="quiz-question" id="defiQuestion" style="font-size: 1.2rem; margin: 30px 0;">
+                        Question...
+                    </div>
+
+                    <div class="quiz-options" id="defiOptions">
+                        <!-- Options générées dynamiquement -->
+                    </div>
+                </div>
+
+                <div class="defi-container" id="defiResults" style="display: none;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;" id="defiResultIcon">🏆</div>
+                    <div class="results-score" id="defiScore">8/10</div>
+                    <div class="results-message" id="defiMessage">Super rapide !</div>
+                    <p style="margin: 20px 0;">Temps : <span id="defiFinalTime">1:23</span></p>
+
+                    <button class="start-btn" style="margin-top: 30px;" onclick="restartDefi()">
+                        Recommencer 🔄
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FICHES DE RÉVISION -->
+        <section id="fiches" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>📖</span> Fiches de Révision</h2>
+
+                <!-- Définitions -->
+                <h3 style="margin: 30px 0 20px; color: #48dbfb;">📘 Les 6 Définitions à Connaître</h3>
+
+                <div class="fiche definition">
+                    <h3>📌 Histoire</h3>
+                    <p>Discipline qui étudie <span class="highlight">le passé de l'humanité</span> à partir de <span class="highlight">documents écrits</span>. Elle analyse les événements, leur enchaînement et leur évolution.</p>
+                </div>
+
+                <div class="fiche definition">
+                    <h3>📌 Préhistoire</h3>
+                    <p>Période <span class="highlight">avant l'invention de l'écriture</span> (avant -3300 av. J.-C.). On l'étudie grâce aux <span class="highlight">traces archéologiques</span> (outils, ossements, peintures...).</p>
+                </div>
+
+                <div class="fiche definition">
+                    <h3>📌 Nomade</h3>
+                    <p>Personne qui <span class="highlight">se déplace régulièrement</span> pour suivre le gibier et chercher de la nourriture. Mode de vie du <span class="highlight">Paléolithique</span>.</p>
+                </div>
+
+                <div class="fiche definition">
+                    <h3>📌 Sédentaire</h3>
+                    <p>Personne qui <span class="highlight">vit au même endroit</span> de façon permanente. Mode de vie du <span class="highlight">Néolithique</span> avec l'agriculture et l'élevage.</p>
+                </div>
+
+                <div class="fiche definition">
+                    <h3>📌 Paléolithique</h3>
+                    <p>"Âge de la pierre ancienne/taillée". Période de <span class="highlight">-3 millions d'années à -10 000 av. J.-C.</span> Les hommes sont <span class="highlight">nomades</span>, chasseurs-cueilleurs, utilisent des outils en pierre taillée.</p>
+                </div>
+
+                <div class="fiche definition">
+                    <h3>📌 Néolithique</h3>
+                    <p>"Âge de la pierre nouvelle/polie". Période de <span class="highlight">-10 000 à -3 300 av. J.-C.</span> Les hommes deviennent <span class="highlight">sédentaires</span>, pratiquent l'agriculture et l'élevage, polissent la pierre.</p>
+                </div>
+
+                <!-- Ce qui est en rouge -->
+                <h3 style="margin: 40px 0 20px; color: #ff6b6b;">🔴 L'Essentiel (ce qui est en rouge)</h3>
+
+                <div class="fiche important">
+                    <h3>🔥 La démarche de l'historien</h3>
+                    <p>L'historien mène une <strong>enquête OBJECTIVE</strong> en 4 étapes :</p>
+                    <ul>
+                        <li><strong>S'interroger</strong> : poser des questions pertinentes</li>
+                        <li><strong>Rechercher</strong> : trier et classer les traces/indices</li>
+                        <li><strong>Analyser</strong> : étudier les traces qui répondent à la question</li>
+                        <li><strong>Communiquer</strong> : rédiger une synthèse objective</li>
+                    </ul>
+                </div>
+
+                <div class="fiche important">
+                    <h3>🔥 L'évolution humaine</h3>
+                    <p><strong>L'Homme ne descend PAS du singe !</strong> L'Homme et le singe ont un <span class="highlight">ancêtre commun</span>.</p>
+                    <ul>
+                        <li><strong>Australopithèque</strong> : premier bipède, Afrique</li>
+                        <li><strong>Homo habilis</strong> : "homme habile", fabrique des outils</li>
+                        <li><strong>Homo erectus</strong> : maîtrise le feu, sort d'Afrique</li>
+                        <li><strong>Néandertal</strong> : Europe, enterre ses morts</li>
+                        <li><strong>Homo sapiens</strong> : nous ! "homme qui sait"</li>
+                    </ul>
+                </div>
+
+                <div class="fiche important">
+                    <h3>🔥 Darwin et l'évolution</h3>
+                    <ul>
+                        <li><strong>Lamarck (1800)</strong> : premier à parler d'évolution</li>
+                        <li><strong>Darwin (1859)</strong> : théorie de la sélection naturelle</li>
+                        <li>La Terre a <strong>4,5 milliards d'années</strong></li>
+                        <li>Les espèces évoluent et s'adaptent à leur environnement</li>
+                    </ul>
+                </div>
+
+                <!-- Tableau détaillé des types humains -->
+                <h3 style="margin: 40px 0 20px; color: #ff9ff3;">🦴 Les Types Humains en Détail</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Nom signifie</th>
+                                <th>Quand ?</th>
+                                <th>Où ?</th>
+                                <th>Caractéristiques</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Australopithèque</strong></td>
+                                <td>"Singe du Sud"</td>
+                                <td>-4 à -2 Ma</td>
+                                <td>🌍 <strong>Afrique</strong> (Est et Sud)</td>
+                                <td>Premier <span class="highlight">bipède</span>, petit cerveau, Lucy célèbre</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Homo habilis</strong></td>
+                                <td>"Homme habile"</td>
+                                <td>-2,4 à -1,5 Ma</td>
+                                <td>🌍 <strong>Afrique</strong></td>
+                                <td>Premier à <span class="highlight">fabriquer des outils</span> (pierre taillée)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Homo erectus</strong></td>
+                                <td>"Homme debout"</td>
+                                <td>-1,8 Ma à -100 000</td>
+                                <td>🌍 <strong>Afrique → Asie → Europe</strong></td>
+                                <td><span class="highlight">Maîtrise le feu</span>, premier à sortir d'Afrique</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Néandertal</strong></td>
+                                <td>(vallée de Neander)</td>
+                                <td>-400 000 à -30 000</td>
+                                <td>🌍 <strong>Europe, Moyen-Orient</strong></td>
+                                <td><span class="highlight">Enterre ses morts</span>, costaud, adapté au froid, disparu</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Homo sapiens</strong></td>
+                                <td>"Homme qui sait"</td>
+                                <td>-300 000 à aujourd'hui</td>
+                                <td>🌍 <strong>Monde entier</strong></td>
+                                <td><span class="highlight">C'est nous !</span> Art, culture, langage complexe</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="fiche important" style="margin-top: 20px;">
+                    <h3>⚠️ Attention aux pièges !</h3>
+                    <ul>
+                        <li><strong>L'Homme ne descend PAS du singe</strong> → Ils ont un ANCÊTRE COMMUN</li>
+                        <li><strong>Néandertal n'est PAS notre ancêtre</strong> → C'est un "cousin" qui a disparu</li>
+                        <li><strong>Bipède</strong> = marche sur 2 pieds (ce qui nous différencie des singes)</li>
+                        <li><strong>Homo sapiens et Néandertal ont coexisté</strong> pendant des milliers d'années</li>
+                    </ul>
+                </div>
+
+                <div class="fiche definition" style="margin-top: 20px;">
+                    <h3>📅 Les Dates Clés à Retenir</h3>
+                    <ul>
+                        <li><strong>4,5 milliards d'années</strong> : âge de la Terre</li>
+                        <li><strong>-3 millions d'années</strong> : début du Paléolithique</li>
+                        <li><strong>-10 000 av. J.-C.</strong> : fin du Paléolithique, début du Néolithique</li>
+                        <li><strong>-3 300 av. J.-C.</strong> : invention de l'écriture = fin de la Préhistoire</li>
+                        <li><strong>1800</strong> : Lamarck parle d'évolution</li>
+                        <li><strong>1859</strong> : Darwin publie sa théorie</li>
+                    </ul>
+                </div>
+
+                <!-- Méthode FO1 -->
+                <h3 style="margin: 40px 0 20px; color: #feca57;">📋 Méthode FO1 : Analyser un Document</h3>
+
+                <div class="fiche methode">
+                    <h3>🔍 Critique EXTERNE (la carte d'identité)</h3>
+                    <ul>
+                        <li><strong>Nature</strong> : Qu'est-ce que c'est ? (texte, image, photo, reconstitution, objet...)</li>
+                        <li><strong>Origine</strong> : Qui l'a fait ? (historien, scientifique, artiste, témoin...)</li>
+                        <li><strong>Références</strong> : Titre, date, auteur, source</li>
+                    </ul>
+                    <p style="margin-top: 15px; opacity: 0.8;">⚠️ On ne parle PAS encore du contenu !</p>
+                </div>
+
+                <div class="fiche methode">
+                    <h3>🔬 Critique INTERNE (le contenu)</h3>
+                    <ul>
+                        <li><strong>De quoi parle le document ?</strong></li>
+                        <li><strong>Quelle période ?</strong> (Paléolithique ou Néolithique)</li>
+                        <li><strong>Qu'est-ce qu'on apprend ?</strong> sur les hommes préhistoriques</li>
+                        <li><strong>Le document est-il pertinent ?</strong> pour répondre à la question posée</li>
+                    </ul>
+                </div>
+
+                <!-- Tableau comparatif -->
+                <h3 style="margin: 40px 0 20px; color: #54a0ff;">📊 Paléolithique vs Néolithique</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>Paléolithique</th>
+                                <th>Néolithique</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Période</strong></td>
+                                <td>-3 Ma à -10 000</td>
+                                <td>-10 000 à -3 300</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mode de vie</strong></td>
+                                <td>Nomade</td>
+                                <td>Sédentaire</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Nourriture</strong></td>
+                                <td>Chasse, pêche, cueillette</td>
+                                <td>Agriculture, élevage</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Habitat</strong></td>
+                                <td>Grottes, abris, campements</td>
+                                <td>Villages, maisons</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Outils</strong></td>
+                                <td>Pierre taillée</td>
+                                <td>Pierre polie, poterie</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Art</strong></td>
+                                <td>Peintures rupestres</td>
+                                <td>Mégalithes (dolmens, menhirs)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="start-btn" onclick="showSection('flashcards'); addXP(20);">
+                        J'ai lu ! Passer aux Flashcards 🃏
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLASHCARDS -->
+        <section id="flashcards" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>🃏</span> Flashcards - Définitions</h2>
+                <p style="text-align: center; opacity: 0.8; margin-bottom: 20px;">Clique sur la carte pour voir la définition !</p>
+
+                <div class="flashcard-container">
+                    <div class="flashcard" id="flashcard" onclick="flipCard()">
+                        <div class="flashcard-front">
+                            <div class="flashcard-word" id="flashcardWord">Histoire</div>
+                            <div class="flashcard-hint">Clique pour voir la définition</div>
+                        </div>
+                        <div class="flashcard-back">
+                            <div class="flashcard-definition" id="flashcardDef">
+                                Discipline qui étudie le passé de l'humanité à partir de documents écrits.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flashcard-nav">
+                    <button class="flashcard-btn dont-know" onclick="nextCard(false)">Je ne sais pas 😕</button>
+                    <button class="flashcard-btn know" onclick="nextCard(true)">Je sais ! 💪</button>
+                </div>
+
+                <div class="flashcard-progress">
+                    <span id="cardProgress">1</span> / <span id="totalCards">6</span>
+                    <div style="margin-top: 10px;">
+                        Score: <span id="flashcardScore">0</span> / 6
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUIZ -->
+        <section id="quiz" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>❓</span> Quiz - Teste tes connaissances</h2>
+
+                <div class="mode-selection" id="quizModeSelection">
+                    <div class="mode-card" onclick="selectQuizMode('definitions')">
+                        <div class="mode-icon">📘</div>
+                        <div class="mode-title">Définitions</div>
+                        <div class="mode-desc">Les 6 mots clés</div>
+                    </div>
+                    <div class="mode-card" onclick="selectQuizMode('evolution')">
+                        <div class="mode-icon">🦴</div>
+                        <div class="mode-title">Évolution</div>
+                        <div class="mode-desc">Darwin & les hommes</div>
+                    </div>
+                    <div class="mode-card" onclick="selectQuizMode('periodes')">
+                        <div class="mode-icon">⏳</div>
+                        <div class="mode-title">Périodes</div>
+                        <div class="mode-desc">Paléo vs Néo</div>
+                    </div>
+                    <div class="mode-card" onclick="selectQuizMode('lieux')">
+                        <div class="mode-icon">🌍</div>
+                        <div class="mode-title">Lieux & Dates</div>
+                        <div class="mode-desc">Où ? Quand ?</div>
+                    </div>
+                    <div class="mode-card" onclick="selectQuizMode('documents')">
+                        <div class="mode-icon">🔍</div>
+                        <div class="mode-title">Documents</div>
+                        <div class="mode-desc">Analyse & critique</div>
+                    </div>
+                    <div class="mode-card" onclick="selectQuizMode('all')">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-title">Tout !</div>
+                        <div class="mode-desc">Le bilan complet</div>
+                    </div>
+                </div>
+
+                <div class="quiz-container" id="quizContainer" style="display: none;">
+                    <div class="quiz-progress">
+                        <span>Question <span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></span>
+                        <div class="quiz-progress-bar">
+                            <div class="quiz-progress-fill" id="quizProgressBar" style="width: 10%"></div>
+                        </div>
+                        <div class="timer" id="timer">⏱️ 00:00</div>
+                    </div>
+
+                    <div class="quiz-question" id="quizQuestion">
+                        Question ici...
+                    </div>
+
+                    <div class="quiz-options" id="quizOptions">
+                        <!-- Options générées dynamiquement -->
+                    </div>
+
+                    <div class="quiz-feedback" id="quizFeedback">
+                        <p id="feedbackText"></p>
+                    </div>
+
+                    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+                        Question suivante →
+                    </button>
+                </div>
+
+                <!-- Résultats -->
+                <div class="results-container" id="quizResults" style="display: none;">
+                    <div class="results-score" id="finalScore">85%</div>
+                    <div class="results-message" id="resultsMessage">Excellent travail ! 🎉</div>
+                    <div class="results-details">
+                        <div class="result-stat">
+                            <div class="number" id="correctCount">8</div>
+                            <div class="label">Bonnes réponses</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="number" id="wrongCount">2</div>
+                            <div class="label">Erreurs</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="number" id="xpEarned">+150</div>
+                            <div class="label">XP gagnés</div>
+                        </div>
+                    </div>
+                    <button class="start-btn" onclick="restartQuiz()">Recommencer 🔄</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- DOCUMENTS -->
+        <section id="documents" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>🔍</span> Exercice : Analyser un Document</h2>
+
+                <div class="doc-exercise">
+                    <div class="doc-image">
+                        <h3 style="margin-bottom: 15px;">📄 Document 1 : Village néolithique</h3>
+
+                        <!-- Image illustrative -->
+                        <div class="doc-img-placeholder" style="background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 40%, #228B22 40%, #228B22 100%);">
+                            <div style="font-size: 3rem; margin-bottom: -30px;">🏠🏠🏠</div>
+                            <div style="font-size: 2rem;">🌾🐄🐑🌾</div>
+                            <span style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; margin-top: 10px;">Reconstitution de village</span>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px dashed #ccc; color: #333;">
+                            <p style="font-style: italic; margin-bottom: 10px;">
+                                "Reconstitution d'un village du Néolithique avec des maisons en bois et torchis,
+                                des enclos pour les animaux et des champs cultivés."
+                            </p>
+                            <p style="font-size: 0.9rem; color: #666;">
+                                Source : Manuel d'Histoire 6e, éditions Nathan, 2024<br>
+                                Reconstitution réalisée par un illustrateur
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0; color: #feca57;">📋 Critique Externe</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>1. Quelle est la NATURE du document ?</label>
+                            <select id="docNature" onchange="checkDocAnswer('nature')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Un texte historique</option>
+                                <option value="correct">Une reconstitution / illustration</option>
+                                <option value="wrong2">Une photographie</option>
+                                <option value="wrong3">Un objet archéologique</option>
+                            </select>
+                            <div id="feedbackNature" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>2. Quelle est l'ORIGINE du document ? (Qui l'a fait ?)</label>
+                            <select id="docOrigine" onchange="checkDocAnswer('origine')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Un homme préhistorique</option>
+                                <option value="wrong2">Un archéologue</option>
+                                <option value="correct">Un illustrateur / artiste</option>
+                                <option value="wrong3">Un photographe</option>
+                            </select>
+                            <div id="feedbackOrigine" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px; color: #48dbfb;">🔬 Critique Interne</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>3. Ce document parle-t-il de la Préhistoire ? Pourquoi ?</label>
+                            <select id="docPrehistoire" onchange="checkDocAnswer('prehistoire')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Oui, car il montre un village avec agriculture et élevage (Néolithique)</option>
+                                <option value="wrong1">Non, car il y a des maisons</option>
+                                <option value="wrong2">Non, car c'est une reconstitution moderne</option>
+                            </select>
+                            <div id="feedbackPrehistoire" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>4. À quelle PÉRIODE de la Préhistoire correspond ce document ?</label>
+                            <select id="docPeriode" onchange="checkDocAnswer('periode')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Paléolithique (nomades, chasseurs)</option>
+                                <option value="correct">Néolithique (sédentaires, agriculteurs)</option>
+                            </select>
+                            <div id="feedbackPeriode" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>5. Qu'est-ce que ce document nous apprend sur les hommes de cette époque ?</label>
+                            <textarea id="docApprend" placeholder="Écris ta réponse ici..." rows="3"></textarea>
+                            <button class="flashcard-btn" style="margin-top: 10px;" onclick="checkDocText()">Vérifier ma réponse</button>
+                            <div id="feedbackApprend" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div id="docScore" style="text-align: center; margin-top: 30px; display: none;">
+                        <h3>🎉 Bravo ! Tu as complété l'analyse !</h3>
+                        <p>Score : <span id="docScoreValue">0</span>/5</p>
+                        <button class="start-btn" style="margin-top: 20px;" onclick="showDoc2()">Document suivant →</button>
+                    </div>
+                </div>
+
+                <!-- DOCUMENT 2 -->
+                <div class="doc-exercise" id="doc2" style="display: none;">
+                    <div class="doc-image">
+                        <h3 style="margin-bottom: 15px;">📄 Document 2 : Peinture de Lascaux</h3>
+
+                        <!-- Image illustrative grotte -->
+                        <div class="doc-img-placeholder" style="background: linear-gradient(180deg, #2C1810 0%, #4A3728 50%, #3D2914 100%); position: relative;">
+                            <div style="font-size: 3.5rem; filter: sepia(1) brightness(0.8);">🐴 🦬 🐂</div>
+                            <div style="position: absolute; top: 10px; left: 10px; font-size: 1.5rem;">🔦</div>
+                            <span style="background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 0.85rem;">Peinture rupestre - Grotte de Lascaux</span>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px dashed #ccc; color: #333;">
+                            <p style="font-style: italic; margin-bottom: 10px;">
+                                "Peinture rupestre représentant des chevaux et des taureaux,
+                                découverte dans la grotte de Lascaux (France)."
+                            </p>
+                            <p style="font-size: 0.9rem; color: #666;">
+                                Datation : environ -17 000 ans<br>
+                                Réalisée par des Homo sapiens du Paléolithique
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0; color: #feca57;">📋 Critique Externe</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>1. Quelle est la NATURE du document ?</label>
+                            <select id="doc2Nature" onchange="checkDoc2Answer('nature')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Une reconstitution moderne</option>
+                                <option value="correct">Une peinture / œuvre d'art préhistorique</option>
+                                <option value="wrong2">Une photographie</option>
+                                <option value="wrong3">Un texte</option>
+                            </select>
+                            <div id="feedback2Nature" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>2. Quelle est l'ORIGINE du document ? (Qui l'a fait ?)</label>
+                            <select id="doc2Origine" onchange="checkDoc2Answer('origine')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Des hommes préhistoriques (Homo sapiens)</option>
+                                <option value="wrong1">Un artiste moderne</option>
+                                <option value="wrong2">Un archéologue</option>
+                                <option value="wrong3">Un illustrateur de manuel</option>
+                            </select>
+                            <div id="feedback2Origine" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px; color: #48dbfb;">🔬 Critique Interne</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>3. Ce document parle-t-il de la Préhistoire ?</label>
+                            <select id="doc2Prehistoire" onchange="checkDoc2Answer('prehistoire')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Oui, c'est une trace directe du Paléolithique</option>
+                                <option value="wrong1">Non, car il n'y a pas d'écriture</option>
+                                <option value="wrong2">Non, car c'est juste un dessin</option>
+                            </select>
+                            <div id="feedback2Prehistoire" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>4. À quelle PÉRIODE correspond ce document ?</label>
+                            <select id="doc2Periode" onchange="checkDoc2Answer('periode')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Paléolithique (chasseurs-cueilleurs nomades)</option>
+                                <option value="wrong1">Néolithique (agriculteurs sédentaires)</option>
+                            </select>
+                            <div id="feedback2Periode" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>5. Qu'est-ce que ce document nous apprend ?</label>
+                            <select id="doc2Apprend" onchange="checkDoc2Answer('apprend')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Les hommes du Paléolithique avaient des capacités artistiques et connaissaient les animaux qu'ils chassaient</option>
+                                <option value="wrong1">Les hommes du Paléolithique savaient écrire</option>
+                                <option value="wrong2">Les hommes du Paléolithique élevaient des chevaux</option>
+                            </select>
+                            <div id="feedback2Apprend" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div id="doc2Score" style="text-align: center; margin-top: 30px; display: none;">
+                        <h3>🎉 Excellent ! Document 2 complété !</h3>
+                        <button class="start-btn" style="margin-top: 20px;" onclick="showDoc3()">Document suivant →</button>
+                    </div>
+                </div>
+
+                <!-- DOCUMENT 3 -->
+                <div class="doc-exercise" id="doc3" style="display: none;">
+                    <div class="doc-image">
+                        <h3 style="margin-bottom: 15px;">📄 Document 3 : Biface en silex</h3>
+
+                        <!-- Image illustrative biface -->
+                        <div class="doc-img-placeholder" style="background: linear-gradient(180deg, #D2B48C 0%, #C4A574 50%, #8B7355 100%);">
+                            <div style="font-size: 5rem; filter: grayscale(0.5);">🪨</div>
+                            <div style="font-size: 0.9rem; margin-top: -10px; opacity: 0.8;">⬆️ Pierre taillée des 2 côtés ⬆️</div>
+                            <span style="background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 0.85rem;">Photo d'objet archéologique</span>
+                        </div>
+
+                        <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px dashed #ccc; color: #333;">
+                            <p style="font-style: italic; margin-bottom: 10px;">
+                                "Photographie d'un biface (outil en pierre taillée des deux côtés),
+                                trouvé sur un site archéologique en Afrique."
+                            </p>
+                            <p style="font-size: 0.9rem; color: #666;">
+                                Datation : environ -1,5 million d'années<br>
+                                Fabriqué par Homo erectus<br>
+                                Source : Musée de la Préhistoire, 2023
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0; color: #feca57;">📋 Critique Externe</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>1. Quelle est la NATURE du document ?</label>
+                            <select id="doc3Nature" onchange="checkDoc3Answer('nature')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Une reconstitution</option>
+                                <option value="correct">Une photographie d'objet archéologique</option>
+                                <option value="wrong2">Un dessin</option>
+                                <option value="wrong3">Un texte scientifique</option>
+                            </select>
+                            <div id="feedback3Nature" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>2. Qui a fabriqué l'OBJET représenté ?</label>
+                            <select id="doc3Origine" onchange="checkDoc3Answer('origine')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="wrong1">Homo sapiens</option>
+                                <option value="correct">Homo erectus</option>
+                                <option value="wrong2">Néandertal</option>
+                                <option value="wrong3">Un archéologue moderne</option>
+                            </select>
+                            <div id="feedback3Origine" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px; color: #48dbfb;">🔬 Critique Interne</h3>
+                    <div class="doc-questions">
+                        <div class="doc-question">
+                            <label>3. Ce document parle-t-il de la Préhistoire ?</label>
+                            <select id="doc3Prehistoire" onchange="checkDoc3Answer('prehistoire')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Oui, c'est un outil fabriqué pendant la Préhistoire</option>
+                                <option value="wrong1">Non, car c'est une photo moderne</option>
+                                <option value="wrong2">On ne peut pas savoir</option>
+                            </select>
+                            <div id="feedback3Prehistoire" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>4. À quelle PÉRIODE correspond cet objet ?</label>
+                            <select id="doc3Periode" onchange="checkDoc3Answer('periode')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">Paléolithique (pierre taillée)</option>
+                                <option value="wrong1">Néolithique (pierre polie)</option>
+                            </select>
+                            <div id="feedback3Periode" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <div class="doc-question">
+                            <label>5. Comment sait-on que c'est du Paléolithique et pas du Néolithique ?</label>
+                            <select id="doc3Apprend" onchange="checkDoc3Answer('apprend')">
+                                <option value="">-- Choisis une réponse --</option>
+                                <option value="correct">La pierre est TAILLÉE (Paléo) et non POLIE (Néo)</option>
+                                <option value="wrong1">À cause de la couleur de la pierre</option>
+                                <option value="wrong2">Parce que c'est écrit sur l'outil</option>
+                            </select>
+                            <div id="feedback3Apprend" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div id="doc3Score" style="text-align: center; margin-top: 30px; display: none;">
+                        <h3>🏆 Félicitations ! Tu as analysé les 3 documents !</h3>
+                        <p style="margin-top: 10px;">Tu maîtrises maintenant la critique de documents !</p>
+                        <button class="start-btn" style="margin-top: 20px;" onclick="showSection('quiz')">Passer au Quiz →</button>
+                    </div>
+                </div>
+
+                <!-- Progression documents -->
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                    <span style="opacity: 0.8;">Progression : </span>
+                    <span id="docProgressDots">
+                        <span style="font-size: 1.5rem;">⚫</span>
+                        <span style="font-size: 1.5rem; opacity: 0.3;">⚫</span>
+                        <span style="font-size: 1.5rem; opacity: 0.3;">⚫</span>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABLEAUX -->
+        <section id="tableaux" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>📊</span> Exercice : Compléter les Tableaux</h2>
+
+                <h3 style="margin: 20px 0; color: #54a0ff;">📋 Tableau à compléter : Les types humains</h3>
+
+                <div class="table-container">
+                    <table id="tableauHumains">
+                        <thead>
+                            <tr>
+                                <th>Type humain</th>
+                                <th>Signification du nom</th>
+                                <th>Caractéristique principale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Homo habilis</td>
+                                <td>
+                                    <select class="table-answer" data-correct="habile" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="habile">Homme habile</option>
+                                        <option value="debout">Homme debout</option>
+                                        <option value="sage">Homme sage</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="table-answer" data-correct="outils" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="feu">Maîtrise le feu</option>
+                                        <option value="outils">Fabrique des outils</option>
+                                        <option value="art">Fait de l'art</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Homo erectus</td>
+                                <td>
+                                    <select class="table-answer" data-correct="debout" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="habile">Homme habile</option>
+                                        <option value="debout">Homme debout/dressé</option>
+                                        <option value="sage">Homme sage</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="table-answer" data-correct="feu" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="feu">Maîtrise le feu</option>
+                                        <option value="outils">Fabrique des outils</option>
+                                        <option value="bipede">Premier bipède</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Homo sapiens</td>
+                                <td>
+                                    <select class="table-answer" data-correct="sage" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="habile">Homme habile</option>
+                                        <option value="debout">Homme debout</option>
+                                        <option value="sage">Homme qui sait/sage</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="table-answer" data-correct="nous" onchange="checkTableAnswer(this)">
+                                        <option value="">?</option>
+                                        <option value="eteint">Espèce éteinte</option>
+                                        <option value="nous">C'est nous !</option>
+                                        <option value="afrique">Vit en Afrique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="tableScore" style="text-align: center; margin-top: 20px;">
+                    Score : <span id="tableScoreValue">0</span>/6
+                </div>
+
+                <h3 style="margin: 40px 0 20px; color: #f093fb;">📋 Tableau à double entrée : Paléolithique vs Néolithique</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Élément</th>
+                                <th>Paléolithique ou Néolithique ?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>🏠 Villages permanents</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="neo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🎨 Peintures rupestres (grottes)</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="paleo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🌾 Agriculture</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="neo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🦌 Chasse et cueillette</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="paleo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🏺 Poterie</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="neo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🗿 Menhirs et dolmens</td>
+                                <td>
+                                    <select class="table-answer2" data-correct="neo" onchange="checkTableAnswer2(this)">
+                                        <option value="">?</option>
+                                        <option value="paleo">Paléolithique</option>
+                                        <option value="neo">Néolithique</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="tableScore2" style="text-align: center; margin-top: 20px;">
+                    Score : <span id="tableScoreValue2">0</span>/6
+                </div>
+            </div>
+        </section>
+
+        <!-- BADGES -->
+        <section id="badges" class="section">
+            <div class="card">
+                <h2 class="card-title"><span>🏆</span> Tes Badges</h2>
+                <p style="text-align: center; opacity: 0.8; margin-bottom: 30px;">Débloque tous les badges en complétant les activités !</p>
+
+                <div class="badges-container" id="badgesContainer">
+                    <div class="badge-item locked" id="badge-reader">
+                        <div class="badge-icon">📖</div>
+                        <div class="badge-name">Lecteur</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">Lire les fiches</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-cards">
+                        <div class="badge-icon">🃏</div>
+                        <div class="badge-name">Mémorisation</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">6/6 flashcards</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-quiz">
+                        <div class="badge-icon">🎯</div>
+                        <div class="badge-name">Quiz Master</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">80% au quiz</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-detective">
+                        <div class="badge-icon">🔍</div>
+                        <div class="badge-name">Détective</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">Analyser un doc</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-table">
+                        <div class="badge-icon">📊</div>
+                        <div class="badge-name">Organisé</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">Tableaux complets</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-streak">
+                        <div class="badge-icon">🔥</div>
+                        <div class="badge-name">En feu !</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">5 bonnes de suite</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-perfect">
+                        <div class="badge-icon">⭐</div>
+                        <div class="badge-name">Parfait !</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">100% au quiz</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-chrono">
+                        <div class="badge-icon">⏱️</div>
+                        <div class="badge-name">Speed Runner</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">8/10 au Défi Chrono</div>
+                    </div>
+                    <div class="badge-item locked" id="badge-champion">
+                        <div class="badge-icon">👑</div>
+                        <div class="badge-name">Champion</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7;">500 XP total</div>
+                    </div>
+                </div>
+
+                <div class="leaderboard" style="margin-top: 40px;">
+                    <h3 style="margin-bottom: 20px;">🏅 Classement</h3>
+                    <div class="leaderboard-item">
+                        <div class="leaderboard-rank">🥇</div>
+                        <div class="leaderboard-name">Super Élève</div>
+                        <div class="leaderboard-score">850 XP</div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <div class="leaderboard-rank">🥈</div>
+                        <div class="leaderboard-name">Historien Pro</div>
+                        <div class="leaderboard-score">720 XP</div>
+                    </div>
+                    <div class="leaderboard-item me">
+                        <div class="leaderboard-rank">🎯</div>
+                        <div class="leaderboard-name">Toi</div>
+                        <div class="leaderboard-score"><span id="leaderboardScore">0</span> XP</div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <div class="leaderboard-rank">4</div>
+                        <div class="leaderboard-name">Apprenti</div>
+                        <div class="leaderboard-score">320 XP</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ==================== DONNÉES ====================
+
+        const definitions = [
+            {
+                word: "Histoire",
+                definition: "Discipline qui étudie le passé de l'humanité à partir de documents écrits. Elle analyse les événements, leur enchaînement et leur évolution."
+            },
+            {
+                word: "Préhistoire",
+                definition: "Période avant l'invention de l'écriture (avant -3300 av. J.-C.). On l'étudie grâce aux traces archéologiques : outils, ossements, peintures..."
+            },
+            {
+                word: "Nomade",
+                definition: "Personne qui se déplace régulièrement pour suivre le gibier et chercher de la nourriture. Mode de vie du Paléolithique."
+            },
+            {
+                word: "Sédentaire",
+                definition: "Personne qui vit au même endroit de façon permanente. Mode de vie du Néolithique avec l'agriculture et l'élevage."
+            },
+            {
+                word: "Paléolithique",
+                definition: "\"Âge de la pierre taillée\". Période de -3 millions d'années à -10 000 av. J.-C. Les hommes sont nomades, chasseurs-cueilleurs."
+            },
+            {
+                word: "Néolithique",
+                definition: "\"Âge de la pierre polie\". Période de -10 000 à -3 300 av. J.-C. Les hommes deviennent sédentaires, pratiquent l'agriculture et l'élevage."
+            }
+        ];
+
+        const quizQuestions = {
+            definitions: [
+                {
+                    question: "Qu'est-ce que l'Histoire ?",
+                    options: [
+                        "L'étude des dinosaures",
+                        "L'étude du passé à partir de documents écrits",
+                        "L'étude des étoiles",
+                        "L'étude de la nature"
+                    ],
+                    correct: 1,
+                    explanation: "L'Histoire étudie le passé de l'humanité grâce aux documents écrits."
+                },
+                {
+                    question: "Qu'est-ce qu'un nomade ?",
+                    options: [
+                        "Une personne qui vit dans un village",
+                        "Une personne qui cultive la terre",
+                        "Une personne qui se déplace régulièrement",
+                        "Une personne qui fabrique des poteries"
+                    ],
+                    correct: 2,
+                    explanation: "Un nomade se déplace pour suivre le gibier et trouver de la nourriture."
+                },
+                {
+                    question: "Que signifie \"Néolithique\" ?",
+                    options: [
+                        "Âge de la pierre taillée",
+                        "Âge du bronze",
+                        "Âge de la pierre polie/nouvelle",
+                        "Âge du fer"
+                    ],
+                    correct: 2,
+                    explanation: "Néolithique vient du grec \"neos\" (nouveau) et \"lithos\" (pierre) = pierre nouvelle/polie."
+                },
+                {
+                    question: "Quelle est la différence entre Histoire et Préhistoire ?",
+                    options: [
+                        "L'Histoire est plus ancienne",
+                        "La Préhistoire est avant l'écriture, l'Histoire après",
+                        "Il n'y a pas de différence",
+                        "La Préhistoire étudie les animaux"
+                    ],
+                    correct: 1,
+                    explanation: "La Préhistoire = avant l'écriture. L'Histoire = après l'invention de l'écriture."
+                },
+                {
+                    question: "Un sédentaire, c'est quelqu'un qui...",
+                    options: [
+                        "Se déplace tout le temps",
+                        "Vit dans une grotte",
+                        "Reste vivre au même endroit",
+                        "Chasse les animaux"
+                    ],
+                    correct: 2,
+                    explanation: "Sédentaire = qui reste au même endroit (villages, agriculture)."
+                }
+            ],
+            evolution: [
+                {
+                    question: "L'Homme descend-il du singe ?",
+                    options: [
+                        "Oui, le singe est notre ancêtre",
+                        "Non, mais ils ont un ancêtre commun",
+                        "Oui, Darwin l'a prouvé",
+                        "Non, l'Homme existe depuis toujours"
+                    ],
+                    correct: 1,
+                    explanation: "L'Homme et le singe ont un ANCÊTRE COMMUN, mais l'Homme ne descend pas du singe !"
+                },
+                {
+                    question: "Que signifie \"Homo habilis\" ?",
+                    options: [
+                        "Homme debout",
+                        "Homme qui sait",
+                        "Homme habile",
+                        "Homme ancien"
+                    ],
+                    correct: 2,
+                    explanation: "Homo habilis = \"Homme habile\" car il fabriquait des outils."
+                },
+                {
+                    question: "Qui a proposé la théorie de l'évolution par sélection naturelle ?",
+                    options: [
+                        "Lamarck",
+                        "Einstein",
+                        "Darwin",
+                        "Pasteur"
+                    ],
+                    correct: 2,
+                    explanation: "Charles Darwin a publié sa théorie de l'évolution en 1859."
+                },
+                {
+                    question: "Quel âge a la Terre ?",
+                    options: [
+                        "1 million d'années",
+                        "100 millions d'années",
+                        "4,5 milliards d'années",
+                        "10 000 ans"
+                    ],
+                    correct: 2,
+                    explanation: "La Terre s'est formée il y a environ 4,5 milliards d'années."
+                },
+                {
+                    question: "Que signifie \"Homo sapiens\" ?",
+                    options: [
+                        "Homme habile",
+                        "Homme debout",
+                        "Homme qui sait / sage",
+                        "Homme des cavernes"
+                    ],
+                    correct: 2,
+                    explanation: "Homo sapiens = \"Homme qui sait\" ou \"Homme sage\". C'est nous !"
+                },
+                {
+                    question: "Quel Homo a été le premier à maîtriser le feu ?",
+                    options: [
+                        "Homo habilis",
+                        "Homo erectus",
+                        "Homo sapiens",
+                        "Australopithèque"
+                    ],
+                    correct: 1,
+                    explanation: "Homo erectus (\"Homme debout\") a été le premier à maîtriser le feu."
+                }
+            ],
+            periodes: [
+                {
+                    question: "Au Paléolithique, les hommes étaient...",
+                    options: [
+                        "Sédentaires et agriculteurs",
+                        "Nomades et chasseurs-cueilleurs",
+                        "Sédentaires et éleveurs",
+                        "Nomades et agriculteurs"
+                    ],
+                    correct: 1,
+                    explanation: "Au Paléolithique = nomades + chasse/pêche/cueillette."
+                },
+                {
+                    question: "L'agriculture apparaît à quelle période ?",
+                    options: [
+                        "Paléolithique",
+                        "Néolithique",
+                        "Antiquité",
+                        "Moyen Âge"
+                    ],
+                    correct: 1,
+                    explanation: "L'agriculture apparaît au Néolithique (-10 000 av. J.-C.)."
+                },
+                {
+                    question: "Les peintures rupestres (grottes de Lascaux) datent de quelle période ?",
+                    options: [
+                        "Néolithique",
+                        "Paléolithique",
+                        "Antiquité",
+                        "Préhistoire récente"
+                    ],
+                    correct: 1,
+                    explanation: "Les peintures rupestres datent du Paléolithique (environ -17 000 ans)."
+                },
+                {
+                    question: "Les menhirs et dolmens ont été construits au...",
+                    options: [
+                        "Paléolithique",
+                        "Néolithique",
+                        "Moyen Âge",
+                        "Antiquité"
+                    ],
+                    correct: 1,
+                    explanation: "Les mégalithes (menhirs, dolmens) datent du Néolithique."
+                },
+                {
+                    question: "La poterie apparaît à quelle période ?",
+                    options: [
+                        "Paléolithique",
+                        "Néolithique",
+                        "Âge du bronze",
+                        "Antiquité"
+                    ],
+                    correct: 1,
+                    explanation: "La poterie apparaît au Néolithique avec la sédentarisation."
+                },
+                {
+                    question: "Le Paléolithique se termine vers...",
+                    options: [
+                        "-3 300 av. J.-C.",
+                        "-10 000 av. J.-C.",
+                        "-1 000 av. J.-C.",
+                        "0 (naissance de J.-C.)"
+                    ],
+                    correct: 1,
+                    explanation: "Le Paléolithique se termine vers -10 000 av. J.-C., début du Néolithique."
+                },
+                {
+                    question: "Quand se termine la Préhistoire ?",
+                    options: [
+                        "-10 000 av. J.-C.",
+                        "-3 300 av. J.-C. (invention de l'écriture)",
+                        "0 (naissance de J.-C.)",
+                        "-1 million d'années"
+                    ],
+                    correct: 1,
+                    explanation: "La Préhistoire se termine vers -3 300 av. J.-C. avec l'invention de l'écriture."
+                }
+            ],
+            lieux: [
+                {
+                    question: "Où sont apparus les premiers hominidés (Australopithèques) ?",
+                    options: [
+                        "En Europe",
+                        "En Asie",
+                        "En Afrique",
+                        "En Amérique"
+                    ],
+                    correct: 2,
+                    explanation: "Les premiers hominidés sont apparus en AFRIQUE (Est et Sud). C'est le berceau de l'humanité !"
+                },
+                {
+                    question: "Où vivait Néandertal ?",
+                    options: [
+                        "En Afrique uniquement",
+                        "En Europe et au Moyen-Orient",
+                        "En Asie uniquement",
+                        "Partout dans le monde"
+                    ],
+                    correct: 1,
+                    explanation: "Néandertal vivait en Europe et au Moyen-Orient. Il était adapté au climat froid."
+                },
+                {
+                    question: "Quel Homo a été le premier à quitter l'Afrique ?",
+                    options: [
+                        "Homo habilis",
+                        "Homo sapiens",
+                        "Homo erectus",
+                        "Australopithèque"
+                    ],
+                    correct: 2,
+                    explanation: "Homo erectus a été le premier à migrer hors d'Afrique vers l'Asie et l'Europe."
+                },
+                {
+                    question: "Qui est Lucy ?",
+                    options: [
+                        "Une femme Néandertal",
+                        "Une Australopithèque célèbre trouvée en Afrique",
+                        "La première Homo sapiens",
+                        "Une scientifique qui étudie la Préhistoire"
+                    ],
+                    correct: 1,
+                    explanation: "Lucy est un squelette d'Australopithèque découvert en Éthiopie (Afrique) en 1974."
+                },
+                {
+                    question: "Quelle caractéristique spéciale avait Néandertal ?",
+                    options: [
+                        "Il était le premier à fabriquer des outils",
+                        "Il enterrait ses morts",
+                        "Il a inventé l'écriture",
+                        "Il vivait en Afrique"
+                    ],
+                    correct: 1,
+                    explanation: "Néandertal enterrait ses morts, ce qui montre une pensée symbolique et des rituels."
+                },
+                {
+                    question: "Néandertal est-il notre ancêtre direct ?",
+                    options: [
+                        "Oui, c'est notre grand-père",
+                        "Non, c'est plutôt un 'cousin' qui a disparu",
+                        "Oui, il a évolué pour devenir Homo sapiens",
+                        "On ne sait pas du tout"
+                    ],
+                    correct: 1,
+                    explanation: "Néandertal n'est PAS notre ancêtre ! C'est un 'cousin' qui a vécu en même temps que Homo sapiens, puis a disparu."
+                },
+                {
+                    question: "En quelle année Lamarck a-t-il parlé d'évolution pour la première fois ?",
+                    options: [
+                        "1700",
+                        "1800",
+                        "1859",
+                        "1900"
+                    ],
+                    correct: 1,
+                    explanation: "Lamarck a proposé sa théorie de l'évolution en 1800, avant Darwin."
+                },
+                {
+                    question: "En quelle année Darwin a-t-il publié sa théorie de l'évolution ?",
+                    options: [
+                        "1800",
+                        "1859",
+                        "1900",
+                        "1950"
+                    ],
+                    correct: 1,
+                    explanation: "Darwin a publié 'L'Origine des espèces' en 1859."
+                }
+            ],
+            documents: [
+                {
+                    question: "Un document montre des hommes chassant le mammouth avec des lances en bois. De quelle période parle-t-il ?",
+                    options: [
+                        "Néolithique",
+                        "Paléolithique",
+                        "Antiquité",
+                        "Ce n'est pas de la Préhistoire"
+                    ],
+                    correct: 1,
+                    explanation: "Chasse au mammouth = Paléolithique (nomades, chasseurs-cueilleurs)."
+                },
+                {
+                    question: "Une reconstitution montre un village avec des maisons, des champs et des animaux dans des enclos. Quelle période ?",
+                    options: [
+                        "Paléolithique",
+                        "Néolithique",
+                        "Moyen Âge",
+                        "Ce n'est pas de la Préhistoire"
+                    ],
+                    correct: 1,
+                    explanation: "Village + agriculture + élevage = Néolithique (sédentaires)."
+                },
+                {
+                    question: "Quelle est la NATURE d'une peinture rupestre de Lascaux ?",
+                    options: [
+                        "Un texte historique",
+                        "Une œuvre d'art / peinture",
+                        "Une reconstitution moderne",
+                        "Une photographie"
+                    ],
+                    correct: 1,
+                    explanation: "Une peinture rupestre est une œuvre d'art réalisée par des hommes préhistoriques."
+                },
+                {
+                    question: "Quelle est l'ORIGINE d'une reconstitution de village néolithique dans un manuel scolaire ?",
+                    options: [
+                        "Un homme préhistorique",
+                        "Un illustrateur / artiste moderne",
+                        "Un archéologue",
+                        "Un photographe"
+                    ],
+                    correct: 1,
+                    explanation: "Une reconstitution est faite par un illustrateur/artiste moderne, basée sur les découvertes archéologiques."
+                },
+                {
+                    question: "Un document montre un biface (outil en pierre taillée des deux côtés). Ce document parle-t-il de la Préhistoire ?",
+                    options: [
+                        "Oui, car c'est un outil du Paléolithique",
+                        "Non, car c'est juste une pierre",
+                        "Non, car il n'y a pas d'écriture",
+                        "On ne peut pas savoir"
+                    ],
+                    correct: 0,
+                    explanation: "Oui ! Un biface est un outil en pierre taillée typique du Paléolithique."
+                },
+                {
+                    question: "Pour faire une critique EXTERNE d'un document, on regarde...",
+                    options: [
+                        "Ce que le document raconte",
+                        "La nature et l'origine du document",
+                        "Les personnages dans le document",
+                        "Si le document est joli"
+                    ],
+                    correct: 1,
+                    explanation: "Critique externe = Nature (qu'est-ce que c'est ?) + Origine (qui l'a fait ?)."
+                },
+                {
+                    question: "Pour faire une critique INTERNE d'un document, on regarde...",
+                    options: [
+                        "Qui a fait le document",
+                        "Le contenu et ce qu'on apprend",
+                        "La date du document",
+                        "Le format du document"
+                    ],
+                    correct: 1,
+                    explanation: "Critique interne = analyser le CONTENU et ce qu'on apprend sur la période."
+                }
+            ]
+        };
+
+        // ==================== VARIABLES GLOBALES ====================
+
+        let totalXP = parseInt(localStorage.getItem('histoireXP')) || 0;
+        let currentStreak = 0;
+        let level = 1;
+        let soundEnabled = true;
+
+        // Flashcards
+        let currentCardIndex = 0;
+        let flashcardScore = 0;
+        let cardsKnown = [];
+
+        // Quiz
+        let currentQuizMode = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+        let quizStartTime = null;
+        let timerInterval = null;
+
+        // Tableaux
+        let tableScore1 = 0;
+        let tableScore2 = 0;
+
+        // Badges
+        let unlockedBadges = JSON.parse(localStorage.getItem('histoireBadges')) || [];
+
+        // ==================== FONCTIONS PRINCIPALES ====================
+
+        function init() {
+            updateXPDisplay();
+            updateBadgesDisplay();
+            loadProgress();
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-btn')?.classList.add('active');
+
+            if (sectionId === 'fiches') {
+                setTimeout(() => unlockBadge('reader'), 2000);
+            }
+        }
+
+        function addXP(amount) {
+            totalXP += amount;
+            localStorage.setItem('histoireXP', totalXP);
+            updateXPDisplay();
+
+            if (totalXP >= 500) unlockBadge('champion');
+
+            // Animation
+            showXPPopup(amount);
+        }
+
+        function updateXPDisplay() {
+            document.getElementById('totalXP').textContent = totalXP;
+            document.getElementById('leaderboardScore').textContent = totalXP;
+
+            // Calcul du niveau
+            level = Math.floor(totalXP / 100) + 1;
+            document.getElementById('level').textContent = level;
+
+            // Barre XP
+            const xpForNextLevel = (level * 100);
+            const xpProgress = (totalXP % 100) / 100 * 100;
+            document.getElementById('xpBar').style.width = xpProgress + '%';
+        }
+
+        function showXPPopup(amount) {
+            const popup = document.createElement('div');
+            popup.textContent = `+${amount} XP`;
+            popup.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                padding: 20px 40px;
+                border-radius: 20px;
+                font-size: 2rem;
+                font-weight: 700;
+                z-index: 1000;
+                animation: popupAnim 1s ease forwards;
+            `;
+            document.body.appendChild(popup);
+
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function updateStreak(correct) {
+            if (correct) {
+                currentStreak++;
+                if (currentStreak >= 5) unlockBadge('streak');
+            } else {
+                currentStreak = 0;
+            }
+            document.getElementById('streak').textContent = currentStreak;
+        }
+
+        // ==================== FLASHCARDS ====================
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+            playSound('flip');
+        }
+
+        function nextCard(known) {
+            if (known) {
+                flashcardScore++;
+                addXP(10);
+                updateStreak(true);
+                playSound('correct');
+            } else {
+                updateStreak(false);
+                playSound('wrong');
+            }
+
+            document.getElementById('flashcardScore').textContent = flashcardScore;
+
+            currentCardIndex++;
+
+            if (currentCardIndex >= definitions.length) {
+                // Fin des flashcards
+                if (flashcardScore === definitions.length) {
+                    unlockBadge('cards');
+                    createConfetti();
+                }
+                alert(`Bravo ! Tu as mémorisé ${flashcardScore}/${definitions.length} définitions ! 🎉`);
+                currentCardIndex = 0;
+                flashcardScore = 0;
+            }
+
+            // Reset card
+            document.getElementById('flashcard').classList.remove('flipped');
+            setTimeout(() => {
+                document.getElementById('flashcardWord').textContent = definitions[currentCardIndex].word;
+                document.getElementById('flashcardDef').textContent = definitions[currentCardIndex].definition;
+                document.getElementById('cardProgress').textContent = currentCardIndex + 1;
+            }, 300);
+        }
+
+        // ==================== QUIZ ====================
+
+        function selectQuizMode(mode) {
+            currentQuizMode = mode;
+
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+            event.target.closest('.mode-card').classList.add('selected');
+
+            // Préparer les questions
+            if (mode === 'all') {
+                currentQuestions = [
+                    ...quizQuestions.definitions,
+                    ...quizQuestions.evolution,
+                    ...quizQuestions.periodes,
+                    ...quizQuestions.lieux,
+                    ...quizQuestions.documents
+                ].sort(() => Math.random() - 0.5).slice(0, 20);
+            } else {
+                currentQuestions = [...quizQuestions[mode]].sort(() => Math.random() - 0.5);
+            }
+
+            currentQuestionIndex = 0;
+            quizScore = 0;
+
+            // Démarrer le quiz
+            setTimeout(() => {
+                document.getElementById('quizModeSelection').style.display = 'none';
+                document.getElementById('quizContainer').style.display = 'block';
+                document.getElementById('totalQuestions').textContent = currentQuestions.length;
+                startTimer();
+                displayQuestion();
+            }, 500);
+        }
+
+        function displayQuestion() {
+            const q = currentQuestions[currentQuestionIndex];
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('quizQuestion').textContent = q.question;
+
+            const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+            document.getElementById('quizProgressBar').style.width = progress + '%';
+
+            const optionsHtml = q.options.map((opt, i) => `
+                <div class="quiz-option" onclick="selectAnswer(${i})">
+                    <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                    <span>${opt}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('quizOptions').innerHTML = optionsHtml;
+            document.getElementById('quizFeedback').classList.remove('show', 'correct', 'incorrect');
+            document.getElementById('nextBtn').classList.remove('show');
+        }
+
+        function selectAnswer(index) {
+            const q = currentQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.quiz-option');
+
+            // Désactiver les clics
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+
+            const isCorrect = index === q.correct;
+
+            options[index].classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                options[q.correct].classList.add('correct');
+            }
+
+            // Feedback
+            const feedback = document.getElementById('quizFeedback');
+            feedback.classList.add('show', isCorrect ? 'correct' : 'incorrect');
+            document.getElementById('feedbackText').textContent =
+                (isCorrect ? '✅ Correct ! ' : '❌ Incorrect. ') + q.explanation;
+
+            if (isCorrect) {
+                quizScore++;
+                addXP(15);
+                updateStreak(true);
+                playSound('correct');
+            } else {
+                updateStreak(false);
+                playSound('wrong');
+            }
+
+            document.getElementById('nextBtn').classList.add('show');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= currentQuestions.length) {
+                showResults();
+            } else {
+                displayQuestion();
+            }
+        }
+
+        function showResults() {
+            stopTimer();
+
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+
+            const percentage = Math.round((quizScore / currentQuestions.length) * 100);
+            document.getElementById('finalScore').textContent = percentage + '%';
+            document.getElementById('correctCount').textContent = quizScore;
+            document.getElementById('wrongCount').textContent = currentQuestions.length - quizScore;
+
+            const xpEarned = quizScore * 15;
+            document.getElementById('xpEarned').textContent = '+' + xpEarned;
+
+            let message = '';
+            if (percentage === 100) {
+                message = 'PARFAIT ! Tu es prêt(e) pour le bilan ! 🏆';
+                unlockBadge('perfect');
+                createConfetti();
+            } else if (percentage >= 80) {
+                message = 'Excellent travail ! 🎉';
+                unlockBadge('quiz');
+            } else if (percentage >= 60) {
+                message = 'Bien joué ! Continue comme ça ! 💪';
+            } else {
+                message = 'Courage ! Relis les fiches et réessaie ! 📖';
+            }
+            document.getElementById('resultsMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('quizModeSelection').style.display = 'flex';
+            document.getElementById('quizContainer').style.display = 'none';
+        }
+
+        function startTimer() {
+            quizStartTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - quizStartTime) / 1000);
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `⏱️ ${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // ==================== DOCUMENTS ====================
+
+        let docAnswers = { nature: false, origine: false, prehistoire: false, periode: false };
+
+        function checkDocAnswer(field) {
+            const select = document.getElementById('doc' + field.charAt(0).toUpperCase() + field.slice(1));
+            const feedback = document.getElementById('feedback' + field.charAt(0).toUpperCase() + field.slice(1));
+
+            if (select.value === 'correct') {
+                feedback.innerHTML = '✅ Correct !';
+                feedback.style.color = '#38ef7d';
+                docAnswers[field] = true;
+                addXP(10);
+                playSound('correct');
+            } else if (select.value !== '') {
+                feedback.innerHTML = '❌ Essaie encore...';
+                feedback.style.color = '#f45c43';
+                playSound('wrong');
+            }
+
+            checkDocComplete();
+        }
+
+        function checkDocText() {
+            const text = document.getElementById('docApprend').value.toLowerCase();
+            const feedback = document.getElementById('feedbackApprend');
+
+            const keywords = ['sédentaire', 'village', 'maison', 'agricul', 'élevage', 'animal', 'champ'];
+            const found = keywords.filter(k => text.includes(k));
+
+            if (found.length >= 2) {
+                feedback.innerHTML = '✅ Très bien ! Tu as identifié les éléments clés : sédentarisation, villages, agriculture/élevage.';
+                feedback.style.color = '#38ef7d';
+                docAnswers.text = true;
+                addXP(20);
+                playSound('correct');
+            } else if (text.length > 10) {
+                feedback.innerHTML = '🤔 Pense aux mots-clés : sédentaire, village, agriculture, élevage...';
+                feedback.style.color = '#feca57';
+            } else {
+                feedback.innerHTML = 'Écris une réponse plus complète !';
+                feedback.style.color = '#f45c43';
+            }
+
+            checkDocComplete();
+        }
+
+        function checkDocComplete() {
+            const allCorrect = Object.values(docAnswers).filter(v => v).length;
+            if (allCorrect >= 4) {
+                document.getElementById('docScore').style.display = 'block';
+                document.getElementById('docScoreValue').textContent = allCorrect;
+            }
+        }
+
+        // Document 2
+        let doc2Answers = { nature: false, origine: false, prehistoire: false, periode: false, apprend: false };
+
+        function showDoc2() {
+            document.getElementById('doc2').style.display = 'block';
+            document.getElementById('doc2').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('docProgressDots').innerHTML = `
+                <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                <span style="font-size: 1.5rem;">⚫</span>
+                <span style="font-size: 1.5rem; opacity: 0.3;">⚫</span>
+            `;
+        }
+
+        function checkDoc2Answer(field) {
+            const select = document.getElementById('doc2' + field.charAt(0).toUpperCase() + field.slice(1));
+            const feedback = document.getElementById('feedback2' + field.charAt(0).toUpperCase() + field.slice(1));
+
+            if (select.value === 'correct') {
+                feedback.innerHTML = '✅ Correct !';
+                feedback.style.color = '#38ef7d';
+                doc2Answers[field] = true;
+                addXP(10);
+                playSound('correct');
+            } else if (select.value !== '') {
+                feedback.innerHTML = '❌ Essaie encore...';
+                feedback.style.color = '#f45c43';
+                playSound('wrong');
+            }
+
+            checkDoc2Complete();
+        }
+
+        function checkDoc2Complete() {
+            const allCorrect = Object.values(doc2Answers).filter(v => v).length;
+            if (allCorrect >= 4) {
+                document.getElementById('doc2Score').style.display = 'block';
+            }
+        }
+
+        // Document 3
+        let doc3Answers = { nature: false, origine: false, prehistoire: false, periode: false, apprend: false };
+
+        function showDoc3() {
+            document.getElementById('doc3').style.display = 'block';
+            document.getElementById('doc3').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('docProgressDots').innerHTML = `
+                <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                <span style="font-size: 1.5rem;">⚫</span>
+            `;
+        }
+
+        function checkDoc3Answer(field) {
+            const select = document.getElementById('doc3' + field.charAt(0).toUpperCase() + field.slice(1));
+            const feedback = document.getElementById('feedback3' + field.charAt(0).toUpperCase() + field.slice(1));
+
+            if (select.value === 'correct') {
+                feedback.innerHTML = '✅ Correct !';
+                feedback.style.color = '#38ef7d';
+                doc3Answers[field] = true;
+                addXP(10);
+                playSound('correct');
+            } else if (select.value !== '') {
+                feedback.innerHTML = '❌ Essaie encore...';
+                feedback.style.color = '#f45c43';
+                playSound('wrong');
+            }
+
+            checkDoc3Complete();
+        }
+
+        function checkDoc3Complete() {
+            const allCorrect = Object.values(doc3Answers).filter(v => v).length;
+            if (allCorrect >= 4) {
+                document.getElementById('doc3Score').style.display = 'block';
+                document.getElementById('docProgressDots').innerHTML = `
+                    <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                    <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                    <span style="font-size: 1.5rem; color: #38ef7d;">✓</span>
+                `;
+                unlockBadge('detective');
+                createConfetti();
+            }
+        }
+
+        // ==================== DÉFI CHRONO ====================
+
+        let defiQuestions = [];
+        let defiCurrentIndex = 0;
+        let defiCorrect = 0;
+        let defiTimeLeft = 120;
+        let defiTimerInterval = null;
+        let defiStartTimestamp = null;
+
+        function startDefi() {
+            // Préparer 10 questions aléatoires
+            const allQuestions = [
+                ...quizQuestions.definitions,
+                ...quizQuestions.evolution,
+                ...quizQuestions.periodes,
+                ...quizQuestions.lieux,
+                ...quizQuestions.documents
+            ];
+            defiQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
+            defiCurrentIndex = 0;
+            defiCorrect = 0;
+            defiTimeLeft = 120;
+            defiStartTimestamp = Date.now();
+
+            // Afficher le jeu
+            document.getElementById('defiStart').style.display = 'none';
+            document.getElementById('defiGame').style.display = 'block';
+            document.getElementById('defiResults').style.display = 'none';
+
+            // Créer les points de progression
+            let dotsHtml = '';
+            for (let i = 0; i < 10; i++) {
+                dotsHtml += `<div class="defi-dot" id="defiDot${i}"></div>`;
+            }
+            document.getElementById('defiProgress').innerHTML = dotsHtml;
+            document.getElementById('defiDot0').classList.add('current');
+
+            // Démarrer le timer
+            startDefiTimer();
+
+            // Afficher la première question
+            displayDefiQuestion();
+        }
+
+        function startDefiTimer() {
+            updateDefiTimerDisplay();
+            defiTimerInterval = setInterval(() => {
+                defiTimeLeft--;
+                updateDefiTimerDisplay();
+
+                if (defiTimeLeft <= 0) {
+                    endDefi();
+                }
+            }, 1000);
+        }
+
+        function updateDefiTimerDisplay() {
+            const mins = Math.floor(defiTimeLeft / 60);
+            const secs = defiTimeLeft % 60;
+            const display = `${mins}:${secs.toString().padStart(2, '0')}`;
+            const timerEl = document.getElementById('defiTimer');
+            timerEl.textContent = display;
+
+            if (defiTimeLeft <= 30) {
+                timerEl.classList.add('danger');
+            } else {
+                timerEl.classList.remove('danger');
+            }
+        }
+
+        function displayDefiQuestion() {
+            const q = defiQuestions[defiCurrentIndex];
+            document.getElementById('defiQuestion').textContent = q.question;
+
+            const optionsHtml = q.options.map((opt, i) => `
+                <div class="quiz-option" onclick="selectDefiAnswer(${i})">
+                    <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                    <span>${opt}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('defiOptions').innerHTML = optionsHtml;
+        }
+
+        function selectDefiAnswer(index) {
+            const q = defiQuestions[defiCurrentIndex];
+            const isCorrect = index === q.correct;
+            const dot = document.getElementById(`defiDot${defiCurrentIndex}`);
+
+            dot.classList.remove('current');
+            if (isCorrect) {
+                defiCorrect++;
+                dot.classList.add('correct');
+                playSound('correct');
+            } else {
+                dot.classList.add('wrong');
+                playSound('wrong');
+            }
+
+            defiCurrentIndex++;
+
+            if (defiCurrentIndex >= 10) {
+                setTimeout(() => endDefi(), 300);
+            } else {
+                document.getElementById(`defiDot${defiCurrentIndex}`).classList.add('current');
+                displayDefiQuestion();
+            }
+        }
+
+        function endDefi() {
+            clearInterval(defiTimerInterval);
+
+            const timeUsed = 120 - defiTimeLeft;
+            const mins = Math.floor(timeUsed / 60);
+            const secs = timeUsed % 60;
+
+            document.getElementById('defiGame').style.display = 'none';
+            document.getElementById('defiResults').style.display = 'block';
+            document.getElementById('defiScore').textContent = `${defiCorrect}/10`;
+            document.getElementById('defiFinalTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            // Message et icône selon le score
+            let icon, message;
+            if (defiCorrect === 10) {
+                icon = '👑';
+                message = 'PARFAIT ! Tu es un(e) champion(ne) !';
+                createConfetti();
+                addXP(200);
+                unlockBadge('chrono');
+            } else if (defiCorrect >= 8) {
+                icon = '🏆';
+                message = 'Excellent ! Tu es prêt(e) !';
+                addXP(150);
+                unlockBadge('chrono');
+            } else if (defiCorrect >= 6) {
+                icon = '💪';
+                message = 'Bien joué ! Continue !';
+                addXP(100);
+            } else if (defiCorrect >= 4) {
+                icon = '📚';
+                message = 'Pas mal ! Relis les fiches !';
+                addXP(50);
+            } else {
+                icon = '😅';
+                message = 'Courage ! Révise encore un peu !';
+                addXP(20);
+            }
+
+            document.getElementById('defiResultIcon').textContent = icon;
+            document.getElementById('defiMessage').textContent = message;
+        }
+
+        function restartDefi() {
+            document.getElementById('defiResults').style.display = 'none';
+            document.getElementById('defiStart').style.display = 'block';
+        }
+
+        // ==================== PARTAGE WHATSAPP ====================
+
+        function shareWhatsApp() {
+            const score = defiCorrect;
+            const time = document.getElementById('defiFinalTime').textContent;
+
+            let emoji;
+            if (score === 10) emoji = '👑';
+            else if (score >= 8) emoji = '🏆';
+            else if (score >= 6) emoji = '💪';
+            else emoji = '📚';
+
+            const message = `${emoji} *Bilan Histoire - Défi Chrono* ${emoji}
+
+J'ai fait *${score}/10* en ${time} !
+
+Tu peux faire mieux ? 😏
+Teste-toi ici : [lien vers l'appli]
+
+#BilanHistoire #Préhistoire`;
+
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        // Partage score quiz normal
+        function shareQuizWhatsApp() {
+            const percentage = document.getElementById('finalScore').textContent;
+            const correct = document.getElementById('correctCount').textContent;
+            const total = currentQuestions.length;
+
+            let emoji;
+            const pct = parseInt(percentage);
+            if (pct === 100) emoji = '👑';
+            else if (pct >= 80) emoji = '🏆';
+            else if (pct >= 60) emoji = '💪';
+            else emoji = '📚';
+
+            const message = `${emoji} *Bilan Histoire - Quiz* ${emoji}
+
+J'ai fait *${correct}/${total}* (${percentage}) !
+
+Tu peux faire mieux ? 😏
+
+#BilanHistoire #Préhistoire`;
+
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        // ==================== TABLEAUX ====================
+
+        function checkTableAnswer(select) {
+            const correct = select.dataset.correct;
+            if (select.value === correct) {
+                select.style.background = 'rgba(56, 239, 125, 0.3)';
+                select.style.borderColor = '#38ef7d';
+                tableScore1++;
+                addXP(5);
+                playSound('correct');
+            } else if (select.value !== '') {
+                select.style.background = 'rgba(244, 92, 67, 0.3)';
+                select.style.borderColor = '#f45c43';
+                playSound('wrong');
+            }
+            document.getElementById('tableScoreValue').textContent = tableScore1;
+
+            if (tableScore1 === 6 && tableScore2 === 6) {
+                unlockBadge('table');
+            }
+        }
+
+        function checkTableAnswer2(select) {
+            const correct = select.dataset.correct;
+            if (select.value === correct) {
+                select.style.background = 'rgba(56, 239, 125, 0.3)';
+                select.style.borderColor = '#38ef7d';
+                tableScore2++;
+                addXP(5);
+                playSound('correct');
+            } else if (select.value !== '') {
+                select.style.background = 'rgba(244, 92, 67, 0.3)';
+                select.style.borderColor = '#f45c43';
+                playSound('wrong');
+            }
+            document.getElementById('tableScoreValue2').textContent = tableScore2;
+
+            if (tableScore1 === 6 && tableScore2 === 6) {
+                unlockBadge('table');
+            }
+        }
+
+        // ==================== BADGES ====================
+
+        function unlockBadge(badgeId) {
+            if (unlockedBadges.includes(badgeId)) return;
+
+            unlockedBadges.push(badgeId);
+            localStorage.setItem('histoireBadges', JSON.stringify(unlockedBadges));
+
+            const badge = document.getElementById('badge-' + badgeId);
+            if (badge) {
+                badge.classList.remove('locked');
+                badge.classList.add('unlocked');
+            }
+
+            // Notification
+            showBadgeNotification(badgeId);
+            playSound('badge');
+        }
+
+        function showBadgeNotification(badgeId) {
+            const badgeNames = {
+                reader: '📖 Lecteur',
+                cards: '🃏 Mémorisation',
+                quiz: '🎯 Quiz Master',
+                detective: '🔍 Détective',
+                table: '📊 Organisé',
+                streak: '🔥 En feu !',
+                perfect: '⭐ Parfait !',
+                chrono: '⏱️ Speed Runner',
+                champion: '👑 Champion'
+            };
+
+            const notif = document.createElement('div');
+            notif.innerHTML = `
+                <div style="font-size: 0.9rem; opacity: 0.8;">Nouveau badge !</div>
+                <div style="font-size: 1.2rem; font-weight: 700;">${badgeNames[badgeId]}</div>
+            `;
+            notif.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                padding: 20px 30px;
+                border-radius: 15px;
+                z-index: 1000;
+                animation: slideIn 0.5s ease;
+            `;
+            document.body.appendChild(notif);
+
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function updateBadgesDisplay() {
+            unlockedBadges.forEach(badgeId => {
+                const badge = document.getElementById('badge-' + badgeId);
+                if (badge) {
+                    badge.classList.remove('locked');
+                    badge.classList.add('unlocked');
+                }
+            });
+        }
+
+        // ==================== EFFETS ====================
+
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            // Utilisation de l'API Web Audio pour des sons simples
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.1;
+                    break;
+                case 'wrong':
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.value = 0.05;
+                    break;
+                case 'badge':
+                    oscillator.frequency.value = 600;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.1;
+                    break;
+                default:
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.05;
+            }
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.15);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function loadProgress() {
+            // Charger la progression depuis localStorage si nécessaire
+        }
+
+        // ==================== INITIALISATION ====================
+
+        // Style pour l'animation popup
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes popupAnim {
+                0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        init();
+    </script>
+</body>
+</html>
