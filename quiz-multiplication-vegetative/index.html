@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - La Multiplication Végétative</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2e7d32;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #558b2f;
+            font-size: 1.1em;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: white;
+            border-radius: 25px;
+            padding: 5px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 25px;
+            background: linear-gradient(90deg, #66bb6a, #43a047);
+            border-radius: 20px;
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* Question Card */
+        .question-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #81c784, #66bb6a);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* Options */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: #f5f5f5;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 18px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            border-color: #81c784;
+            background: #e8f5e9;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #2196f3;
+            background: #e3f2fd;
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            animation: pulse 0.5s ease;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .option-letter {
+            background: #81c784;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* True/False Buttons */
+        .tf-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .tf-btn {
+            flex: 1;
+            max-width: 200px;
+            padding: 25px;
+            border: 3px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+        }
+
+        .tf-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .tf-btn.vrai:hover {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .tf-btn.faux:hover {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .tf-btn .emoji {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .tf-btn .label {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Drag and Drop */
+        .drag-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .drag-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background: #f0f4f0;
+            border-radius: 15px;
+            min-height: 80px;
+            justify-content: center;
+        }
+
+        .drag-item {
+            background: linear-gradient(135deg, #fff9c4, #fff59d);
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: grab;
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            border: 2px solid #fbc02d;
+        }
+
+        .drag-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .drop-zones {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .drop-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .drop-label {
+            flex: 1;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .drop-zone {
+            width: 180px;
+            min-height: 50px;
+            border: 3px dashed #bdbdbd;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #81c784;
+            background: #e8f5e9;
+        }
+
+        .drop-zone.has-item {
+            border-style: solid;
+            border-color: #81c784;
+        }
+
+        .drop-zone .drag-item {
+            margin: 5px;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+            border-left: 5px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
+            border-left: 5px solid #f44336;
+        }
+
+        .feedback-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .feedback-text {
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #66bb6a, #43a047);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.1em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            display: none;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .btn.show {
+            display: inline-block;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .btn-validate {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-validate:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
+        }
+
+        /* Results Screen */
+        .results-screen {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            display: none;
+        }
+
+        .results-screen.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .results-emoji {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .results-score {
+            font-size: 3em;
+            color: #2e7d32;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .results-message {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .results-details {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .results-details h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item.correct {
+            color: #4caf50;
+        }
+
+        .result-item.incorrect {
+            color: #f44336;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-restart:hover {
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+        }
+
+        /* Start Screen */
+        .start-screen {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .start-screen h2 {
+            color: #2e7d32;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .start-info {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .start-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .start-info li {
+            padding: 10px 0;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .start-info li::before {
+            content: "🌱";
+        }
+
+        .btn-start {
+            font-size: 1.3em;
+            padding: 18px 50px;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.6em;
+            }
+
+            .question-text {
+                font-size: 1.2em;
+            }
+
+            .drop-row {
+                flex-direction: column;
+            }
+
+            .drop-zone {
+                width: 100%;
+            }
+
+            .tf-container {
+                flex-direction: column;
+            }
+
+            .tf-btn {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            <h1>🌿 La Multiplication Végétative 🌿</h1>
+            <p class="subtitle">Quiz interactif</p>
+        </header>
+
+        <div class="progress-container" id="progress-container" style="display: none;">
+            <div class="progress-bar" id="progress-bar">0%</div>
+        </div>
+
+        <!-- Start Screen -->
+        <div class="start-screen" id="start-screen">
+            <h2>Prêt(e) pour le quiz ? 🎯</h2>
+            <div class="start-info">
+                <ul>
+                    <li>10 questions sur la multiplication végétative</li>
+                    <li>QCM, Vrai/Faux et associations</li>
+                    <li>Feedback immédiat après chaque réponse</li>
+                    <li>Objectif : 80% pour être prêt(e) pour le contrôle !</li>
+                </ul>
+            </div>
+            <button class="btn btn-start show" onclick="startQuiz()">Commencer le Quiz ! 🚀</button>
+        </div>
+
+        <!-- Questions Container -->
+        <div id="questions-container"></div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" id="results-screen">
+            <div class="results-emoji" id="results-emoji"></div>
+            <div class="results-score" id="results-score"></div>
+            <div class="results-message" id="results-message"></div>
+            <div class="results-details" id="results-details">
+                <h3>📋 Détail des réponses</h3>
+                <div id="results-list"></div>
+            </div>
+            <button class="btn btn-restart show" onclick="restartQuiz()">Recommencer 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        // Questions data
+        const questions = [
+            {
+                type: 'tf',
+                question: 'La multiplication végétative utilise des graines pour créer de nouvelles plantes.',
+                answer: false,
+                explanation: 'Faux ! La multiplication végétative est une reproduction SANS graines. La nouvelle plante est identique à la plante mère.'
+            },
+            {
+                type: 'mcq',
+                question: 'Quel organe permet au fraisier de se reproduire ?',
+                options: ['Le bulbe', 'Le stolon', 'Le tubercule', 'Le rhizome'],
+                answer: 1,
+                explanation: 'Le fraisier se reproduit grâce au stolon, une tige horizontale qui rampe sur le sol.'
+            },
+            {
+                type: 'tf',
+                question: 'La nouvelle plante issue de la multiplication végétative est identique à la plante mère.',
+                answer: true,
+                explanation: 'Vrai ! C\'est comme un clone de la plante mère.'
+            },
+            {
+                type: 'mcq',
+                question: 'La pomme de terre se reproduit grâce à :',
+                options: ['Un stolon', 'Un bulbe', 'Un tubercule', 'Une plantule'],
+                answer: 2,
+                explanation: 'La pomme de terre utilise un tubercule, un organe souterrain qui contient des réserves.'
+            },
+            {
+                type: 'drag',
+                question: 'Associe chaque type de reproduction à son exemple :',
+                items: ['Fraisier 🍓', 'Pomme de terre 🥔', 'Iris 🌸', 'Tulipe 🌷'],
+                zones: ['Stolon', 'Tubercule', 'Rhizome', 'Bulbe'],
+                answers: {
+                    'Stolon': 'Fraisier 🍓',
+                    'Tubercule': 'Pomme de terre 🥔',
+                    'Rhizome': 'Iris 🌸',
+                    'Bulbe': 'Tulipe 🌷'
+                },
+                explanation: 'Stolon → Fraisier, Tubercule → Pomme de terre, Rhizome → Iris, Bulbe → Tulipe'
+            },
+            {
+                type: 'mcq',
+                question: 'Le stolon est une tige qui :',
+                options: ['Pousse sous la terre', 'Rampe sur le sol', 'Pousse vers le haut', 'Flotte sur l\'eau'],
+                answer: 1,
+                explanation: 'Le stolon est une tige horizontale qui rampe SUR le sol (pas sous terre !).'
+            },
+            {
+                type: 'tf',
+                question: 'Le rhizome est une tige souterraine.',
+                answer: true,
+                explanation: 'Vrai ! Le rhizome est bien une tige qui pousse SOUS la terre (contrairement au stolon qui est sur le sol).'
+            },
+            {
+                type: 'mcq',
+                question: 'La lentille d\'eau se reproduit grâce à :',
+                options: ['Un bulbe', 'Un stolon', 'Des plantules qui se détachent', 'Un rhizome'],
+                answer: 2,
+                explanation: 'La lentille d\'eau produit des petites plantules (bébés-plantes) qui se détachent et deviennent indépendantes.'
+            },
+            {
+                type: 'mcq',
+                question: 'Lequel de ces organes n\'est PAS sous terre ?',
+                options: ['Le tubercule', 'Le rhizome', 'Le stolon', 'Le bulbe'],
+                answer: 2,
+                explanation: 'Seul le STOLON est sur le sol (il rampe à la surface). Le tubercule, le rhizome et le bulbe sont tous sous terre.'
+            },
+            {
+                type: 'mcq',
+                question: 'Quels sont les 5 types de multiplication végétative à connaître ?',
+                options: [
+                    'Stolon, Tubercule, Rhizome, Plantule, Bulbe',
+                    'Graine, Fleur, Fruit, Racine, Feuille',
+                    'Stolon, Graine, Rhizome, Fleur, Bulbe',
+                    'Tubercule, Graine, Plantule, Fruit, Stolon'
+                ],
+                answer: 0,
+                explanation: 'Les 5 types sont : Stolon, Tubercule, Rhizome, Plantule qui se détache, et Bulbe (S-T-R-P-B).'
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = [];
+        let draggedItem = null;
+
+        // Confetti
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confettiPieces = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Confetti {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -20;
+                this.size = Math.random() * 10 + 5;
+                this.speedY = Math.random() * 6 + 5;
+                this.speedX = Math.random() * 4 - 2;
+                this.color = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#fd79a8', '#a29bfe'][Math.floor(Math.random() * 8)];
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 10 - 5;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function launchConfetti(duration = 2000) {
+            const interval = setInterval(() => {
+                for (let i = 0; i < 5; i++) {
+                    confettiPieces.push(new Confetti());
+                }
+            }, 50);
+
+            setTimeout(() => clearInterval(interval), duration);
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            confettiPieces = confettiPieces.filter(c => c.y < canvas.height);
+            confettiPieces.forEach(c => {
+                c.update();
+                c.draw();
+            });
+            requestAnimationFrame(animateConfetti);
+        }
+        animateConfetti();
+
+        // Quiz Functions
+        function startQuiz() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('progress-container').style.display = 'block';
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('questions-container');
+            const q = questions[currentQuestion];
+
+            let html = `
+                <div class="question-card active" id="question-${currentQuestion}">
+                    <span class="question-number">Question ${currentQuestion + 1}/${questions.length}</span>
+                    <h2 class="question-text">${q.question}</h2>
+            `;
+
+            if (q.type === 'mcq') {
+                html += '<div class="options">';
+                q.options.forEach((opt, i) => {
+                    html += `
+                        <div class="option" onclick="selectOption(${i})" data-index="${i}">
+                            <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                            <span>${opt}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else if (q.type === 'tf') {
+                html += `
+                    <div class="tf-container">
+                        <div class="tf-btn vrai" onclick="selectTF(true)">
+                            <div class="emoji">✅</div>
+                            <div class="label">VRAI</div>
+                        </div>
+                        <div class="tf-btn faux" onclick="selectTF(false)">
+                            <div class="emoji">❌</div>
+                            <div class="label">FAUX</div>
+                        </div>
+                    </div>
+                `;
+            } else if (q.type === 'drag') {
+                html += `
+                    <div class="drag-container">
+                        <div class="drag-items" id="drag-items-${currentQuestion}">
+                            ${q.items.map(item => `<div class="drag-item" draggable="true" data-value="${item}">${item}</div>`).join('')}
+                        </div>
+                        <div class="drop-zones">
+                            ${q.zones.map(zone => `
+                                <div class="drop-row">
+                                    <div class="drop-label">${zone}</div>
+                                    <div class="drop-zone" data-zone="${zone}"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="btn-container">
+                        <button class="btn btn-validate show" onclick="validateDrag()">Valider mes réponses ✓</button>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="feedback" id="feedback-${currentQuestion}">
+                    <div class="feedback-icon" id="feedback-icon-${currentQuestion}"></div>
+                    <div class="feedback-text" id="feedback-text-${currentQuestion}"></div>
+                </div>
+                <div class="btn-container">
+                    <button class="btn" id="next-btn-${currentQuestion}" onclick="nextQuestion()">
+                        ${currentQuestion === questions.length - 1 ? 'Voir mes résultats 📊' : 'Question suivante →'}
+                    </button>
+                </div>
+            </div>
+            `;
+
+            container.innerHTML = html;
+            updateProgress();
+
+            if (q.type === 'drag') {
+                setupDragAndDrop();
+            }
+        }
+
+        function setupDragAndDrop() {
+            const items = document.querySelectorAll('.drag-item');
+            const zones = document.querySelectorAll('.drop-zone');
+
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    item.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                });
+            });
+
+            zones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+
+                    // If zone already has item, return it to items container
+                    if (zone.children.length > 0) {
+                        const existingItem = zone.children[0];
+                        document.getElementById(`drag-items-${currentQuestion}`).appendChild(existingItem);
+                    }
+
+                    zone.appendChild(draggedItem);
+                    zone.classList.add('has-item');
+                });
+            });
+
+            // Touch support
+            items.forEach(item => {
+                item.addEventListener('touchstart', (e) => {
+                    draggedItem = item;
+                    item.classList.add('dragging');
+                });
+
+                item.addEventListener('touchend', (e) => {
+                    item.classList.remove('dragging');
+                    const touch = e.changedTouches[0];
+                    const dropZone = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (dropZone && dropZone.classList.contains('drop-zone')) {
+                        if (dropZone.children.length > 0) {
+                            document.getElementById(`drag-items-${currentQuestion}`).appendChild(dropZone.children[0]);
+                        }
+                        dropZone.appendChild(draggedItem);
+                        dropZone.classList.add('has-item');
+                    }
+                });
+            });
+        }
+
+        function selectOption(index) {
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const isCorrect = index === q.answer;
+
+            options.forEach((opt, i) => {
+                opt.onclick = null;
+                if (i === q.answer) {
+                    opt.classList.add('correct');
+                } else if (i === index && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            showFeedback(isCorrect, q.explanation);
+            recordAnswer(isCorrect);
+        }
+
+        function selectTF(value) {
+            const q = questions[currentQuestion];
+            const isCorrect = value === q.answer;
+            const buttons = document.querySelectorAll('.tf-btn');
+
+            buttons.forEach(btn => {
+                btn.onclick = null;
+                if (btn.classList.contains('vrai') && q.answer === true) {
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.background = '#e8f5e9';
+                } else if (btn.classList.contains('faux') && q.answer === false) {
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.background = '#e8f5e9';
+                } else if ((btn.classList.contains('vrai') && value === true && !isCorrect) ||
+                           (btn.classList.contains('faux') && value === false && !isCorrect)) {
+                    btn.style.borderColor = '#f44336';
+                    btn.style.background = '#ffebee';
+                }
+            });
+
+            showFeedback(isCorrect, q.explanation);
+            recordAnswer(isCorrect);
+        }
+
+        function validateDrag() {
+            const q = questions[currentQuestion];
+            const zones = document.querySelectorAll('.drop-zone');
+            let allCorrect = true;
+
+            zones.forEach(zone => {
+                const zoneName = zone.dataset.zone;
+                const item = zone.children[0];
+                const expectedValue = q.answers[zoneName];
+
+                if (item && item.dataset.value === expectedValue) {
+                    zone.style.borderColor = '#4caf50';
+                    zone.style.background = '#e8f5e9';
+                } else {
+                    zone.style.borderColor = '#f44336';
+                    zone.style.background = '#ffebee';
+                    allCorrect = false;
+                }
+            });
+
+            // Disable further dragging
+            document.querySelectorAll('.drag-item').forEach(item => {
+                item.draggable = false;
+                item.style.cursor = 'default';
+            });
+
+            document.querySelector('.btn-validate').style.display = 'none';
+            showFeedback(allCorrect, q.explanation);
+            recordAnswer(allCorrect);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const feedback = document.getElementById(`feedback-${currentQuestion}`);
+            const icon = document.getElementById(`feedback-icon-${currentQuestion}`);
+            const text = document.getElementById(`feedback-text-${currentQuestion}`);
+            const nextBtn = document.getElementById(`next-btn-${currentQuestion}`);
+
+            feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+            icon.textContent = isCorrect ? '🎉' : '💡';
+            text.textContent = isCorrect ? 'Bravo ! ' + explanation : 'Pas tout à fait... ' + explanation;
+            nextBtn.classList.add('show');
+
+            if (isCorrect) {
+                launchConfetti(1000);
+            }
+        }
+
+        function recordAnswer(isCorrect) {
+            if (isCorrect) score++;
+            answers.push({
+                question: questions[currentQuestion].question,
+                correct: isCorrect
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion) / questions.length) * 100;
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = progress + '%';
+            bar.textContent = Math.round(progress) + '%';
+        }
+
+        function showResults() {
+            document.getElementById('questions-container').innerHTML = '';
+            document.getElementById('progress-container').style.display = 'none';
+
+            const results = document.getElementById('results-screen');
+            const percentage = Math.round((score / questions.length) * 100);
+
+            let emoji, message;
+            if (percentage >= 90) {
+                emoji = '🏆🌟';
+                message = 'Extraordinaire ! Tu es plus que prêt(e) pour le contrôle ! Tu maîtrises parfaitement la multiplication végétative !';
+                launchConfetti(2000);
+            } else if (percentage >= 80) {
+                emoji = '🎉🌿';
+                message = 'Super ! Tu es prêt(e) pour le contrôle ! Tu connais bien les 5 types de reproduction végétative !';
+                launchConfetti(1500);
+            } else if (percentage >= 60) {
+                emoji = '💪🌱';
+                message = 'Bien ! Tu as compris les bases. Relis la fiche une fois et refais le quiz pour être sûr(e) à 100% !';
+            } else {
+                emoji = '📚🌱';
+                message = 'Continue tes révisions ! Relis bien la fiche et les exemples, puis refais le quiz. Tu vas y arriver !';
+            }
+
+            document.getElementById('results-emoji').textContent = emoji;
+            document.getElementById('results-score').textContent = `${score}/${questions.length} (${percentage}%)`;
+            document.getElementById('results-message').textContent = message;
+
+            let detailsHtml = '';
+            answers.forEach((a, i) => {
+                detailsHtml += `
+                    <div class="result-item ${a.correct ? 'correct' : 'incorrect'}">
+                        <span>Q${i + 1}: ${a.question.substring(0, 40)}...</span>
+                        <span>${a.correct ? '✅' : '❌'}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('results-list').innerHTML = detailsHtml;
+
+            results.classList.add('active');
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answers = [];
+            document.getElementById('results-screen').classList.remove('active');
+            document.getElementById('progress-container').style.display = 'block';
+            renderQuestion();
+        }
+    </script>
+</body>
+</html>
