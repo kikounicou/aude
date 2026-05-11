@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards - Histoire Antiquité</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .toolbar { text-align: center; margin-bottom: 20px; }
+
+  .flashcard-zone {
+    perspective: 1500px;
+    margin: 30px auto;
+    max-width: 600px;
+  }
+
+  .flashcard {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    cursor: pointer;
+  }
+
+  .flashcard.flipped { transform: rotateY(180deg); }
+
+  .face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 3px solid;
+  }
+
+  .face-recto {
+    background: linear-gradient(135deg, #fff 0%, var(--papyrus) 100%);
+    border-color: var(--nil);
+  }
+
+  .face-verso {
+    background: linear-gradient(135deg, var(--papyrus) 0%, #fff 100%);
+    border-color: var(--oasis);
+    transform: rotateY(180deg);
+  }
+
+  .face-label {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .face-recto .face-label { color: var(--nil); }
+  .face-verso .face-label { color: var(--oasis); }
+
+  .face-content {
+    text-align: center;
+    font-size: 1.3em;
+    line-height: 1.5;
+  }
+
+  .face-recto .face-content { color: var(--encre); font-weight: bold; }
+  .face-verso .face-content { color: var(--encre); font-size: 1.1em; font-weight: normal; }
+
+  .hint {
+    position: absolute;
+    bottom: 15px;
+    font-size: 0.85em;
+    color: var(--encre);
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .compteur {
+    background: white;
+    border: 2px solid var(--papyrus-fonce);
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    color: var(--encre);
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: white;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 2px solid;
+    font-weight: bold;
+  }
+  .stat-su { border-color: var(--oasis); color: var(--oasis); }
+  .stat-rev { border-color: var(--terre); color: var(--terre); }
+
+  .progress-bar {
+    height: 10px;
+    background: var(--papyrus-fonce);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 15px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--oasis), var(--nil-clair));
+    transition: width 0.4s;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="toolbar no-print">
+    <a href="index.html" class="btn btn-bleu">🏠 Retour au menu</a>
+  </div>
+
+  <h1>🎴 Flashcards</h1>
+  <p class="subtitle">Clique sur la carte pour voir la réponse !</p>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width: 0%"></div>
+  </div>
+
+  <div class="compteur" style="display: block; text-align: center; margin: 0 auto 20px; max-width: 200px;">
+    Carte <span id="numero">1</span> / <span id="total">0</span>
+  </div>
+
+  <div class="flashcard-zone">
+    <div class="flashcard" id="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="face face-recto">
+        <div class="face-label">❓ Question</div>
+        <div class="face-content" id="question">Chargement...</div>
+        <div class="hint">👆 Clique pour voir la réponse</div>
+      </div>
+      <div class="face face-verso">
+        <div class="face-label">✅ Réponse</div>
+        <div class="face-content" id="reponse"></div>
+        <div class="hint">👆 Re-clique pour cacher</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-bleu" onclick="precedente()">← Précédente</button>
+    <button class="btn btn-vert" onclick="suivante('su')">😎 Je savais !</button>
+    <button class="btn" onclick="suivante('rev')">📖 À revoir</button>
+    <button class="btn btn-bleu" onclick="suivanteSimple()">Suivante →</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat stat-su">😎 Sues : <span id="nb-su">0</span></div>
+    <div class="stat stat-rev">📖 À revoir : <span id="nb-rev">0</span></div>
+  </div>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button class="btn" onclick="melanger()">🔀 Mélanger</button>
+    <button class="btn" onclick="recommencer()">🔄 Recommencer</button>
+  </div>
+
+  <div class="encadre" style="margin-top: 25px;">
+    💡 <strong>Comment utiliser les flashcards ?</strong>
+    <ol style="margin-left: 20px; margin-top: 8px;">
+      <li>Lis la <strong>question</strong></li>
+      <li>Essaie de répondre dans ta tête (ou à voix haute !)</li>
+      <li>Clique sur la carte pour voir la <strong>vraie réponse</strong></li>
+      <li>Clique sur "<strong>😎 Je savais</strong>" ou "<strong>📖 À revoir</strong>"</li>
+      <li>Recommence avec les cartes "à revoir" jusqu'à tout savoir 💪</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+const cartes = [
+  { q: "Qu'est-ce que l'écriture cunéiforme ?", r: "Une première forme d'écriture en forme de coin, de pointe, de clou, apparue en Mésopotamie vers -3300 ACN. Inventée par les Sumériens." },
+  { q: "Quand et où est apparue l'écriture cunéiforme ?", r: "Vers -3300 ACN, en Mésopotamie." },
+  { q: "Quand et où sont apparus les hiéroglyphes ?", r: "Vers -3000 ACN, en Égypte." },
+  { q: "Quand et où est apparu l'alphabet phénicien ?", r: "Vers -1200 ACN, en Phénicie." },
+  { q: "Quand est apparu l'alphabet grec ?", r: "Vers -900 ACN, en Grèce." },
+  { q: "Quand est apparu l'alphabet latin ?", r: "Vers -600 ACN, à Rome (Latium)." },
+  { q: "Que veut dire 'rupestre' ?", r: "Sur la roche (du latin 'rupes' = rocher). Une peinture rupestre = peinture sur la paroi d'une grotte." },
+  { q: "Que signifie ACN ?", r: "Ante Christum Natum = avant Jésus-Christ (avant l'an 0)." },
+  { q: "Qu'est-ce qu'un hiéroglyphe ?", r: "Un signe basé sur un système d'écriture idéographique dans l'Égypte antique." },
+  { q: "Qu'est-ce qu'un pictogramme ?", r: "Un signe d'approche d'une écriture où les concepts sont représentés par des scènes figurées ou des symboles." },
+  { q: "Qu'est-ce qu'un alphabet ?", r: "Une liste de toutes les lettres énumérées selon un ordre conventionnel, qui permettent de retranscrire tous les sons d'une langue." },
+  { q: "Qu'est-ce qu'un scribe ?", r: "Un fonctionnaire (une minorité) qui savait lire et écrire. Il s'occupait des impôts et avait le droit de sanctionner si on ne payait pas." },
+  { q: "Qu'est-ce que la Pierre de Rosette ?", r: "Une stèle qui présente le même texte en 3 écritures différentes (hiéroglyphes, hiératique/démotique, grec ancien)." },
+  { q: "Qui a déchiffré les hiéroglyphes et quand ?", r: "Jean-François CHAMPOLLION en 1822, grâce à la Pierre de Rosette." },
+  { q: "Quand et par qui la Pierre de Rosette a-t-elle été DÉCOUVERTE ?", r: "En 1799 en Égypte, par les soldats de Napoléon." },
+  { q: "Pourquoi l'écriture est-elle apparue en Mésopotamie ?", r: "Pour gérer les comptes : dénombrer les troupeaux, les récoltes, les biens et recenser la population." },
+  { q: "Pourquoi l'écriture est-elle apparue en Égypte ?", r: "Pour gérer les comptes ET surtout pour surveiller minutieusement les récoltes, le bétail et la production des artisans afin de fixer l'impôt." },
+  { q: "Qu'est-ce que le croissant fertile ?", r: "Une zone fertile en forme de croissant qui va de l'Égypte (Nil) à la Mésopotamie (Tigre et Euphrate). C'est là que sont nées les premières civilisations." },
+  { q: "Quels sont les 3 fleuves importants du Proche-Orient ancien ?", r: "Le Nil (Égypte), le Tigre et l'Euphrate (Mésopotamie)." },
+  { q: "Cite 2 grandes villes de l'ancien empire égyptien.", r: "Gizeh et Thèbes." },
+  { q: "Cite 8 pays actuels qui se trouvent dans la zone de l'Orient ancien.", r: "Irak, Syrie, Égypte, Palestine, Liban, Iran, Jordanie, Israël." },
+  { q: "Sur quel support écrivait-on en Mésopotamie ?", r: "Sur des tablettes d'argile." },
+  { q: "Sur quel support écrivait-on en Égypte et en Phénicie ?", r: "Sur du papyrus." },
+  { q: "Quel est le grand avantage de l'alphabet ?", r: "Avec un nombre limité de signes (lettres), on peut TOUT écrire !" },
+  { q: "Qu'est-ce qu'un calculi ?", r: "Une petite tablette/jeton d'argile utilisé pour la comptabilité en Mésopotamie (le mot a donné 'calcul' en français)." },
+  { q: "Quelle écriture marque le passage de la Préhistoire à l'Histoire ?", r: "L'invention de l'écriture (cunéiforme et hiéroglyphes), vers -3300/-3000 ACN. Avant : Préhistoire. Après : Histoire (Antiquité)." },
+  { q: "Quel ordre suivent les 3 grands alphabets ?", r: "Phénicien (-1200) → Grec (-900) → Latin (-600). Astuce : 'P G L'." },
+  { q: "À l'époque de la Préhistoire, comment l'homme communiquait-il ?", r: "Grâce aux peintures rupestres (comme à Lascaux) — il laissait des traces mais on ne lit pas, on devine." }
+];
+
+let ordre = [];
+let index = 0;
+let stats = { su: 0, rev: 0, vus: new Set() };
+
+function init() {
+  ordre = cartes.map((_, i) => i);
+  index = 0;
+  stats = { su: 0, rev: 0, vus: new Set() };
+  document.getElementById('total').textContent = cartes.length;
+  afficher();
+  majStats();
+}
+
+function afficher() {
+  const c = cartes[ordre[index]];
+  document.getElementById('question').textContent = c.q;
+  document.getElementById('reponse').textContent = c.r;
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('numero').textContent = index + 1;
+  const pct = ((index + 1) / cartes.length) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+function suivante(reponse) {
+  const cle = ordre[index];
+  if (!stats.vus.has(cle)) {
+    stats.vus.add(cle);
+    if (reponse === 'su') stats.su++;
+    else stats.rev++;
+  }
+  majStats();
+  suivanteSimple();
+}
+
+function suivanteSimple() {
+  index = (index + 1) % cartes.length;
+  afficher();
+}
+
+function precedente() {
+  index = (index - 1 + cartes.length) % cartes.length;
+  afficher();
+}
+
+function melanger() {
+  ordre = cartes.map((_, i) => i).sort(() => Math.random() - 0.5);
+  index = 0;
+  afficher();
+}
+
+function recommencer() {
+  init();
+}
+
+function majStats() {
+  document.getElementById('nb-su').textContent = stats.su;
+  document.getElementById('nb-rev').textContent = stats.rev;
+}
+
+init();
+</script>
+</body>
+</html>

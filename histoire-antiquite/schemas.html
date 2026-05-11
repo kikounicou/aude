@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schémas visuels - Histoire Antiquité</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .toolbar { text-align: center; margin-bottom: 20px; }
+
+  /* Ligne du temps SVG */
+  .timeline-container {
+    background: var(--papyrus);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  svg { width: 100%; height: auto; display: block; }
+
+  /* Carte mentale */
+  .carte-mentale {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+  }
+  .branche {
+    background: white;
+    border: 2px solid;
+    border-radius: 12px;
+    padding: 15px;
+  }
+  .b-cunei { border-color: var(--terre); }
+  .b-cunei h3 { color: var(--terre); }
+  .b-hiero { border-color: var(--or); }
+  .b-hiero h3 { color: #b8860b; }
+  .b-alpha { border-color: var(--oasis); }
+  .b-alpha h3 { color: var(--oasis); }
+
+  .centre-carte {
+    background: var(--nil);
+    color: white;
+    padding: 20px;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    margin: 20px auto;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(44, 95, 141, 0.4);
+  }
+
+  .branche ul { margin-left: 18px; }
+  .branche li { font-size: 0.95em; margin-bottom: 4px; }
+
+  @media print {
+    .carte-mentale { grid-template-columns: 1fr 1fr 1fr; }
+    .branche { page-break-inside: avoid; }
+  }
+
+  @media (max-width: 700px) {
+    .carte-mentale { grid-template-columns: 1fr; }
+  }
+
+  .legende-couleurs {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 15px 0;
+    font-size: 0.9em;
+  }
+  .legende-couleurs span {
+    padding: 5px 12px;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="toolbar no-print">
+    <a href="index.html" class="btn btn-bleu">🏠 Retour au menu</a>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+
+  <h1>🗺️ Schémas visuels</h1>
+  <p class="subtitle">Visualise pour mieux retenir !</p>
+
+  <h2>1. La ligne du temps des écritures ⏳</h2>
+  <div class="timeline-container">
+    <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ligne principale -->
+      <line x1="40" y1="180" x2="860" y2="180" stroke="#3d2817" stroke-width="3"/>
+
+      <!-- Flèches aux extrémités -->
+      <polygon points="40,180 55,172 55,188" fill="#3d2817"/>
+      <polygon points="860,180 845,172 845,188" fill="#3d2817"/>
+
+      <!-- Zones préhistoire / antiquité -->
+      <rect x="40" y="200" width="180" height="20" fill="#c9b896" opacity="0.5"/>
+      <text x="130" y="215" text-anchor="middle" font-size="13" font-weight="bold" fill="#3d2817">PRÉHISTOIRE</text>
+
+      <rect x="220" y="200" width="640" height="20" fill="#d4a017" opacity="0.5"/>
+      <text x="540" y="215" text-anchor="middle" font-size="13" font-weight="bold" fill="#3d2817">ANTIQUITÉ</text>
+
+      <!-- Points de la timeline -->
+      <!-- -10000 -->
+      <circle cx="80" cy="180" r="7" fill="#7f8c8d"/>
+      <line x1="80" y1="180" x2="80" y2="120" stroke="#7f8c8d" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="80" y="115" text-anchor="middle" font-size="12" fill="#3d2817" font-weight="bold">-10 000</text>
+      <text x="80" y="100" text-anchor="middle" font-size="11" fill="#7f8c8d">Néolithique</text>
+      <text x="80" y="88" text-anchor="middle" font-size="10" fill="#7f8c8d">(pas d'écriture)</text>
+
+      <!-- -3300 cunéiforme -->
+      <circle cx="270" cy="180" r="9" fill="#b8530c"/>
+      <line x1="270" y1="180" x2="270" y2="110" stroke="#b8530c" stroke-width="2"/>
+      <text x="270" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#b8530c">-3300</text>
+      <text x="270" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">Cunéiforme</text>
+      <text x="270" y="76" text-anchor="middle" font-size="10" fill="#3d2817">Mésopotamie</text>
+
+      <!-- -3000 hiéroglyphes -->
+      <circle cx="350" cy="180" r="9" fill="#d4a017"/>
+      <line x1="350" y1="180" x2="350" y2="250" stroke="#d4a017" stroke-width="2"/>
+      <text x="350" y="265" text-anchor="middle" font-size="12" font-weight="bold" fill="#b8860b">-3000</text>
+      <text x="350" y="280" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">Hiéroglyphes</text>
+      <text x="350" y="294" text-anchor="middle" font-size="10" fill="#3d2817">Égypte</text>
+
+      <!-- -1200 phénicien -->
+      <circle cx="550" cy="180" r="9" fill="#5a8054"/>
+      <line x1="550" y1="180" x2="550" y2="110" stroke="#5a8054" stroke-width="2"/>
+      <text x="550" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#5a8054">-1200</text>
+      <text x="550" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">Alphabet phénicien</text>
+      <text x="550" y="76" text-anchor="middle" font-size="10" fill="#3d2817">Phénicie</text>
+
+      <!-- -900 grec -->
+      <circle cx="670" cy="180" r="9" fill="#2c5f8d"/>
+      <line x1="670" y1="180" x2="670" y2="250" stroke="#2c5f8d" stroke-width="2"/>
+      <text x="670" y="265" text-anchor="middle" font-size="12" font-weight="bold" fill="#2c5f8d">-900</text>
+      <text x="670" y="280" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">Alphabet grec</text>
+      <text x="670" y="294" text-anchor="middle" font-size="10" fill="#3d2817">Grèce</text>
+
+      <!-- -600 latin -->
+      <circle cx="790" cy="180" r="9" fill="#6b4a8e"/>
+      <line x1="790" y1="180" x2="790" y2="110" stroke="#6b4a8e" stroke-width="2"/>
+      <text x="790" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#6b4a8e">-600</text>
+      <text x="790" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">Alphabet latin</text>
+      <text x="790" y="76" text-anchor="middle" font-size="10" fill="#3d2817">Rome</text>
+
+      <!-- Année 0 -->
+      <circle cx="845" cy="180" r="6" fill="#3d2817"/>
+      <text x="845" y="245" text-anchor="middle" font-size="11" font-weight="bold" fill="#3d2817">0</text>
+      <text x="845" y="258" text-anchor="middle" font-size="9" fill="#3d2817">Jésus-Christ</text>
+    </svg>
+  </div>
+
+  <h2>2. Carte mentale des 3 écritures principales 🧠</h2>
+
+  <div class="centre-carte">📜 LES PREMIÈRES ÉCRITURES</div>
+
+  <div class="carte-mentale">
+
+    <div class="branche b-cunei">
+      <h3>🔺 CUNÉIFORME</h3>
+      <ul>
+        <li>📅 ~ -3300 ACN</li>
+        <li>📍 Mésopotamie</li>
+        <li>✏️ Coins, pointes, clous</li>
+        <li>🔊 Basée sur des sons</li>
+        <li>📜 Tablette d'argile</li>
+        <li>👥 Sumériens</li>
+        <li>✅ Trace fixe</li>
+        <li>❌ Trop de signes</li>
+      </ul>
+    </div>
+
+    <div class="branche b-hiero">
+      <h3>𓂀 HIÉROGLYPHES</h3>
+      <ul>
+        <li>📅 ~ -3000 ACN</li>
+        <li>📍 Égypte</li>
+        <li>✏️ Idéogrammes (dessins-idées)</li>
+        <li>💡 Basée sur des idées</li>
+        <li>📜 Papyrus</li>
+        <li>🔍 Déchiffrés par Champollion</li>
+        <li>✅ Trace fixe</li>
+        <li>❌ Trop de signes, plusieurs sens</li>
+      </ul>
+    </div>
+
+    <div class="branche b-alpha">
+      <h3>🔠 ALPHABET PHÉNICIEN</h3>
+      <ul>
+        <li>📅 ~ -1200 ACN</li>
+        <li>📍 Phénicie</li>
+        <li>✏️ Lettres</li>
+        <li>🎯 1 signe = 1 son</li>
+        <li>📜 Papyrus</li>
+        <li>🌟 Devient le grec puis le latin</li>
+        <li>✅ Peu de signes</li>
+        <li>✅ Permet de TOUT écrire !</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <h2>3. Schéma : De la préhistoire à l'histoire 🪨→📜</h2>
+  <div class="encadre">
+    <div style="text-align: center; font-size: 1.05em; line-height: 2.2;">
+      <div>🦴 <strong>PRÉHISTOIRE</strong> 🦴</div>
+      <div>(avant l'écriture)</div>
+      <div>🎨 Peintures rupestres (Lascaux)</div>
+      <div>→ On VOIT mais on DEVINE</div>
+      <div style="font-size: 1.5em; color: var(--terre); margin: 10px 0;">⬇️</div>
+      <div style="font-size: 1.2em;"><strong>INVENTION DE L'ÉCRITURE</strong></div>
+      <div>(~ -3300 ACN, Mésopotamie)</div>
+      <div style="font-size: 1.5em; color: var(--terre); margin: 10px 0;">⬇️</div>
+      <div>📜 <strong>HISTOIRE</strong> 📜</div>
+      <div>(après l'écriture)</div>
+      <div>📝 Textes écrits</div>
+      <div>→ On LIT et on COMPREND clairement</div>
+    </div>
+  </div>
+
+  <h2>4. Le croissant fertile 🌙</h2>
+  <div class="encadre">
+    <pre style="font-family: monospace; font-size: 0.95em; line-height: 1.5; text-align: center;">
+              🌙 CROISSANT FERTILE 🌙
+                ___________________
+               /                   \____
+              / 🇮🇶 MÉSOPOTAMIE        \
+             |    Tigre + Euphrate    |
+              \___                   /
+                  \___        ______/
+                      \      /
+                  🇪🇬 ÉGYPTE
+                      |
+                    🏞️ Nil
+                      |
+                      ▼
+                  (Mer Rouge)
+    </pre>
+    <p style="text-align: center;"><em>Zone fertile (verte) en forme de croissant de lune</em></p>
+    <p style="text-align: center;"><strong>📍 Là où tout a commencé : agriculture → villes → écriture !</strong></p>
+  </div>
+
+  <h2>5. Frise : Évolution de l'écriture 📈</h2>
+  <div class="encadre" style="text-align: center;">
+    <div style="font-size: 1.05em; line-height: 2;">
+      🖼️ <strong>Pictogrammes</strong> (dessins)<br>
+      ⬇️ ça se simplifie<br>
+      🔺 <strong>Cunéiforme</strong> (coins/clous)<br>
+      ⬇️ autre civilisation<br>
+      𓂀 <strong>Hiéroglyphes</strong> (dessins-idées)<br>
+      ⬇️ révolution !<br>
+      🔠 <strong>Alphabet</strong> (lettres = sons)<br>
+      ⬇️ se transmet<br>
+      ABC → Grec → Latin → <strong>NOTRE alphabet aujourd'hui</strong> 🎉
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

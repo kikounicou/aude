@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz - Histoire Antiquité</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .toolbar { text-align: center; margin-bottom: 20px; }
+
+  .quiz-zone {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin: 20px 0;
+    border: 2px solid var(--papyrus-fonce);
+  }
+
+  .compteur-quiz {
+    text-align: center;
+    font-size: 0.95em;
+    color: var(--encre);
+    opacity: 0.7;
+    margin-bottom: 15px;
+  }
+
+  .progress-bar {
+    height: 12px;
+    background: var(--papyrus-fonce);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--oasis), var(--nil-clair));
+    transition: width 0.4s;
+  }
+
+  .question-text {
+    font-size: 1.25em;
+    font-weight: bold;
+    color: var(--terre-fonce);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .reponses {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .reponse-btn {
+    background: white;
+    border: 2px solid var(--papyrus-fonce);
+    padding: 14px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1em;
+    text-align: left;
+    transition: all 0.2s;
+    color: var(--encre);
+  }
+
+  .reponse-btn:hover:not(:disabled) {
+    border-color: var(--nil);
+    background: var(--papyrus);
+    transform: translateX(4px);
+  }
+
+  .reponse-btn.correct {
+    background: #d4edda;
+    border-color: var(--oasis);
+    color: var(--oasis);
+    font-weight: bold;
+  }
+
+  .reponse-btn.incorrect {
+    background: #f8d7da;
+    border-color: #c0392b;
+    color: #c0392b;
+  }
+
+  .reponse-btn:disabled { cursor: default; }
+
+  .explication {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--papyrus);
+    border-left: 5px solid var(--or);
+    border-radius: 0 8px 8px 0;
+    display: none;
+  }
+  .explication.visible { display: block; }
+  .explication strong { color: var(--terre); }
+
+  .actions-quiz {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  /* Résultats finaux */
+  .resultat-final {
+    text-align: center;
+    padding: 30px;
+  }
+  .score-grand {
+    font-size: 4em;
+    font-weight: bold;
+    color: var(--terre);
+    margin: 20px 0;
+  }
+  .message-final {
+    font-size: 1.3em;
+    margin: 20px 0;
+    line-height: 1.5;
+  }
+  .medaille { font-size: 5em; }
+
+  .recap-erreurs {
+    background: var(--papyrus);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    text-align: left;
+  }
+  .recap-erreurs h3 { color: var(--terre); }
+  .recap-erreur-item {
+    background: white;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border-left: 4px solid #c0392b;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="toolbar no-print">
+    <a href="index.html" class="btn btn-bleu">🏠 Retour au menu</a>
+  </div>
+
+  <h1>🎯 Quiz - Es-tu prête pour le bilan ?</h1>
+  <p class="subtitle">15 questions pour tester tes connaissances !</p>
+
+  <div id="quiz-container">
+
+    <div class="compteur-quiz">
+      Question <span id="numero">1</span> sur <span id="total">15</span>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress" style="width: 0%"></div>
+    </div>
+
+    <div class="quiz-zone">
+      <div class="question-text" id="question"></div>
+      <div class="reponses" id="reponses"></div>
+      <div class="explication" id="explication"></div>
+
+      <div class="actions-quiz">
+        <button class="btn btn-bleu" id="btn-suivant" onclick="questionSuivante()" style="display:none;">
+          Question suivante →
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align: center; color: var(--encre); opacity: 0.7;">
+      Score actuel : <strong><span id="score">0</span> / <span id="nb-repondues">0</span></strong>
+    </div>
+
+  </div>
+
+  <div id="resultat-container" style="display: none;"></div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Quand est apparue l'écriture cunéiforme ?",
+    options: ["Vers -10 000 ACN", "Vers -3300 ACN", "Vers -1200 ACN", "Vers -600 ACN"],
+    bonne: 1,
+    expl: "L'écriture cunéiforme est apparue vers -3300 ACN en Mésopotamie. C'est la PREMIÈRE forme d'écriture !"
+  },
+  {
+    q: "Dans quelle région a été inventée l'écriture cunéiforme ?",
+    options: ["En Égypte", "En Phénicie", "En Mésopotamie", "En Grèce"],
+    bonne: 2,
+    expl: "L'écriture cunéiforme a été inventée par les Sumériens en Mésopotamie."
+  },
+  {
+    q: "Quelle est la forme de l'écriture cunéiforme ?",
+    options: ["Des dessins symboliques", "Des coins, pointes, clous", "Des lettres", "Des nombres"],
+    bonne: 1,
+    expl: "Cunéiforme = écriture en forme de coin, de pointe, de clou. Le mot vient du latin 'cuneus' qui veut dire... coin !"
+  },
+  {
+    q: "Que veut dire le mot 'rupestre' ?",
+    options: ["En couleur", "Sur la roche", "Très ancien", "Préhistorique"],
+    bonne: 1,
+    expl: "Rupestre vient du latin 'rupes' qui signifie 'rocher'. Donc une peinture rupestre = sur la roche (paroi de grotte)."
+  },
+  {
+    q: "Que signifie 'ACN' ?",
+    options: ["Avant Christ Né", "Ante Christum Natum (= avant Jésus-Christ)", "Après Christ Né", "Année du Christ"],
+    bonne: 1,
+    expl: "ACN = Ante Christum Natum, c'est du latin pour 'avant Jésus-Christ'. Ça nous indique qu'on parle d'avant l'an 0."
+  },
+  {
+    q: "Qui a déchiffré les hiéroglyphes ?",
+    options: ["Napoléon", "Champollion", "Les Sumériens", "Jules César"],
+    bonne: 1,
+    expl: "Jean-François CHAMPOLLION a déchiffré les hiéroglyphes en 1822 grâce à la Pierre de Rosette. ATTENTION : il ne l'a pas découverte, il l'a déchiffrée !"
+  },
+  {
+    q: "Quand la Pierre de Rosette a-t-elle été découverte ?",
+    options: ["En 1799 par les soldats de Napoléon", "En 1822 par Champollion", "Vers -3300 par les Sumériens", "Vers -600 à Rome"],
+    bonne: 0,
+    expl: "Découverte en 1799 par les soldats de Napoléon en Égypte. Champollion l'a DÉCHIFFRÉE en 1822. Ne confonds pas !"
+  },
+  {
+    q: "Quel est le plus grand avantage de l'alphabet ?",
+    options: ["Il est très beau à dessiner", "Avec peu de signes, on peut tout écrire", "Il est utilisé seulement en Égypte", "Il était écrit sur des tablettes d'argile"],
+    bonne: 1,
+    expl: "Avec un nombre limité de signes (~22 lettres pour le phénicien), on peut écrire TOUS les mots d'une langue. C'est une vraie révolution !"
+  },
+  {
+    q: "Quel ordre chronologique est CORRECT ?",
+    options: [
+      "Hiéroglyphes → Cunéiforme → Alphabet phénicien",
+      "Alphabet phénicien → Hiéroglyphes → Cunéiforme",
+      "Cunéiforme → Hiéroglyphes → Alphabet phénicien",
+      "Cunéiforme → Alphabet phénicien → Hiéroglyphes"
+    ],
+    bonne: 2,
+    expl: "Cunéiforme (-3300) → Hiéroglyphes (-3000) → Alphabet phénicien (-1200). Du plus ancien au plus récent !"
+  },
+  {
+    q: "Pour quelle raison principale l'écriture est-elle apparue ?",
+    options: [
+      "Pour écrire de la poésie",
+      "Pour raconter l'histoire des rois",
+      "Pour gérer les comptes (troupeaux, récoltes, impôts)",
+      "Pour décorer les murs des temples"
+    ],
+    bonne: 2,
+    expl: "L'écriture est née pour des raisons PRATIQUES : compter les récoltes, les troupeaux, recenser la population, gérer les impôts. Pas pour la poésie !"
+  },
+  {
+    q: "Qui étaient les scribes ?",
+    options: [
+      "Des soldats du pharaon",
+      "Des fonctionnaires qui savaient lire et écrire, et géraient les impôts",
+      "Des paysans très pauvres",
+      "Des prêtres seulement"
+    ],
+    bonne: 1,
+    expl: "Les scribes étaient une minorité de fonctionnaires qui savaient lire et écrire. Ils s'occupaient des impôts et pouvaient sanctionner."
+  },
+  {
+    q: "Qu'est-ce que le croissant fertile ?",
+    options: [
+      "Une pâtisserie de l'Antiquité",
+      "Une zone fertile en forme de croissant, de l'Égypte à la Mésopotamie",
+      "Une région en Grèce",
+      "Un type d'écriture"
+    ],
+    bonne: 1,
+    expl: "Le croissant fertile est une zone fertile en forme de croissant de lune, qui va de l'Égypte (vallée du Nil) à la Mésopotamie (vallée du Tigre et de l'Euphrate)."
+  },
+  {
+    q: "Sur quel support écrivait-on en Mésopotamie ?",
+    options: ["Le papyrus", "La tablette d'argile", "Le parchemin", "Le papier"],
+    bonne: 1,
+    expl: "En Mésopotamie, on écrivait avec un roseau (calame) sur des tablettes d'argile humide qu'on faisait ensuite sécher."
+  },
+  {
+    q: "Quels sont les 3 fleuves importants à connaître ?",
+    options: [
+      "La Seine, la Loire, le Rhône",
+      "Le Nil, l'Amazone, le Mississippi",
+      "Le Nil, le Tigre, l'Euphrate",
+      "Le Nil, le Danube, le Tibre"
+    ],
+    bonne: 2,
+    expl: "Le Nil (Égypte), le Tigre et l'Euphrate (Mésopotamie). Ces 3 fleuves ont permis l'agriculture et donc l'apparition des premières civilisations !"
+  },
+  {
+    q: "Quelle invention marque le passage de la Préhistoire à l'Histoire ?",
+    options: [
+      "Le feu",
+      "L'agriculture",
+      "L'écriture",
+      "La roue"
+    ],
+    bonne: 2,
+    expl: "C'est l'invention de l'ÉCRITURE (~-3300 ACN) qui marque la fin de la Préhistoire et le début de l'Histoire. Avant : on devine grâce aux dessins. Après : on lit !"
+  }
+];
+
+let index = 0;
+let score = 0;
+let nbRepondues = 0;
+let erreurs = [];
+
+function afficher() {
+  const q = questions[index];
+  document.getElementById('numero').textContent = index + 1;
+  document.getElementById('total').textContent = questions.length;
+  document.getElementById('question').textContent = q.q;
+
+  const pct = (index / questions.length) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+
+  const div = document.getElementById('reponses');
+  div.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'reponse-btn';
+    btn.textContent = opt;
+    btn.onclick = () => repondre(i);
+    div.appendChild(btn);
+  });
+
+  document.getElementById('explication').classList.remove('visible');
+  document.getElementById('btn-suivant').style.display = 'none';
+}
+
+function repondre(choix) {
+  const q = questions[index];
+  const btns = document.querySelectorAll('.reponse-btn');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.bonne) b.classList.add('correct');
+    if (i === choix && choix !== q.bonne) b.classList.add('incorrect');
+  });
+
+  nbRepondues++;
+  if (choix === q.bonne) {
+    score++;
+  } else {
+    erreurs.push({ q: q.q, bonne: q.options[q.bonne], expl: q.expl });
+  }
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('nb-repondues').textContent = nbRepondues;
+
+  const expl = document.getElementById('explication');
+  expl.innerHTML = '<strong>' + (choix === q.bonne ? '✅ Bravo !' : '❌ Ce n\'est pas ça...') + '</strong><br>' + q.expl;
+  expl.classList.add('visible');
+
+  document.getElementById('btn-suivant').style.display = 'inline-block';
+  if (index === questions.length - 1) {
+    document.getElementById('btn-suivant').textContent = '🏁 Voir mon score final';
+  }
+}
+
+function questionSuivante() {
+  index++;
+  if (index >= questions.length) {
+    afficherResultatFinal();
+  } else {
+    afficher();
+  }
+}
+
+function afficherResultatFinal() {
+  document.getElementById('quiz-container').style.display = 'none';
+
+  const pct = Math.round((score / questions.length) * 100);
+  let medaille, message;
+
+  if (pct >= 90) {
+    medaille = '🏆';
+    message = 'EXCELLENT ! Tu connais ton cours sur le bout des doigts !';
+  } else if (pct >= 75) {
+    medaille = '🥇';
+    message = 'Très bien ! Tu es prête pour le bilan, encore quelques révisions et c\'est parfait !';
+  } else if (pct >= 60) {
+    medaille = '🥈';
+    message = 'Pas mal ! Continue à réviser, surtout les points où tu as fait des erreurs.';
+  } else if (pct >= 40) {
+    medaille = '🥉';
+    message = 'Tu as les bases, mais il faut encore réviser ! Reprends la fiche-résumé.';
+  } else {
+    medaille = '📚';
+    message = 'Il faut réviser encore ! Mais ne t\'inquiète pas, tu vas y arriver. Lis la fiche-résumé et réessaie !';
+  }
+
+  let html = `
+    <div class="resultat-final">
+      <div class="medaille">${medaille}</div>
+      <div class="score-grand">${score} / ${questions.length}</div>
+      <div style="font-size: 1.4em; color: var(--terre);">${pct}%</div>
+      <div class="message-final">${message}</div>
+      <button class="btn btn-bleu" onclick="recommencer()">🔄 Refaire le quiz</button>
+      <a href="index.html" class="btn">🏠 Retour au menu</a>
+    </div>
+  `;
+
+  if (erreurs.length > 0) {
+    html += '<div class="recap-erreurs"><h3>📖 À revoir :</h3>';
+    erreurs.forEach(e => {
+      html += `<div class="recap-erreur-item">
+        <strong>❓ ${e.q}</strong><br>
+        ✅ <strong>Bonne réponse :</strong> ${e.bonne}<br>
+        💡 ${e.expl}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('resultat-container').innerHTML = html;
+  document.getElementById('resultat-container').style.display = 'block';
+}
+
+function recommencer() {
+  index = 0;
+  score = 0;
+  nbRepondues = 0;
+  erreurs = [];
+  document.getElementById('resultat-container').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('score').textContent = '0';
+  document.getElementById('nb-repondues').textContent = '0';
+  afficher();
+}
+
+afficher();
+</script>
+</body>
+</html>

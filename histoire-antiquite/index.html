@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Révisions Histoire - Antiquité - Aude</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+  }
+  .menu-card {
+    background: white;
+    border: 2px solid var(--papyrus-fonce);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--encre);
+    transition: all 0.3s;
+    display: block;
+  }
+  .menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(184, 83, 12, 0.2);
+    border-color: var(--terre);
+  }
+  .menu-card .icone {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .menu-card h3 {
+    color: var(--terre);
+    margin: 10px 0;
+  }
+  .menu-card.imprimable { border-color: var(--nil); }
+  .menu-card.imprimable:hover { border-color: var(--nil); box-shadow: 0 8px 20px rgba(44, 95, 141, 0.2); }
+  .menu-card.imprimable h3 { color: var(--nil); }
+
+  .menu-card.interactif { border-color: var(--oasis); }
+  .menu-card.interactif:hover { border-color: var(--oasis); box-shadow: 0 8px 20px rgba(90, 128, 84, 0.2); }
+  .menu-card.interactif h3 { color: var(--oasis); }
+
+  .badge {
+    display: inline-block;
+    background: var(--papyrus);
+    color: var(--encre);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    margin-top: 10px;
+  }
+
+  .salut {
+    background: linear-gradient(135deg, var(--papyrus) 0%, white 100%);
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 2px dashed var(--or);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📜 Mes Révisions d'Histoire</h1>
+  <p class="subtitle">L'histoire commence-t-elle à Sumer ou dans la vallée du Nil ?</p>
+
+  <div class="salut">
+    <p style="font-size: 1.2em;"><strong>Salut Aude ! 👋</strong></p>
+    <p>Bienvenue dans ton espace de révision. Choisis ce que tu veux faire aujourd'hui !</p>
+  </div>
+
+  <div class="menu-grid">
+
+    <a href="fiche_resume.html" class="menu-card imprimable">
+      <span class="icone">📝</span>
+      <h3>Fiche-résumé</h3>
+      <p>Tout l'essentiel sur une page</p>
+      <span class="badge">🖨️ Imprimable</span>
+    </a>
+
+    <a href="mnemo.html" class="menu-card imprimable">
+      <span class="icone">🧠</span>
+      <h3>Trucs pour retenir</h3>
+      <p>Astuces et phrases magiques</p>
+      <span class="badge">🖨️ Imprimable</span>
+    </a>
+
+    <a href="schemas.html" class="menu-card imprimable">
+      <span class="icone">🗺️</span>
+      <h3>Schémas visuels</h3>
+      <p>Ligne du temps + carte mentale</p>
+      <span class="badge">🖨️ Imprimable</span>
+    </a>
+
+    <a href="flashcards.html" class="menu-card interactif">
+      <span class="icone">🎴</span>
+      <h3>Flashcards</h3>
+      <p>Cartes question/réponse à retourner</p>
+      <span class="badge">📱 Interactif</span>
+    </a>
+
+    <a href="quiz.html" class="menu-card interactif">
+      <span class="icone">🎯</span>
+      <h3>Quiz</h3>
+      <p>Teste tes connaissances !</p>
+      <span class="badge">📱 Interactif</span>
+    </a>
+
+    <a href="notes.html" class="menu-card">
+      <span class="icone">📚</span>
+      <h3>Mes notes complètes</h3>
+      <p>Toutes les feuilles dans le détail</p>
+      <span class="badge">🌐 Page web</span>
+    </a>
+
+  </div>
+
+  <div class="encadre" style="margin-top: 40px;">
+    <strong>💡 Comment bien utiliser cet espace :</strong>
+    <ol style="margin-left: 20px; margin-top: 10px;">
+      <li>Lis d'abord la <strong>fiche-résumé</strong> pour avoir une vue d'ensemble</li>
+      <li>Regarde les <strong>schémas</strong> pour visualiser dans ta tête</li>
+      <li>Apprends les <strong>trucs pour retenir</strong></li>
+      <li>Entraîne-toi avec les <strong>flashcards</strong></li>
+      <li>Teste-toi avec le <strong>quiz</strong> 🎯</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,152 @@
+/* ===== Style partagé - Révisions Histoire Antiquité ===== */
+
+:root {
+  --papyrus: #f8f1e4;
+  --papyrus-fonce: #ede2c8;
+  --terre: #b8530c;
+  --terre-fonce: #8b3e08;
+  --nil: #2c5f8d;
+  --nil-clair: #4a8bc4;
+  --oasis: #5a8054;
+  --or: #d4a017;
+  --encre: #3d2817;
+  --rose-quartz: #d77a8d;
+  --violet-antique: #6b4a8e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: var(--papyrus);
+  color: var(--encre);
+  line-height: 1.6;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(61, 40, 23, 0.15);
+  border: 2px solid var(--papyrus-fonce);
+}
+
+h1 {
+  color: var(--terre);
+  font-size: 2.2em;
+  text-align: center;
+  margin-bottom: 10px;
+  border-bottom: 3px double var(--or);
+  padding-bottom: 15px;
+}
+
+h2 {
+  color: var(--nil);
+  font-size: 1.6em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  border-left: 5px solid var(--or);
+  padding-left: 12px;
+}
+
+h3 {
+  color: var(--terre-fonce);
+  font-size: 1.3em;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+p, li { margin-bottom: 8px; }
+
+.subtitle {
+  text-align: center;
+  font-style: italic;
+  color: var(--encre);
+  opacity: 0.8;
+  margin-bottom: 30px;
+}
+
+.encadre {
+  background: var(--papyrus);
+  border-left: 5px solid var(--terre);
+  padding: 15px 20px;
+  margin: 15px 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.important {
+  background: #fff3cd;
+  border: 2px solid var(--or);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.attention {
+  background: #fde2e2;
+  border: 2px solid #c0392b;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: white;
+}
+
+th {
+  background: var(--nil);
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-weight: bold;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--papyrus-fonce);
+}
+
+tr:nth-child(even) { background: var(--papyrus); }
+
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--terre);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  font-family: inherit;
+}
+
+.btn:hover { background: var(--terre-fonce); transform: translateY(-2px); }
+.btn-bleu { background: var(--nil); }
+.btn-bleu:hover { background: #1f4366; }
+.btn-vert { background: var(--oasis); }
+.btn-vert:hover { background: #44623f; }
+
+.emoji-grand { font-size: 1.5em; }
+
+/* Impression : optimise pour A4 */
+@media print {
+  body { background: white; padding: 0; }
+  .container { box-shadow: none; border: none; padding: 15px; }
+  .no-print { display: none !important; }
+  h1, h2, h3 { page-break-after: avoid; }
+  table { page-break-inside: avoid; }
+  .encadre, .important, .attention { page-break-inside: avoid; }
+}
+
+@page { margin: 1.5cm; }
