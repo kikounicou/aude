@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mémo Express - Juste avant le bilan !</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { font-size: 12.5px; }
+  .container { padding: 20px; }
+  h1 { font-size: 1.5em; margin-bottom: 5px; }
+  h2 { font-size: 1.05em; margin-top: 12px; margin-bottom: 6px; padding-left: 8px; border-left-width: 4px; }
+  table { font-size: 0.88em; margin: 6px 0; }
+  th, td { padding: 4px 6px; }
+  p, li { margin-bottom: 3px; font-size: 0.92em; }
+  .toolbar { text-align: center; margin-bottom: 15px; }
+  .box { background: var(--papyrus); padding: 8px 10px; border-radius: 6px; margin: 6px 0; font-size: 0.92em; }
+  .box-important { background: #fff3cd; border: 1px solid var(--or); padding: 8px 10px; border-radius: 6px; margin: 6px 0; font-size: 0.92em; }
+  .deux-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .separator { border: none; border-top: 2px dashed var(--or); margin: 10px 0; }
+  ul { margin-left: 16px; }
+  @media print {
+    body { font-size: 11px; }
+    .container { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="toolbar no-print">
+    <a href="index.html" class="btn btn-bleu">🏠 Menu</a>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer (1 page !)</button>
+  </div>
+
+  <h1>⚡ Mémo Express — À relire juste avant le bilan</h1>
+
+  <div class="deux-col">
+    <div>
+      <h2>📜 Les écritures</h2>
+      <table>
+        <tr><th>Écriture</th><th>Date</th><th>Lieu</th></tr>
+        <tr><td><strong>Cunéiforme</strong></td><td>-3300</td><td>Mésopotamie</td></tr>
+        <tr><td><strong>Hiéroglyphes</strong></td><td>-3000</td><td>Égypte</td></tr>
+        <tr><td><strong>Alph. phénicien</strong></td><td>-1200</td><td>Phénicie</td></tr>
+        <tr><td>Alph. grec</td><td>-900</td><td>Grèce</td></tr>
+        <tr><td>Alph. latin</td><td>-600</td><td>Rome</td></tr>
+      </table>
+      <div class="box">
+        <strong>Cunéiforme</strong> = coins/clous, tablettes d'argile, Sumériens<br>
+        <strong>Hiéroglyphes</strong> = idéogrammes, papyrus<br>
+        <strong>Alphabet</strong> = peu de signes → on peut TOUT écrire
+      </div>
+      <div class="box">
+        <strong>Pourquoi l'écriture ?</strong> Pour COMPTER (récoltes, troupeaux, population) et FIXER L'IMPÔT. Pas pour la poésie !
+      </div>
+      <div class="box">
+        <strong>Scribes</strong> = fonctionnaires, minorité qui sait lire/écrire, gère les impôts
+      </div>
+
+      <hr class="separator">
+
+      <h2>🏛️ Les premières villes</h2>
+      <div class="box">
+        Nées en <strong>Mésopotamie</strong>, près d'un <strong>cours d'eau</strong>, entourées de <strong>remparts</strong>. Le <strong>palais</strong> = centre du pouvoir.
+      </div>
+      <div class="box-important">
+        <strong>5 fonctions :</strong> Politique · Économique · Religieuse · Militaire · Sociale
+      </div>
+
+      <hr class="separator">
+
+      <h2>🔍 Critique de documents</h2>
+      <div class="deux-col">
+        <div class="box">
+          <strong>Critique externe</strong><br>
+          Ce qu'on voit DE L'EXTÉRIEUR :<br>
+          lieu, date, origine (trace du passé ou travail postérieur), nature (schéma, texte, image...)
+        </div>
+        <div class="box">
+          <strong>Critique interne</strong><br>
+          Ce que le document RACONTE :<br>
+          situation géographique, milieu/paysage, contenu, titre
+        </div>
+      </div>
+      <div class="box">
+        <strong>Trace du passé</strong> = objet d'époque (ex : ruines, momie)<br>
+        <strong>Travail postérieur</strong> = reconstitution moderne (ex : maquette, plan redessiné)
+      </div>
+    </div>
+
+    <div>
+      <h2>🌊 L'eau et le Nil</h2>
+      <div class="box-important">
+        <strong>Crue</strong> = l'eau monte et déborde<br>
+        <strong>Décrue</strong> = l'eau redescend → laisse du <strong>limon</strong> (boue fertile)<br>
+        → On cultive <strong>juste après la décrue</strong>
+      </div>
+      <div class="box">
+        <strong>Nilomètre</strong> = mesurer les crues · <strong>Chadouf</strong> = irriguer<br>
+        <strong>Travaux :</strong> Labour → Semailles → Moisson → Transport → Battage<br>
+        <strong>4 usages eau :</strong> agriculture, poissons, commerce (voie navigable), papyrus
+      </div>
+      <div class="box-important">
+        <strong>« L'Égypte est un don du Nil »</strong> (Hérodote) — le désert doit tout au Nil
+      </div>
+
+      <hr class="separator">
+
+      <h2>👑 La société égyptienne</h2>
+      <div class="box-important" style="text-align: center; line-height: 1.6;">
+        👑 <strong>Pharaon</strong> (dieu vivant)<br>
+        📋 Vizir<br>
+        👪 Famille royale<br>
+        ⚔️ Chefs (admin, armée, grands prêtres)<br>
+        📖 Prêtres, scribes, soldats<br>
+        ─── privilégiés ↑ / non-privilégiés ↓ ───<br>
+        🔨 Artisans, pêcheurs, paysans<br>
+        ⛓️ Serviteurs, esclaves, prisonniers
+      </div>
+      <div class="box">
+        Société <strong>hiérarchisée</strong> et <strong>inégalitaire</strong>. Pas mêmes droits ni devoirs.<br>
+        <strong>Symboles Pharaon :</strong> barbe postiche, serpent, pectoral, sceptre, fouet
+      </div>
+
+      <hr class="separator">
+
+      <h2>🏺 Les croyances</h2>
+      <div class="box">
+        <strong>Polythéisme</strong> = plusieurs dieux (formes : animale, hybride, humaine)<br>
+        <strong>Temples</strong> = espaces sacrés, on y fait des <strong>offrandes</strong><br>
+        Dieux ont une énorme influence sur la vie quotidienne
+      </div>
+      <div class="box-important">
+        <strong>Osiris</strong> = bon roi → meurt → juge les morts (tribunal)<br>
+        <strong>Isis</strong> = déesse magie, sœur/femme d'Osiris<br>
+        <strong>Seth</strong> = frère jaloux, dieu du désert
+      </div>
+      <div class="box">
+        Croyance en la <strong>vie après la mort</strong> (paradis d'Osiris)<br>
+        <strong>Momification</strong> = conserver le corps (protège l'âme)<br>
+        <strong>Pesée de l'âme</strong> = jugement au tribunal d'Osiris<br>
+        <strong>Pyramide</strong> = demeure du Pharaon après sa mort
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
