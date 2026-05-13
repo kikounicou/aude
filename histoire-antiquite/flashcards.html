@@ -116,6 +116,20 @@
   .stat-su { border-color: var(--oasis); color: var(--oasis); }
   .stat-rev { border-color: var(--terre); color: var(--terre); }
 
+  .filtre-btn {
+    padding: 8px 14px;
+    border: 2px solid var(--papyrus-fonce);
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    color: var(--encre);
+  }
+  .filtre-btn:hover { border-color: var(--nil); background: var(--papyrus); }
+  .filtre-btn.actif { background: var(--nil); color: white; border-color: var(--nil); font-weight: bold; }
+
   .progress-bar {
     height: 10px;
     background: var(--papyrus-fonce);
@@ -139,6 +153,15 @@
 
   <h1>🎴 Flashcards</h1>
   <p class="subtitle">Clique sur la carte pour voir la réponse !</p>
+
+  <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;">
+    <button class="filtre-btn actif" data-theme="tous" onclick="filtrer('tous')">📚 Tout</button>
+    <button class="filtre-btn" data-theme="ecritures" onclick="filtrer('ecritures')">📜 Écritures</button>
+    <button class="filtre-btn" data-theme="villes" onclick="filtrer('villes')">🏛️ Villes</button>
+    <button class="filtre-btn" data-theme="eau" onclick="filtrer('eau')">🌊 Eau / Nil</button>
+    <button class="filtre-btn" data-theme="societe" onclick="filtrer('societe')">👑 Société</button>
+    <button class="filtre-btn" data-theme="croyances" onclick="filtrer('croyances')">🏺 Croyances</button>
+  </div>
 
   <div class="progress-bar">
     <div class="progress-fill" id="progress" style="width: 0%"></div>
@@ -195,84 +218,106 @@
 
 <script>
 const cartes = [
-  { q: "Qu'est-ce que l'écriture cunéiforme ?", r: "Une première forme d'écriture en forme de coin, de pointe, de clou, apparue en Mésopotamie vers -3300 ACN. Inventée par les Sumériens." },
-  { q: "Quand et où est apparue l'écriture cunéiforme ?", r: "Vers -3300 ACN, en Mésopotamie." },
-  { q: "Quand et où sont apparus les hiéroglyphes ?", r: "Vers -3000 ACN, en Égypte." },
-  { q: "Quand et où est apparu l'alphabet phénicien ?", r: "Vers -1200 ACN, en Phénicie." },
-  { q: "Quand est apparu l'alphabet grec ?", r: "Vers -900 ACN, en Grèce." },
-  { q: "Quand est apparu l'alphabet latin ?", r: "Vers -600 ACN, à Rome (Latium)." },
-  { q: "Que veut dire 'rupestre' ?", r: "Sur la roche (du latin 'rupes' = rocher). Une peinture rupestre = peinture sur la paroi d'une grotte." },
-  { q: "Que signifie ACN ?", r: "Ante Christum Natum = avant Jésus-Christ (avant l'an 0)." },
-  { q: "Qu'est-ce qu'un hiéroglyphe ?", r: "Un signe basé sur un système d'écriture idéographique dans l'Égypte antique." },
-  { q: "Qu'est-ce qu'un pictogramme ?", r: "Un signe d'approche d'une écriture où les concepts sont représentés par des scènes figurées ou des symboles." },
-  { q: "Qu'est-ce qu'un alphabet ?", r: "Une liste de toutes les lettres énumérées selon un ordre conventionnel, qui permettent de retranscrire tous les sons d'une langue." },
-  { q: "Qu'est-ce qu'un scribe ?", r: "Un fonctionnaire (une minorité) qui savait lire et écrire. Il s'occupait des impôts et avait le droit de sanctionner si on ne payait pas." },
-  { q: "Qu'est-ce que la Pierre de Rosette ?", r: "Une stèle qui présente le même texte en 3 écritures différentes (hiéroglyphes, hiératique/démotique, grec ancien)." },
-  { q: "Qui a déchiffré les hiéroglyphes et quand ?", r: "Jean-François CHAMPOLLION en 1822, grâce à la Pierre de Rosette." },
-  { q: "Quel est le rôle du Nil pour l'agriculture en Égypte ?", r: "Grâce aux CRUES, le Nil dépose du LIMON (boue fertile) sur les terres. Après la décrue, on peut cultiver sur ces terres rendues fertiles." },
-  { q: "Pourquoi l'écriture est-elle apparue en Mésopotamie ?", r: "Pour gérer les comptes : dénombrer les troupeaux, les récoltes, les biens et recenser la population." },
-  { q: "Pourquoi l'écriture est-elle apparue en Égypte ?", r: "Pour gérer les comptes ET surtout pour surveiller minutieusement les récoltes, le bétail et la production des artisans afin de fixer l'impôt." },
-  { q: "Qu'est-ce que le croissant fertile ?", r: "Une zone fertile en forme de croissant qui va de l'Égypte (Nil) à la Mésopotamie (Tigre et Euphrate). C'est là que sont nées les premières civilisations." },
-  { q: "Quels sont les 3 fleuves importants du Proche-Orient ancien ?", r: "Le Nil (Égypte), le Tigre et l'Euphrate (Mésopotamie)." },
-  { q: "Cite 2 grandes villes de l'ancien empire égyptien.", r: "Gizeh et Thèbes." },
-  { q: "Cite 8 pays actuels qui se trouvent dans la zone de l'Orient ancien.", r: "Irak, Syrie, Égypte, Palestine, Liban, Iran, Jordanie, Israël." },
-  { q: "Sur quel support écrivait-on en Mésopotamie ?", r: "Sur des tablettes d'argile." },
-  { q: "Sur quel support écrivait-on en Égypte et en Phénicie ?", r: "Sur du papyrus." },
-  { q: "Quel est le grand avantage de l'alphabet ?", r: "Avec un nombre limité de signes (lettres), on peut TOUT écrire !" },
-  { q: "Qu'est-ce qu'un calculi ?", r: "Une petite tablette/jeton d'argile utilisé pour la comptabilité en Mésopotamie (le mot a donné 'calcul' en français)." },
-  { q: "Quelle écriture marque le passage de la Préhistoire à l'Histoire ?", r: "L'invention de l'écriture (cunéiforme et hiéroglyphes), vers -3300/-3000 ACN. Avant : Préhistoire. Après : Histoire (Antiquité)." },
-  { q: "Quel ordre suivent les 3 grands alphabets ?", r: "Phénicien (-1200) → Grec (-900) → Latin (-600). Astuce : 'P G L'." },
-  { q: "À l'époque de la Préhistoire, comment l'homme communiquait-il ?", r: "Grâce aux peintures rupestres (comme à Lascaux) — il laissait des traces mais on ne lit pas, on devine." },
-  // === ENQUÊTE 2 — Villes, eau, société, croyances ===
-  { q: "Où sont nées les premières villes de l'humanité ?", r: "En Mésopotamie, à proximité d'un cours d'eau (situation stratégique : près des terres fertiles, en dehors des zones inondables)." },
-  { q: "Quelles sont les 5 fonctions d'une ville ?", r: "Politique (gestion), Économique (commerce), Religieuse (religion), Militaire (armée), Sociale (vie quotidienne). Astuce : P.E.R.M.S." },
-  { q: "Quel est le rôle du palais dans la ville ?", r: "C'est le centre du POUVOIR POLITIQUE. C'est du palais que le roi dirige la ville et prend toutes les décisions importantes." },
-  { q: "Cite 3 lieux religieux de Babylone.", r: "Le Temple d'Ishtar, le Temple de Marduk et la Tour de Babel." },
-  { q: "Qu'est-ce qu'une crue ?", r: "La montée des eaux d'un fleuve qui déborde et recouvre les terres environnantes." },
-  { q: "Qu'est-ce qu'une décrue ?", r: "Le retrait des eaux — le fleuve retrouve son niveau normal et les terres ne sont plus recouvertes." },
-  { q: "Qu'est-ce qu'un nilomètre ?", r: "Un instrument servant à mesurer exactement le niveau des crues du Nil." },
-  { q: "Qu'est-ce qu'un chadouf ?", r: "Un instrument d'irrigation — un long balancier avec un seau pour puiser l'eau et arroser les terres." },
-  { q: "Qu'est-ce que le limon ?", r: "La boue fertile déposée par le Nil après la décrue. C'est grâce au limon que les terres sont fertiles !" },
-  { q: "Quand cultive-t-on les terres en Égypte ?", r: "Juste après la décrue : les terres ne sont plus recouvertes d'eau et le Nil a déposé du limon fertile." },
-  { q: "Quel est l'ordre des travaux des champs ?", r: "1. Labour (houe) → 2. Semailles → 3. Moisson (faucille) → 4. Transport (ânes) → 5. Dépiquage/Battage (fléau)" },
-  { q: "Quels sont les 4 usages de l'eau au Proche-Orient ?", r: "Agriculture (irriguer), Alimentation (poissons), Commerce (voie navigable), Papyrus (support d'écriture)." },
-  { q: "Qui a dit « L'Égypte est un don du Nil » ?", r: "HÉRODOTE, un historien grec qui a voyagé en Égypte et observé le Nil pendant un an." },
-  { q: "Quelle est la particularité du Nil par rapport aux autres fleuves ?", r: "Il a un régime CONTRAIRE aux autres fleuves : le Nil déborde au solstice d'été." },
-  { q: "Qui se trouve tout en haut de la pyramide sociale égyptienne ?", r: "Le PHARAON — considéré comme un dieu vivant, il a le pouvoir absolu de droit divin." },
-  { q: "Qu'est-ce qu'un vizir ?", r: "Le conseiller du roi (Pharaon). Il n'est responsable que devant Pharaon." },
-  { q: "Cite les 5 symboles du pouvoir du Pharaon.", r: "Barbe postiche, serpent protecteur (uræus), pectoral, sceptre et fouet." },
-  { q: "La société égyptienne est-elle égalitaire ?", r: "NON ! Elle est très HIÉRARCHISÉE et INÉGALITAIRE. Deux groupes : privilégiés (en haut) et non-privilégiés (en bas). Pas les mêmes droits ni devoirs." },
-  { q: "Qu'est-ce que le polythéisme ?", r: "Une religion selon laquelle on croit en PLUSIEURS dieux (poly = plusieurs, théisme = dieux)." },
-  { q: "Qui est Osiris ?", r: "Roi d'Égypte, bon souverain aimé de son peuple. Après sa mort, il préside le tribunal des morts. Première momie, symbole de résurrection." },
-  { q: "Qui est Isis ?", r: "Déesse de la magie, sœur et femme d'Osiris." },
-  { q: "Qui est Seth ?", r: "Frère d'Osiris et d'Isis, dieu du désert. Très jaloux, il veut le pouvoir et convoite le trône." },
-  { q: "Qu'est-ce que la pesée de l'âme ?", r: "Le jugement du défunt au tribunal d'Osiris. On pèse le cœur du mort contre la plume de Maât (déesse de la justice)." },
-  { q: "Pourquoi les Égyptiens pratiquaient la momification ?", r: "Parce que le corps est l'enveloppe qui PROTÈGE L'ÂME. Pour accéder au paradis d'Osiris (l'au-delà), il faut que le corps soit conservé." },
-  { q: "Quelle est la demeure du Pharaon après sa mort ?", r: "La PYRAMIDE." },
-  { q: "Sous quelles formes les dieux égyptiens sont-ils représentés ?", r: "Forme animale, forme hybride (corps humain + tête d'animal), ou forme humaine. Ils éprouvent des sentiments et des faiblesses humaines." },
-  { q: "Qu'est-ce qu'un temple dans l'Égypte antique ?", r: "Un espace sacré réservé aux dieux, où les Égyptiens font des OFFRANDES (= cadeaux) pour rendre hommage aux dieux." }
+  { q: "Qu'est-ce que l'écriture cunéiforme ?", r: "Une première forme d'écriture en forme de coin, de pointe, de clou, apparue en Mésopotamie vers -3300 ACN. Inventée par les Sumériens.", t: "ecritures" },
+  { q: "Quand et où est apparue l'écriture cunéiforme ?", r: "Vers -3300 ACN, en Mésopotamie.", t: "ecritures" },
+  { q: "Quand et où sont apparus les hiéroglyphes ?", r: "Vers -3000 ACN, en Égypte.", t: "ecritures" },
+  { q: "Quand et où est apparu l'alphabet phénicien ?", r: "Vers -1200 ACN, en Phénicie.", t: "ecritures" },
+  { q: "Quand est apparu l'alphabet grec ?", r: "Vers -900 ACN, en Grèce.", t: "ecritures" },
+  { q: "Quand est apparu l'alphabet latin ?", r: "Vers -600 ACN, à Rome (Latium).", t: "ecritures" },
+  { q: "Que veut dire 'rupestre' ?", r: "Sur la roche (du latin 'rupes' = rocher). Une peinture rupestre = peinture sur la paroi d'une grotte.", t: "ecritures" },
+  { q: "Que signifie ACN ?", r: "Ante Christum Natum = avant Jésus-Christ (avant l'an 0).", t: "ecritures" },
+  { q: "Qu'est-ce qu'un hiéroglyphe ?", r: "Un signe basé sur un système d'écriture idéographique dans l'Égypte antique.", t: "ecritures" },
+  { q: "Qu'est-ce qu'un pictogramme ?", r: "Un signe d'approche d'une écriture où les concepts sont représentés par des scènes figurées ou des symboles.", t: "ecritures" },
+  { q: "Qu'est-ce qu'un alphabet ?", r: "Une liste de toutes les lettres énumérées selon un ordre conventionnel, qui permettent de retranscrire tous les sons d'une langue.", t: "ecritures" },
+  { q: "Qu'est-ce qu'un scribe ?", r: "Un fonctionnaire (une minorité) qui savait lire et écrire. Il s'occupait des impôts et avait le droit de sanctionner si on ne payait pas.", t: "ecritures" },
+  { q: "Qu'est-ce que la Pierre de Rosette ?", r: "Une stèle qui présente le même texte en 3 écritures différentes (hiéroglyphes, hiératique/démotique, grec ancien).", t: "ecritures" },
+  { q: "Qui a déchiffré les hiéroglyphes et quand ?", r: "Jean-François CHAMPOLLION en 1822, grâce à la Pierre de Rosette.", t: "ecritures" },
+  { q: "Quel est le rôle du Nil pour l'agriculture en Égypte ?", r: "Grâce aux CRUES, le Nil dépose du LIMON (boue fertile) sur les terres. Après la décrue, on peut cultiver sur ces terres rendues fertiles.", t: "eau" },
+  { q: "Pourquoi l'écriture est-elle apparue en Mésopotamie ?", r: "Pour gérer les comptes : dénombrer les troupeaux, les récoltes, les biens et recenser la population.", t: "ecritures" },
+  { q: "Pourquoi l'écriture est-elle apparue en Égypte ?", r: "Pour gérer les comptes ET surtout pour surveiller minutieusement les récoltes, le bétail et la production des artisans afin de fixer l'impôt.", t: "ecritures" },
+  { q: "Qu'est-ce que le croissant fertile ?", r: "Une zone fertile en forme de croissant qui va de l'Égypte (Nil) à la Mésopotamie (Tigre et Euphrate). C'est là que sont nées les premières civilisations.", t: "ecritures" },
+  { q: "Quels sont les 3 fleuves importants du Proche-Orient ancien ?", r: "Le Nil (Égypte), le Tigre et l'Euphrate (Mésopotamie).", t: "ecritures" },
+  { q: "Cite 2 grandes villes de l'ancien empire égyptien.", r: "Gizeh et Thèbes.", t: "ecritures" },
+  { q: "Cite 8 pays actuels qui se trouvent dans la zone de l'Orient ancien.", r: "Irak, Syrie, Égypte, Palestine, Liban, Iran, Jordanie, Israël.", t: "ecritures" },
+  { q: "Sur quel support écrivait-on en Mésopotamie ?", r: "Sur des tablettes d'argile.", t: "ecritures" },
+  { q: "Sur quel support écrivait-on en Égypte et en Phénicie ?", r: "Sur du papyrus.", t: "ecritures" },
+  { q: "Quel est le grand avantage de l'alphabet ?", r: "Avec un nombre limité de signes (lettres), on peut TOUT écrire !", t: "ecritures" },
+  { q: "Qu'est-ce qu'un calculi ?", r: "Une petite tablette/jeton d'argile utilisé pour la comptabilité en Mésopotamie (le mot a donné 'calcul' en français).", t: "ecritures" },
+  { q: "Quelle écriture marque le passage de la Préhistoire à l'Histoire ?", r: "L'invention de l'écriture (cunéiforme et hiéroglyphes), vers -3300/-3000 ACN. Avant : Préhistoire. Après : Histoire (Antiquité).", t: "ecritures" },
+  { q: "Quel ordre suivent les 3 grands alphabets ?", r: "Phénicien (-1200) → Grec (-900) → Latin (-600). Astuce : 'P G L'.", t: "ecritures" },
+  { q: "À l'époque de la Préhistoire, comment l'homme communiquait-il ?", r: "Grâce aux peintures rupestres (comme à Lascaux) — il laissait des traces mais on ne lit pas, on devine.", t: "ecritures" },
+  { q: "Où sont nées les premières villes de l'humanité ?", r: "En Mésopotamie, à proximité d'un cours d'eau (situation stratégique : près des terres fertiles, en dehors des zones inondables).", t: "villes" },
+  { q: "Quelles sont les 5 fonctions d'une ville ?", r: "Politique (gestion), Économique (commerce), Religieuse (religion), Militaire (armée), Sociale (vie quotidienne).", t: "villes" },
+  { q: "Quel est le rôle du palais dans la ville ?", r: "C'est le centre du POUVOIR POLITIQUE. C'est du palais que le roi dirige la ville et prend toutes les décisions importantes.", t: "villes" },
+  { q: "Cite 3 lieux religieux de Babylone.", r: "Le Temple d'Ishtar, le Temple de Marduk et la Tour de Babel.", t: "villes" },
+  { q: "Qu'est-ce qu'une crue ?", r: "La montée des eaux d'un fleuve qui déborde et recouvre les terres environnantes.", t: "eau" },
+  { q: "Qu'est-ce qu'une décrue ?", r: "Le retrait des eaux — le fleuve retrouve son niveau normal et les terres ne sont plus recouvertes.", t: "eau" },
+  { q: "Qu'est-ce qu'un nilomètre ?", r: "Un instrument servant à mesurer exactement le niveau des crues du Nil.", t: "eau" },
+  { q: "Qu'est-ce qu'un chadouf ?", r: "Un instrument d'irrigation — un long balancier avec un seau pour puiser l'eau et arroser les terres.", t: "eau" },
+  { q: "Qu'est-ce que le limon ?", r: "La boue fertile déposée par le Nil après la décrue. C'est grâce au limon que les terres sont fertiles !", t: "eau" },
+  { q: "Quand cultive-t-on les terres en Égypte ?", r: "Juste après la décrue : les terres ne sont plus recouvertes d'eau et le Nil a déposé du limon fertile.", t: "eau" },
+  { q: "Quel est l'ordre des travaux des champs ?", r: "1. Labour (houe) → 2. Semailles → 3. Moisson (faucille) → 4. Transport (ânes) → 5. Dépiquage/Battage (fléau)", t: "eau" },
+  { q: "Quels sont les 4 usages de l'eau au Proche-Orient ?", r: "Agriculture (irriguer), Alimentation (poissons), Commerce (voie navigable), Papyrus (support d'écriture).", t: "eau" },
+  { q: "Qui a dit « L'Égypte est un don du Nil » ?", r: "HÉRODOTE, un historien grec qui a voyagé en Égypte et observé le Nil pendant un an.", t: "eau" },
+  { q: "Quelle est la particularité du Nil par rapport aux autres fleuves ?", r: "Il a un régime CONTRAIRE aux autres fleuves : le Nil déborde au solstice d'été.", t: "eau" },
+  { q: "Qui se trouve tout en haut de la pyramide sociale égyptienne ?", r: "Le PHARAON — considéré comme un dieu vivant, il a le pouvoir absolu de droit divin.", t: "societe" },
+  { q: "Qu'est-ce qu'un vizir ?", r: "Le conseiller du roi (Pharaon). Il n'est responsable que devant Pharaon.", t: "societe" },
+  { q: "Cite les 5 symboles du pouvoir du Pharaon.", r: "Barbe postiche, serpent protecteur (uræus), pectoral, sceptre et fouet.", t: "societe" },
+  { q: "La société égyptienne est-elle égalitaire ?", r: "NON ! Elle est très HIÉRARCHISÉE et INÉGALITAIRE. Deux groupes : privilégiés (en haut) et non-privilégiés (en bas). Pas les mêmes droits ni devoirs.", t: "societe" },
+  { q: "Qu'est-ce que le polythéisme ?", r: "Une religion selon laquelle on croit en PLUSIEURS dieux (poly = plusieurs, théisme = dieux).", t: "croyances" },
+  { q: "Qui est Osiris ?", r: "Roi d'Égypte, bon souverain aimé de son peuple. Après sa mort, il préside le tribunal des morts. Première momie, symbole de résurrection.", t: "croyances" },
+  { q: "Qui est Isis ?", r: "Déesse de la magie, sœur et femme d'Osiris.", t: "croyances" },
+  { q: "Qui est Seth ?", r: "Frère d'Osiris et d'Isis, dieu du désert. Très jaloux, il veut le pouvoir et convoite le trône.", t: "croyances" },
+  { q: "Qu'est-ce que la pesée de l'âme ?", r: "Le jugement du défunt au tribunal d'Osiris. On pèse le cœur du mort contre la plume de Maât (déesse de la justice).", t: "croyances" },
+  { q: "Pourquoi les Égyptiens pratiquaient la momification ?", r: "Parce que le corps est l'enveloppe qui PROTÈGE L'ÂME. Pour accéder au paradis d'Osiris (l'au-delà), il faut que le corps soit conservé.", t: "croyances" },
+  { q: "Quelle est la demeure du Pharaon après sa mort ?", r: "La PYRAMIDE.", t: "croyances" },
+  { q: "Sous quelles formes les dieux égyptiens sont-ils représentés ?", r: "Forme animale, forme hybride (corps humain + tête d'animal), ou forme humaine. Ils éprouvent des sentiments et des faiblesses humaines.", t: "croyances" },
+  { q: "Qu'est-ce qu'un temple dans l'Égypte antique ?", r: "Un espace sacré réservé aux dieux, où les Égyptiens font des OFFRANDES (= cadeaux) pour rendre hommage aux dieux.", t: "croyances" }
 ];
 
+const themes = {
+  tous: "📚 Tout",
+  ecritures: "📜 Écritures",
+  villes: "🏛️ Villes",
+  eau: "🌊 Eau / Nil",
+  societe: "👑 Société",
+  croyances: "🏺 Croyances"
+};
+
+let filtreActif = 'tous';
+let cartesFiltrees = [];
 let ordre = [];
 let index = 0;
 let stats = { su: 0, rev: 0, vus: new Set() };
 
+function filtrer(theme) {
+  filtreActif = theme;
+  document.querySelectorAll('.filtre-btn').forEach(b => b.classList.remove('actif'));
+  document.querySelector('[data-theme="' + theme + '"]').classList.add('actif');
+  init();
+}
+
 function init() {
-  ordre = cartes.map((_, i) => i);
+  if (filtreActif === 'tous') {
+    cartesFiltrees = cartes;
+  } else {
+    cartesFiltrees = cartes.filter(c => c.t === filtreActif);
+  }
+  ordre = cartesFiltrees.map((_, i) => i);
   index = 0;
   stats = { su: 0, rev: 0, vus: new Set() };
-  document.getElementById('total').textContent = cartes.length;
+  document.getElementById('total').textContent = cartesFiltrees.length;
   afficher();
   majStats();
 }
 
 function afficher() {
-  const c = cartes[ordre[index]];
+  const c = cartesFiltrees[ordre[index]];
   document.getElementById('question').textContent = c.q;
   document.getElementById('reponse').textContent = c.r;
   document.getElementById('flashcard').classList.remove('flipped');
   document.getElementById('numero').textContent = index + 1;
-  const pct = ((index + 1) / cartes.length) * 100;
+  const pct = ((index + 1) / cartesFiltrees.length) * 100;
   document.getElementById('progress').style.width = pct + '%';
 }
 
@@ -288,17 +333,17 @@ function suivante(reponse) {
 }
 
 function suivanteSimple() {
-  index = (index + 1) % cartes.length;
+  index = (index + 1) % cartesFiltrees.length;
   afficher();
 }
 
 function precedente() {
-  index = (index - 1 + cartes.length) % cartes.length;
+  index = (index - 1 + cartesFiltrees.length) % cartesFiltrees.length;
   afficher();
 }
 
 function melanger() {
-  ordre = cartes.map((_, i) => i).sort(() => Math.random() - 0.5);
+  ordre = cartesFiltrees.map((_, i) => i).sort(() => Math.random() - 0.5);
   index = 0;
   afficher();
 }
