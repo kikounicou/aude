@@ -326,3 +326,412 @@ Avant, on connaissait l'alphabet phénicien. Mais d'autres alphabets ont suivi :
 > - **Faire payer les impôts** (en Égypte surtout)
 >
 > 👉 L'écriture est donc liée à l'apparition des **premières villes** et des **premiers États** organisés.
+
+---
+
+# Chapitre 2 : À quoi ressemblent les toutes premières villes de l'humanité ?
+
+---
+
+## Feuille 1 - Analyse de documents (critique externe et interne)
+
+### Exercice : carte d'identité des documents 12 à 22
+
+Pour chaque document (tirés du manuel *Enquêtes d'histoire, 1re année*), on doit remplir :
+
+**Critique externe** (ce qu'on voit de l'extérieur) :
+- Lieu
+- Date
+- Origine du document : **trace du passé** (objet d'époque) ou **travail postérieur** (reconstitution moderne)
+- Nature du document : schématique, iconographique, archéologique, texte...
+
+**Critique interne** (ce que le document raconte) :
+- Situation géographique
+- Milieu / paysage
+- Lieu de proximité
+- Titre et contenu
+
+**Exemples de documents analysés** :
+- Doc 12 : Plan de Babylone (7e-6e s. ACN) — document schématique, espace urbain, sur les rives de l'Euphrate, zone agricole du croissant fertile
+- Doc 13 : Reconstruction du palais
+- Doc 19 : Le chadouf (instrument d'irrigation)
+- Doc 20 : Texte sur l'Égypte ("l'Égypte ne ressemble ni à l'Arabie ni à la Libye")
+- Doc 22 : Peintures sur l'agriculture (collation, dépiquage, faucille...)
+
+### Indices pour reconstituer le passé
+> Pour reconstituer les monuments et les villes du passé, on utilise des **ruines**, des **vestiges**, des **traces de fondation au sol** dans les salles = ce qu'il nous reste du passé.
+
+---
+
+## Feuille 2 - Le plan de Babylone (7e-6e siècle ACN)
+
+> Plan réalisé d'après les fouilles menées depuis **1851**.
+
+### Coloriage par fonction
+
+| Couleur | Fonction | Exemples de lieux |
+|---|---|---|
+| 🟠 Orange | **Lieux de culte** (religion) | Temple d'Ishtar, Tour de Babel, Temple de Marduk |
+| 🟣 Mauve | **Lieux économiques** (commerce) | Quartier commercial, quartier de Merkès |
+| 🔴 Rouge | **Lieux de pouvoir/autorité** (politique) | Palais d'été, Palais Nord, Palais Sud |
+| 🟡 Jaune | **Lieux militaires** (défense) | Porte d'Ishtar, Voie Processionnelle |
+
+### Éléments importants du plan de Babylone
+- Palais d'été, Palais Nord, Palais Sud
+- Porte d'Ishtar
+- Voie Processionnelle
+- Temple d'Ishtar
+- Quartier de Merkès
+- Quartier commercial
+- Tour de Babel
+- Temple de Marduk
+
+---
+
+## ⭐⭐ Feuille 3 - SYNTHÈSE : Situation géographique des premières villes ⭐⭐
+
+### 📊 Tableau à double entrée
+
+| | Mésopotamie | Égypte | Phénicie |
+|---|---|---|---|
+| **Situation géographique** | Sur les bords du **Tigre** et de l'**Euphrate**, proche d'un cours d'eau | Traversée par le **Nil** | Sur les bords de la **Méditerranée** et de la **mer Morte** |
+| **Situation stratégique** | Développement de l'agriculture, du commerce et de la ville | Développement de l'agriculture, du commerce et de la ville | Développement de l'agriculture, du commerce et de la ville |
+| **Protection** | Villes entourées de **remparts** | Villes entourées de **remparts** | Villes entourées de **remparts** |
+
+---
+
+## ⭐⭐⭐ RÉPONSE À LA PROBLÉMATIQUE — À SAVOIR PAR CŒUR ! ⭐⭐⭐
+
+> **À quoi ressemblent les toutes premières villes de l'humanité ?**
+
+Les premières villes de l'humanité sont nées en **Mésopotamie**, à proximité d'un **cours d'eau** = **situation stratégique** pour le développement de la ville (proche des **terres fertiles**, mais **en dehors des zones inondables**).
+
+Les villes sont entourées de **remparts** qui abritent différents lieux, composés de différents **éléments constitutifs** de la ville (palais, temples, quartiers...). Chacun a un **rôle**, une **fonction** particulière.
+
+> **C'est du palais que le roi dirige la ville** (= fonction politique).
+> C'est du palais que la ville s'organise et c'est du palais que se prennent toutes les décisions importantes.
+
+---
+
+## ⭐⭐⭐ LES 5 FONCTIONS D'UNE VILLE — À CONNAÎTRE ! ⭐⭐⭐
+
+| Fonction | Ce que ça veut dire |
+|---|---|
+| **Politique** | Tout ce qui concerne l'**organisation**, la **gestion** de la cité, de la ville, du pays |
+| **Économique** | Tout ce qui concerne les **échanges**, le **commerce** et l'**argent** |
+| **Religieuse** | Tout ce qui concerne la **religion** |
+| **Militaire** | Tout ce qui concerne l'**armée**, la **défense** et la **guerre** |
+| **Sociale** | Tout ce qui concerne la **vie en société** et la **vie quotidienne** |
+
+---
+
+# Chapitre 3 : L'eau au Proche-Orient antique — L'Égypte est-elle un don du Nil ?
+
+---
+
+## Feuille 1 - Carte de l'Égypte et de ses environs
+
+### Exercice : compléter une carte à partir de la carte des civilisations du bassin méditerranéen
+
+**Éléments à placer** :
+- **Cours d'eau** (en bleu) : le **Nil**, le **Jourdain**
+- **Étendues d'eau** (en bleu + noms) : **Mer Méditerranée**, **Mer Rouge**
+- **Terres cultivées** (en vert) : la bande le long du Nil
+- **Zones désertiques et montagneuses** (en jaune) : autour des terres fertiles
+
+**Régions sur la carte** :
+- **Basse-Égypte** (au nord, le delta du Nil)
+- **Haute-Égypte** (au sud)
+- **Nubie** (encore plus au sud)
+
+---
+
+## Feuille 2 - Photo du paysage : la vallée du Nil à Louxor
+
+Composantes du paysage (numéros 1 à 4) :
+1. Le **désert**
+2. Le **Nil** (cours d'eau)
+3. Les **régions montagneuses**
+4. Les **terres fertiles** (cultivées, le long du Nil)
+
+---
+
+## Feuille 3 - La crue et la décrue du Nil (Documents 19 à 22)
+
+### Hérodote et le Nil
+
+- **Hérodote** = historien **grec** qui a voyagé en Égypte
+- Son témoignage est **fiable** : il a observé le Nil durant une année entière
+- **Particularité du Nil** : il a un régime **contraire** aux autres fleuves — le Nil **déborde au solstice d'été**, recouvrant une grande partie des terres
+
+### ⭐ DÉFINITIONS À RETENIR POUR LE BILAN
+
+> **Crue** : montée des eaux d'un fleuve qui déborde et recouvre les terres environnantes.
+>
+> **Décrue** : retrait des eaux — le fleuve retrouve son niveau normal et les terres ne sont plus recouvertes.
+
+### Aménagements pour faire face aux crues
+
+| Aménagement | À quoi ça sert |
+|---|---|
+| **Nilomètre** | Instrument servant à **mesurer** exactement le niveau des crues du Nil |
+| **Chadouf** (ou shadouf) | Instrument d'**irrigation** — sert à puiser et à arroser les terres |
+
+### ⭐ Quand cultive-t-on les terres et pourquoi ?
+
+> On cultive **juste après la décrue** (quand l'eau redescend), car :
+> 1. Les terres ne sont **plus recouvertes d'eau**
+> 2. Le fleuve a déposé du **limon** (boue fertile) qui **rend les terres fertiles**
+
+### ⭐ Les travaux des champs dans l'ordre
+
+| Ordre | Travail | Outil / animal utilisé |
+|---|---|---|
+| 1 | **Labour** (retourner le sol) | La **houe** (outil pour creuser) |
+| 2 | **Semailles** (semer les graines) | À la main |
+| 3 | **Moisson** (couper le blé) | La **faucille** (lame courbée) |
+| 4 | **Transport** du blé | Ânes, paniers |
+| 5 | **Dépiquage / Battage** (séparer les grains des tiges) | Le **fléau** (bâton articulé qu'on tape sur les épis) |
+
+### 📚 Vocabulaire
+
+- **Crue** : montée des eaux d'un fleuve qui déborde
+- **Décrue** : retrait des eaux, retour au niveau normal
+- **Limon** : boue fertile déposée par le fleuve après la décrue
+- **Nilomètre** : instrument pour mesurer le niveau des crues du Nil
+- **Chadouf** : instrument d'irrigation (un long balancier avec un seau pour puiser l'eau)
+- **Faucille** : outil en forme de demi-lune pour couper le blé
+- **Fléau** : bâton articulé pour battre le blé et en détacher les grains
+- **Labour** : action de retourner la terre avant de semer
+
+---
+
+## Feuille 4 - Les usages de l'eau (Documents 23, 24, 25)
+
+### Documents analysés
+- Doc 23 : Texte sur les échanges commerciaux entre **Tarsis** et **Tyr** (toutes sortes de biens)
+- Doc 24 : Fresque de la tombe de **Nébamon**, vers **1500 ACN**
+- Doc 25 : Texte sur le **papyrus** (récolté sur les bords du Nil, tige débitée en fines lamelles)
+
+### ⭐ Les 4 usages de l'eau au Proche-Orient antique
+
+| Usage | Explication |
+|---|---|
+| 1. **Agriculture** | Irriguer les terres pour faire pousser les cultures |
+| 2. **Alimentation** | Le fleuve est riche en **poissons** = source de nourriture |
+| 3. **Commerce** | Le Nil est une **voie navigable** = voie de communication importante qui favorise les échanges |
+| 4. **Écriture** | Faire pousser le **papyrus**, un support sur lequel les Égyptiens écrivaient |
+
+---
+
+## ⭐⭐⭐ RÉPONSE À LA PROBLÉMATIQUE — L'eau, source de vie ? L'Égypte, un don du Nil ? ⭐⭐⭐
+
+> **Oui, l'eau est source de vie** pour les Égyptiens.
+> Dans ce pays de déserts et de montagnes, l'eau est **indispensable pour vivre**.
+>
+> **L'Égypte est un véritable don (= cadeau) du Nil.**
+> Alors que l'Égypte est une vaste étendue désertique, cette région doit ses richesses aux **crues du Nil**.
+>
+> 💡 *Cette phrase célèbre vient d'**Hérodote** : « L'Égypte est un don du Nil » = c'est le Nil qui offre à l'Égypte ses richesses (le limon fertile, l'eau, le poisson, le commerce, le papyrus).*
+
+---
+
+# Chapitre 4 : La société égyptienne — Comment se compose-t-elle ? Étaient-ils tous égaux ?
+
+---
+
+## ⭐⭐⭐ Feuille 1 - LA PYRAMIDE SOCIALE DE L'ÉGYPTE ANTIQUE (TRÈS IMPORTANT !) ⭐⭐⭐
+
+> Analyse des documents 17 à 30 → compléter la pyramide sociale
+
+```
+                          /\
+                         /  \
+                        / 👑 \
+                       / PHARAON \
+                      / Dieu vivant \
+                     / Pouvoir absolu \
+                    /  de droit divin  \
+                   /____________________\
+                  /                      \
+                 /        VIZIR           \
+                / Conseiller du roi, n'est \
+               / responsable que devant     \
+              /        Pharaon               \
+             /________________________________\
+            /                                  \
+           /     FAMILLE ROYALE et              \
+          /     serviteurs directs               \
+         /________________________________________\
+        /                                          \
+       /  Gens de cour · Chefs de l'administration  \
+      /   Chefs de l'armée · Grands prêtres           \
+     /______________________________________________________\
+    /                                                        \
+   /     Prêtres · Scribes · Soldats                          \
+  /____________________________________________________________\
+═══════════════════ PRIVILÉGIÉS (au-dessus) ═════════════════════
+═══════════════════ NON-PRIVILÉGIÉS (en-dessous) ════════════════
+  \                                                            /
+   \     Artisans · Pêcheurs · Paysans                       /
+    \________________________________________________________/
+     \                                                      /
+      \   Serviteurs · Prisonniers · Esclaves              /
+       \          (corvéables)                            /
+        \________________________________________________/
+```
+
+### Les symboles du pouvoir du Pharaon
+
+| Symbole | Description |
+|---|---|
+| **Barbe postiche** | Fausse barbe portée comme symbole de royauté |
+| **Serpent protecteur** (uræus) | Cobra dressé sur le front, symbole de protection |
+| **Pectoral** | Grand bijou porté sur la poitrine |
+| **Sceptre** | Bâton de commandement |
+| **Fouet** | Symbole d'autorité |
+
+---
+
+## ⭐⭐ RÉPONSE À LA PROBLÉMATIQUE — Étaient-ils tous égaux ? ⭐⭐
+
+> **Non !** La société égyptienne est très **hiérarchisée** et **inégalitaire** :
+> pas tous les mêmes **droits** ni les mêmes **devoirs**.
+>
+> La société se divise en **deux grands groupes** :
+> - Les **privilégiés** (en haut de la pyramide)
+> - Les **non-privilégiés** (en bas de la pyramide)
+>
+> Chacun y occupe une place **bien particulière et bien précise**.
+> Il existe une hiérarchie **même au sein** des groupes privilégiés (le Pharaon domine tout le monde, puis le vizir, puis la famille royale, etc.).
+
+---
+
+# Chapitre 5 : Les croyances de l'Égypte antique — Quelle place occupe la religion ?
+
+---
+
+## Feuille 1 - Le mythe d'Osiris (Documents 40 à 42)
+
+### Les personnages principaux du mythe
+
+| Personnage | Qui est-il/elle ? | Rôle |
+|---|---|---|
+| **Osiris** | Roi d'Égypte, gouverne les terres fertiles | Souverain bon, aimé de son peuple. Préside le **tribunal des morts**. Première momie. Symbole de la **résurrection**. |
+| **Isis** | Déesse de la **magie**, **sœur et femme** d'Osiris | Utilise ses pouvoirs magiques pour aider Osiris |
+| **Seth** | **Frère** d'Osiris et d'Isis, dieu du **désert** | Très **jaloux**, aspire au pouvoir, convoite le trône de son frère |
+
+> 💡 **Point commun** : ce sont tous des **dieux** (et de la même famille).
+
+### Que devient Osiris après sa mort ?
+
+> Après avoir été tué par Seth, Osiris est ramené à la vie par la magie d'Isis. Il ne revient pas parmi les vivants, mais devient le **souverain du royaume des morts** : il préside le **tribunal d'Osiris**, où l'âme des défunts est jugée lors de la **pesée de l'âme** (on pèse le cœur du mort contre la plume de Maât, déesse de la justice).
+
+### Les croyances des Égyptiens
+
+- Croyance en une **vie après la mort**
+- Importance de la **momification** : le corps est l'enveloppe charnelle qui **protège l'âme**
+- Croyance en la **magie**
+- La **pesée de l'âme** : le cœur du défunt est jugé au tribunal d'Osiris
+- Religion **polythéiste** = on croit en **plusieurs dieux**
+
+### Après la mort du Pharaon
+
+- La demeure du Pharaon après sa mort = la **pyramide**
+- On pratique la **momification** pour **conserver le corps** du défunt, car le corps protège l'âme et lui permet d'accéder à l'au-delà
+
+---
+
+## ⭐⭐⭐ RÉPONSE À LA PROBLÉMATIQUE — Les croyances et la religion ⭐⭐⭐
+
+> Les Égyptiens, comme la plupart des peuples de l'Antiquité, sont **polythéistes** (= ils croient en **plusieurs dieux**).
+>
+> ### Comment sont représentés les dieux ?
+> - Sous forme **animale** (corps d'animal)
+> - Sous forme **hybride** (corps humain + tête d'animal)
+> - Sous forme **humaine**
+>
+> Les dieux éprouvent des **sentiments**, des **émotions** et des **faiblesses** humaines.
+>
+> ### La place de la religion dans la société
+> Les dieux ont une **énorme influence** dans la société égyptienne et sur la **vie quotidienne**.
+> Pour rendre hommage aux dieux, les Égyptiens édifient des **temples** (= espaces sacrés réservés aux dieux) auxquels ils font des **offrandes** (= cadeaux).
+>
+> ### La vie après la mort
+> Les Égyptiens croient en la **survie de l'âme** et en une **vie après la mort**.
+> L'au-delà se présente comme un paradis : le **paradis d'Osiris**.
+>
+> Pour y accéder, le corps du défunt doit être **conservé**, car le corps est l'enveloppe qui **protège l'âme**.
+> → C'est pourquoi les Égyptiens pratiquent la **momification**.
+
+---
+
+# ⭐⭐⭐ FICHES DE SYNTHÈSE — ENQUÊTE 2 (les deux roues) ⭐⭐⭐
+
+---
+
+## ROUE 1 : Le mode de vie en MÉSOPOTAMIE au Proche-Orient (IVe - IIIe mill. ACN)
+
+### 1. Se représenter le monde (rites, croyances)
+- Croyance en **plusieurs dieux** → **POLYTHÉISME**
+
+### 2. Un espace de vie (paysage, habitat)
+- Naissance des **premières villes** sur les bords du **Tigre** et de l'**Euphrate**
+- Villes entourées de **remparts**
+- Différents **éléments constitutifs** de la ville, ayant chacun une **fonction bien particulière**
+- → **5 fonctions d'une ville** (politique, économique, religieuse, militaire, sociale)
+
+### 3. Des activités pour répondre à des besoins (activités, outils, échanges)
+- **Agriculture** et **élevage**
+- **Commerce** et échanges par **voie navigable** → importance du Tigre et de l'Euphrate
+- **Artisanat**
+- → 1ers **comptes** et 1ers **contrats** grâce à l'**écriture cunéiforme**
+- **Techniques** : importance des techniques d'**irrigation**
+
+### 4. Des activités pour communiquer (s'exprimer, s'instruire)
+- 1re forme d'écriture : **ÉCRITURE CUNÉIFORME** ± **3300 ACN**
+- Support : **tablettes d'argile**
+
+### 5. Des rapports sociaux (organisation, classes sociales)
+- Société très **HIÉRARCHISÉE** et **INÉGALITAIRE**
+- → Différents groupes sociaux gouvernés par le **Roi** qui s'appuie sur une **administration de scribes**
+
+### 6. Les étapes de la vie (naissance, mort)
+- *(non complété sur la fiche)*
+
+---
+
+## ROUE 2 : Le mode de vie en ÉGYPTE (IIIe mill. - Ve s. ACN)
+
+### 1. Se représenter le monde (rites, croyances)
+- Place **très importante** de la **religion** dans la société
+- Croyance en **plusieurs dieux** → **POLYTHÉISME**
+- Dieux représentés sous **plusieurs formes** : mi-humain/mi-animal, hybrides...
+- Croyance en une vie après la mort → **MOMIFICATION**
+
+### 2. Un espace de vie (paysage, habitat)
+- **Terres fertiles** le long du **Nil**, car l'Égypte est une zone entourée de **montagnes** et de **déserts** → **importance du Nil**
+- Villes installées le long du Nil, sur les **bords du Nil**
+
+### 3. Des activités pour répondre à des besoins (activités, outils, échanges)
+- Principale activité : **AGRICULTURE** → grâce aux **crues du Nil** → importance du **limon**
+- **Commerce** et échanges → **recensement des richesses**
+- → **IMPÔTS** fixés par les **scribes** qui ont un rôle important
+- Outils : **nilomètre**, **araire**...
+- Techniques d'**irrigation** avec le **chadouf**
+
+### 4. Des activités pour communiquer (s'exprimer, s'instruire)
+- **HIÉROGLYPHES** ± **3000 ACN**
+- Importance du rôle des **scribes**
+
+### 5. Des rapports sociaux (organisation, classes sociales)
+- La société et la vie quotidienne sont très **imprégnées de la religion** → importance des dieux dans la société
+- Société très **HIÉRARCHISÉE** et **INÉGALITAIRE**, parfois même **au sein d'un même groupe social**
+- *(Les femmes ont **plus de droits et de libertés** que dans les autres peuples de l'Antiquité)*
+
+### 6. Les étapes de la vie (naissance, mort)
+- **Pesée de l'âme**
+- **Tribunal d'Osiris**
+- **Momification**
+- **Vie après la mort**
+- Pyramides, tombes
