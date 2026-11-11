@@ -133,6 +133,7 @@ export const PRIO = {
     ],
   },
   separations: {
+    video: { id: 'separations', titre: 'Séparer un mélange : 5 méthodes, 1 piège', duree: 'à regarder avant tout le reste' },
     minutes: 12,
     prio: [
       ['Le schéma de l\'appareil à distillation ⚠', 'Les 9 légendes, et le sens de l\'eau froide (entre en bas, sort en haut).'],
