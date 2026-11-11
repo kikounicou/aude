@@ -167,7 +167,7 @@ table.tab th { background: var(--papier2); font-weight: 700; }
 .sim-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 4px solid var(--encre); margin-top: -8px; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .sim-slider input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid var(--encre); }
 .sim-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-.sim-btn { border: 1.5px solid rgba(255,255,255,.35); background: transparent; color: #fff; padding: 9px 14px; border-radius: 99px; font-weight: 700; font-size: 14px; min-height: 40px; }
+.sim-btn { border: 1.5px solid rgba(255,255,255,.35); background: transparent; color: #fff; padding: 9px 14px; border-radius: 99px; font-weight: 700; font-size: 14px; min-height: 44px; }
 .sim-btn:hover { background: rgba(255,255,255,.12); }
 .sim-btn.primary { background: var(--fluo); border-color: var(--fluo); color: var(--encre); }
 .sim-btn.on { background: #fff; color: var(--encre); border-color: #fff; }
@@ -175,7 +175,7 @@ table.tab th { background: var(--papier2); font-weight: 700; }
 .sim-choice { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .sim-choice-label { color: #cfc8ff; }
 .sim-seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.sim-seg button { border: 1.5px solid rgba(255,255,255,.3); background: transparent; color: #fff; padding: 7px 12px; border-radius: 99px; font-weight: 600; font-size: 14px; min-height: 38px; }
+.sim-seg button { border: 1.5px solid rgba(255,255,255,.3); background: transparent; color: #fff; padding: 8px 13px; border-radius: 99px; font-weight: 600; font-size: 14px; min-height: 44px; }
 .sim-seg button.on { background: #fff; color: var(--encre); border-color: #fff; }
 .sim-readout { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: #cfc8ff; border-top: 1px dashed rgba(255,255,255,.18); padding-top: 8px; }
 .sim-readout strong { font: 700 18px/1 var(--titre); color: #fff; }
