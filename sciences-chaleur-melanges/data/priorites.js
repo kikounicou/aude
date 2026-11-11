@@ -89,6 +89,7 @@ export const PRIO = {
   },
   graphique: {
     minutes: 10,
+    video: { id: 'graphique', titre: 'Le graphique et le palier en une minute', duree: 'à regarder avant tout le reste', chiffre: true },
     prio: [
       ['Le palier', 'La température reste constante pendant le changement d\'état.'],
       ['Variable contrôlée / dépendante', 'Le temps (axe horizontal, min) ; la température (axe vertical, °C).'],
