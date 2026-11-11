@@ -44,6 +44,7 @@ export const PRIO = {
     ],
   },
   'chaleur-temperature': {
+    video: { id: 'chaleur-temperature', titre: 'Chaleur et température : ne les confonds plus', duree: 'à regarder avant tout le reste' },
     minutes: 8,
     prio: [
       ['Chaleur = énergie thermique', 'Une forme d\'énergie : on la fournit, on l\'échange.'],
