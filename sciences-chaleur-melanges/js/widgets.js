@@ -29,8 +29,42 @@ function video(el, c) {
   el.innerHTML = `<div class="w-video-tete"><span class="kicker">Capsule</span><h2>${c.video.titre}</h2><span>${c.video.duree || ''}</span></div>
     <video controls playsinline preload="none" poster="video/${c.video.id}.jpg"><source src="video/${c.video.id}.mp4" type="video/mp4"></video>`;
   const v = el.querySelector('video');
-  v.querySelector('source').addEventListener('error', () => { el.style.display = 'none'; });
-  return () => { v.pause(); };
+  if (!c.video.chiffre) {
+    v.querySelector('source').addEventListener('error', () => { el.style.display = 'none'; });
+    return () => { v.pause(); };
+  }
+  // Capsule chiffrée : en ligne il n'y a qu'un fichier illisible (video/<id>.enc). On demande le mot de passe une fois,
+  // l'appareil s'en souvient, et la vidéo est déchiffrée ici, dans le navigateur (AES-256-GCM, clé PBKDF2).
+  v.remove();
+  const CLE_MDP = 'rs2e-capsules';
+  const zone = h('div', 'w-verrou');
+  zone.style.backgroundImage = `url(video/${c.video.id}.jpg)`;
+  zone.innerHTML = `<form><b>🔒 Capsule protégée</b><span>Entre le mot de passe des capsules (une seule fois sur cet appareil).</span>
+    <div><input type="password" autocomplete="current-password" aria-label="Mot de passe des capsules" placeholder="mot de passe"><button class="btn chaud petit" type="submit">Voir la capsule</button></div><i></i></form>`;
+  el.appendChild(zone);
+  const form = zone.querySelector('form'), champ = zone.querySelector('input'), msg = zone.querySelector('i');
+  let url = null, video = null;
+  async function ouvrir(mdp, silencieux) {
+    msg.textContent = 'Déchiffrement…';
+    try {
+      const buf = new Uint8Array(await (await fetch(`video/${c.video.id}.enc`)).arrayBuffer());
+      const enc = new TextEncoder();
+      const base = await crypto.subtle.importKey('raw', enc.encode(mdp.trim()), 'PBKDF2', false, ['deriveKey']);
+      const cle = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: buf.slice(5, 21), iterations: 600000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const clair = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(21, 33), additionalData: enc.encode('RS2E1') }, cle, buf.slice(33));
+      url = URL.createObjectURL(new Blob([clair], { type: 'video/mp4' }));
+      video = h('video'); video.controls = true; video.playsInline = true; video.src = url; video.poster = `video/${c.video.id}.jpg`;
+      zone.replaceWith(video);
+      try { localStorage.setItem(CLE_MDP, mdp.trim()); } catch { /* navigation privée */ }
+    } catch (e) {
+      msg.textContent = silencieux ? '' : 'Mot de passe incorrect. Demande-le à papa.';
+      if (silencieux) { try { localStorage.removeItem(CLE_MDP); } catch { /* rien */ } }
+    }
+  }
+  form.addEventListener('submit', (e) => { e.preventDefault(); if (champ.value.trim()) ouvrir(champ.value, false); });
+  let garde = null; try { garde = localStorage.getItem(CLE_MDP); } catch { /* rien */ }
+  if (garde) ouvrir(garde, true);
+  return () => { if (video) video.pause(); if (url) URL.revokeObjectURL(url); };
 }
 
 /* ---------- 3. Le triangle vivant (changements d'état) ---------- */

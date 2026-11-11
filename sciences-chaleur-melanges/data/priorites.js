@@ -85,7 +85,7 @@ export const PRIO = {
       ['Les gouttes d\'eau déposées sur le bloc réfrigérant gèlent.', 'SOLIDIFICATION', 'L\'eau passe de l\'état liquide à l\'état solide.'],
       ['La tige chaude d\'une cuillère à combustion touche un glaçon : la glace se transforme en vapeur.', 'SUBLIMATION', 'L\'eau passe directement de l\'état solide à l\'état gazeux.'],
     ],
-    video: { id: 'etats', titre: 'Les changements d\'état en une minute', duree: 'à regarder avant tout le reste' },
+    video: { id: 'etats', titre: 'Les changements d\'état en une minute', duree: 'à regarder avant tout le reste', chiffre: true },
   },
   graphique: {
     minutes: 10,
