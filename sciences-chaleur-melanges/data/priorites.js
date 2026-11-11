@@ -149,6 +149,7 @@ export const PRIO = {
     ],
   },
   dissolution: {
+    video: { id: 'dissolution', titre: 'Dissoudre : le sucre ne fond pas !', duree: 'à regarder avant tout le reste' },
     minutes: 10,
     prio: [
       ['Solvant, soluté, solution', 'Le liquide qui dissout ; ce qui se dissout ; le mélange homogène obtenu.'],
