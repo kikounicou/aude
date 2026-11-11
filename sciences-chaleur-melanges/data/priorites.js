@@ -122,6 +122,7 @@ export const PRIO = {
     ],
   },
   melanges: {
+    video: { id: 'melanges', titre: 'Homogène ou hétérogène ? Tout se joue à l’œil nu', duree: 'à regarder avant tout le reste' },
     minutes: 4,
     prio: [
       ['Hétérogène', 'Différents constituants sont visibles à l\'œil nu (eau + huile, eau boueuse).'],
