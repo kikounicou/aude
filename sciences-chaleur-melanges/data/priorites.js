@@ -170,6 +170,7 @@ export const PRIO = {
     ],
   },
   'corps-purs': {
+    video: { id: 'corps-purs', titre: 'Corps pur ou mélange ? Tout se joue dans les molécules', duree: 'à regarder avant tout le reste' },
     minutes: 8,
     prio: [
       ['C = m / V, en g/L', 'Masse de soluté divisée par le volume de la solution.'],
