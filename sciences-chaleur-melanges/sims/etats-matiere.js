@@ -67,10 +67,11 @@ function triangle(parent) {
     `<text x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#fff" letter-spacing="1">${t}</text></g>`;
   const box = document.createElement('div');
   box.innerHTML = `<svg viewBox="0 0 320 240" style="width:100%;max-width:290px;margin:0 auto;display:block;font-family:inherit" role="img" aria-label="Triangle des changements d'état">` +
-    fl('fusion', [98, 206], [222, 206], -8, -20, 'fusion') + fl('solidification', [222, 206], [98, 206], 8, 21, 'solidification') +
-    fl('vaporisation', [250, 190], [184, 46], 8, 21, 'vaporisation') + fl('condL', [184, 46], [250, 190], -8, -20, 'condensation') +
-    fl('sublimation', [70, 190], [136, 46], 8, 21, 'sublimation') + fl('condS', [136, 46], [70, 190], -8, -20, 'condensation') +
-    nd('S', 52, 206, 'SOLIDE') + nd('L', 268, 206, 'LIQUIDE') + nd('G', 160, 30, 'GAZ') + '</svg>';
+    // même disposition que le schéma du cours : LIQUIDE en haut, SOLIDE en bas à gauche, GAZ en bas à droite
+    fl('fusion', [70, 190], [136, 46], 8, 21, 'fusion') + fl('solidification', [136, 46], [70, 190], -8, -20, 'solidification') +
+    fl('vaporisation', [184, 46], [250, 190], 8, 21, 'vaporisation') + fl('condL', [250, 190], [184, 46], -8, -20, 'condensation') +
+    fl('sublimation', [98, 206], [222, 206], -8, -20, 'sublimation') + fl('condS', [222, 206], [98, 206], 8, 21, 'condensation') +
+    nd('L', 160, 30, 'LIQUIDE') + nd('S', 52, 206, 'SOLIDE') + nd('G', 268, 206, 'GAZ') + '</svg>';
   parent.appendChild(box);
   const fleches = [...box.querySelectorAll('[data-a]')], noeuds = [...box.querySelectorAll('[data-n]')];
   const fond = { S: 'rgba(207,238,255,.3)', L: 'rgba(77,184,255,.35)', G: 'rgba(232,244,255,.22)' };
@@ -163,7 +164,7 @@ export default function mount(root) {
   const lblS = st.label('état solide', pS), lblL = st.label('état liquide', pL), lblG = st.label('état gazeux', pG);
   const lblPlaque = st.label('', new THREE.Vector3(0, -0.05, D / 2 + 0.18));
   const lblTige = st.label('tige chaude<br>(cuillère à combustion)', tige, { offset: [-0.58, 0.85, 0], cls: 'chaud' });
-  const lblBloc = st.label('bloc réfrigérant (−18 °C)', bloc, { offset: [0, -0.24, 0.3], cls: 'froid' });
+  const lblBloc = st.label('bloc réfrigérant (sorti du congélateur)', bloc, { offset: [0, -0.24, 0.3], cls: 'froid' });
   const lblGivre = st.label('givre', new THREE.Vector3(0.78, 0.42, D / 2), { cls: 'fluo' });
 
   // ---------- état du modèle ----------
@@ -320,7 +321,7 @@ export default function mount(root) {
     scen = { type, t: 0, pret: false, fin: false, n: 0, acc: 0 };
     for (const b of bulles) { b.on = false; b.mols.length = 0; b.m.visible = false; }
     fondu(() => {
-      if (type === 'subli') { latY = 0; toutSolide(); sl.set(3.3); E = cible = 3.3; tige.position.y = 2.45; }
+      if (type === 'subli') { latY = 0; toutSolide(); sl.set(4); E = cible = 4; tige.position.y = 2.45; }
       else {
         latY = 0.16; occ.fill(-1);
         for (let i = 0; i < N; i++) { site[i] = -1; ph[i] = GAZ; P[i * 3] = rand(X0, X1); P[i * 3 + 1] = rand(0.3, Y1); P[i * 3 + 2] = rand(Z0, Z1); const v = new THREE.Vector3(gauss(), gauss(), gauss()).setLength(1.1); setV(i, v.x, v.y, v.z); }
@@ -332,7 +333,7 @@ export default function mount(root) {
   function scenario(dt) {
     const s = scen; if (!s.pret) return; s.t += dt;
     if (s.type === 'subli') {
-      Tsol = -20; Tliq = 0; Tgaz = 60; T = -20;
+      Tsol = -18; Tliq = 0; Tgaz = 60; T = -18;
       const tip = tige.position;
       if (!s.fin) {
         const k = siteAFondre(tip), dk = k < 0 ? 9 : Math.hypot(SX[k] - tip.x, SY[k] - tip.y, SZ[k] - tip.z);
@@ -452,10 +453,10 @@ export default function mount(root) {
     let sx = 0, sy = 0; for (let i = 0; i < N; i++) if (ph[i] === SOL) { sx += P[i * 3]; sy = Math.max(sy, P[i * 3 + 1]); }
     pS.set(scen && scen.type === 'subli' ? -0.36 : nS ? sx / nS : 0, sy + 0.17, D / 2); pL.set(X1 - 0.3, haut + 0.13, D / 2);
     lblS.show(nS > 8); lblL.show(nL > 8); lblG.show(nG > 8);
-    lblTige.show(tige.visible && tigeMat.opacity > 0.5 && !!scen && !scen.fin);lblBloc.show(bloc.visible && blocMat.opacity > 0.5);
+    lblTige.show(tige.visible && tigeMat.opacity > 0.5 && !!scen && !scen.fin); lblBloc.show(bloc.visible && blocMat.opacity > 0.5);
     lblGivre.show(!!(scen && scen.type === 'givre' && scen.n > 12));
     // panneau
-    const te = scen ? (scen.type === 'subli' ? '−20 °C (glace)' : '20 °C (air) · bloc −18 °C') : fmt(Taff) + ' °C';
+    const te = scen ? (scen.type === 'subli' ? '−18 °C (glaçon)' : 'air 20 °C · bloc très froid') : fmt(Taff) + ' °C';
     const etat = [pres.S && 'solide', pres.L && 'liquide', pres.G && 'gazeux'].filter(Boolean).join(' + ');
     if (te + etat !== txtE) { txtE = te + etat; roT.set(te); roE.set(etat); }
     // explication

@@ -94,7 +94,7 @@ mark, .fluo { background: linear-gradient(180deg, transparent 12%, var(--fluo) 1
 .pastille.ok { background: var(--ok-bg); color: var(--ok); }
 
 /* ---------- page chapitre ---------- */
-.chap-tete { padding: 30px 0 8px; }
+.chap-tete { padding: 30px 20px 8px; }
 .chap-tete .fil { font-size: 14px; color: var(--encre2); text-decoration: none; font-weight: 600; }
 .chap-tete h1 { font-size: clamp(32px, 5vw, 54px); font-weight: 800; margin: 10px 0 8px; }
 .chap-tete p { color: var(--encre2); font-size: 18px; max-width: 46em; }

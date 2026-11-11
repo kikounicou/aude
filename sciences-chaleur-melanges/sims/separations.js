@@ -122,7 +122,7 @@ export default function mount(root) {
   }
   function cadrer() { // la caméra cadre la boîte du labo (en perspective) + la place des étiquettes à gauche et à droite
     const { w, h } = st.size(); if (!box || w < 10 || h < 10 || (w === fw && h === fh)) return; fw = w; fh = h;
-    const b = box, m = 10, pl = 108, pr = 108, T = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const etroit = w < 560, b = box, m = 10, pl = etroit ? 80 : 108, pr = pl, T = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const dir = V3(...(b.dir || [0, 0.26, 1])).normalize(), dr = V3(0, 1, 0).cross(dir).normalize(), up = dir.clone().cross(dr);
     const c0 = V3((b.xL + b.xR) / 2, (b.yB + b.yT) / 2, 0), pts = [];
     for (const x of [b.xL, b.xR]) for (const y of [b.yB, b.yT]) for (const z of [-b.z, b.z]) pts.push(V3(x, y, z).sub(c0));
@@ -135,6 +135,7 @@ export default function mount(root) {
     const reste = Math.max(0, w - pl - pr - 2 * m - (u1 - u0) * k), du = u0 - (pl + m + reste / 2 - w / 2) / k;
     const tgt = c0.clone().addScaledVector(dr, du).addScaledVector(up, (v0 + v1) / 2);
     controls.minDistance = d * 0.5; controls.maxDistance = d * 1.6;
+    labels.forEach((L) => { L.el.style.fontSize = etroit ? '11.5px' : ''; L.el.style.padding = etroit ? '3px 6px' : ''; }); // téléphone : étiquettes plus petites
     tw = { t: 0, t0: controls.target.clone(), p0: camera.position.clone(), t1: tgt, p1: tgt.clone().addScaledVector(dir, d) };
   }
   st.onFrame((dt, t) => {
@@ -406,7 +407,7 @@ export default function mount(root) {
     const coulee = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1, 8), liquidMaterial(BOUE, 0.9)); g.add(coulee);
     const goutteM = liquidMaterial(0x9fdcff, 0.8), gouttes = Array.from({ length: 6 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), goutteM); m.visible = false; g.add(m); return m; });
     const filet = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 8), goutteM); g.add(filet);
-    lbl('un agitateur', A, 'g');
+    lbl('un agitateur', V3(A.x + 0.06, A.y, 0), 'd');
     lbl('le mélange<br>(eau boueuse)', V3(-0.98, 2.6, 0), 'g');
     lbl('un filtre', V3(0.6, 2.62, 0), 'd');
     lbl('un entonnoir', V3(0.06, 1.55, 0), 'd');
@@ -420,7 +421,7 @@ export default function mount(root) {
     init();
     const cP = new THREE.Color(), lo = V3(0, 0, 0), lo2 = V3(0, 0, 0);
     return {
-      box: { xL: -1.0, xR: 1.1, yB: 0, yT: 3.35, z: 0.45 },
+      box: { xL: -1.0, xR: 1.1, yB: 0, yT: 3.55, z: 0.45 },
       maj(dt) {
         tilt = lerp(tilt, versant ? 1.15 : 0, Math.min(1, dt * 3)); pivot.rotation.z = -tilt;
         const verse = versant && tilt > 0.95 && L > 0;
@@ -480,15 +481,16 @@ export default function mount(root) {
     const vm = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 12, 0, Math.PI * 2, Math.PI - Math.asin(A0 / R), Math.asin(A0 / R)), glassMaterial({ opacity: 0.26 }));
     vm.position.y = GT + 0.004 + R; vm.renderOrder = 2; g.add(vm);
     const vmG = new THREE.Group(); vmG.position.y = GT + 0.006; g.add(vmG);
-    const eau = couche(liquidMaterial(C.eau, 0.55), vmG, (y) => rV(y) - 0.004, 24);
-    const crist = nuage(new THREE.BoxGeometry(1, 1, 1), 170, vmG); crist.tint(0xffffff, 0.06);
-    crist.P.forEach((q) => { const rho = 0.53 * Math.sqrt(Math.random()), a = rand(6.28); q.lx = rho; q.x = Math.cos(a) * rho; q.z = Math.sin(a) * rho; q.r = rand(0.012, 0.028); q.y = R - Math.sqrt(R * R - rho * rho) + q.r * 0.4; q.st = 'on'; });
+    const eau = couche(liquidMaterial(C.eau, 0.7), vmG, (y) => rV(y) - 0.004, 24);
+    // les cristaux se forment d'abord sur les bords, là où le liquide se retire
+    const crist = nuage(new THREE.BoxGeometry(1, 1, 1), 260, vmG); crist.tint(0xffffff, 0.05);
+    crist.P.forEach((q) => { const rho = 0.53 * Math.pow(Math.random(), 0.4), a = rand(6.28); q.lx = rho; q.x = Math.cos(a) * rho; q.z = Math.sin(a) * rho; q.r = rand(0.008, 0.02); q.y = R - Math.sqrt(R * R - rho * rho) + q.r * 0.4; q.st = 'on'; });
     // vapeur : des sprites doux qui montent
     const vapT = texture(64, 64, (x) => { const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(240,248,255,1)'); gr.addColorStop(1, 'rgba(240,248,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); });
     const vap = Array.from({ length: 28 }, () => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: vapT, transparent: true, depthWrite: false, opacity: 0 })); s.visible = false; s.userData = { age: 0, vie: 1 }; g.add(s); return s; });
     lbl('une source<br>de chaleur', V3(-0.12, 0.5, 0), 'g', 'chaud');
     lbl('un verre<br>de montre', V3(0.66, GT + 0.13, 0), 'd');
-    const lEau = lbl('', V3(-0.6, GT + 0.08, 0), 'g'), lCr = lbl('', V3(0.42, GT - 0.1, 0), 'd', 'fluo'), lVap = lbl('', V3(0.28, GT + 0.8, 0), 'd', 'discret');
+    const lEau = lbl('', V3(-0.6, GT + 0.15, 0), 'g'), lCr = lbl('', V3(-0.5, GT - 0.12, 0), 'g', 'fluo'), lVap = lbl('', V3(0.28, GT + 0.8, 0), 'd', 'discret');
     note(u, COURS.evaporation, COURS.evaP);
     const sl = u.slider({ label: 'Chaleur', min: 0, max: 100, step: 1, value: 0, unit: '%', onInput: () => {} });
     const [bR] = u.buttons([{ label: 'Recommencer', onClick: () => init() }]);
@@ -499,7 +501,7 @@ export default function mount(root) {
     function init() { V = V0; tSp = 0; crist.P.forEach((q) => { q.s = 0; }); }
     init();
     return {
-      box: { xL: -0.68, xR: 0.68, yB: 0, yT: 2.2, z: 0.5, dir: [0, 0.5, 1] },
+      box: { xL: -0.62, xR: 0.62, yB: 0, yT: 2.0, z: 0.5, dir: [0, 0.5, 1] },
       maj(dt, t) {
         if (auto && sl.value === 0) sl.set(80);
         const ch = sl.value / 100;
@@ -511,7 +513,7 @@ export default function mount(root) {
         crist.commit();
         // flamme, lueur
         flamme.visible = ch > 0.02; flamme.scale.set(0.6 + 0.5 * ch, ch * (0.85 + 0.08 * Math.sin(t * 31)), 0.6 + 0.5 * ch);
-        lum.intensity = 2.2 * ch; disque.material.emissiveIntensity = 0.45 * ch;
+        lum.intensity = 1.6 * ch; disque.material.emissiveIntensity = 0.22 * ch;
         // vapeur
         tSp += dt * 10 * ch * (V > 0 ? 1 : 0);
         while (tSp > 1) { tSp -= 1; const s = vap.find((x) => !x.visible); if (!s) break; const a = rand(6.28), r = rs * 0.8 * Math.sqrt(Math.random()); s.position.set(Math.cos(a) * r, GT + h + 0.03, Math.sin(a) * r); s.userData = { age: 0, vie: rand(1.8, 2.6), v: rand(0.3, 0.55), ph: rand(6.28) }; s.visible = true; }
@@ -522,7 +524,7 @@ export default function mount(root) {
           s.scale.setScalar(0.12 + 0.5 * k); s.material.opacity = 0.42 * Math.min(1, d.age / 0.3) * (1 - k);
         }
         lu.set(pct(f));
-        dit(lEau, f > 0.02 ? 'eau salée' : ''); dit(lCr, nC > 12 ? 'cristaux<br>de sel' : ''); dit(lVap, nV > 3 ? 'vapeur d\'eau' : '');
+        dit(lEau, f > 0.02 ? 'eau salée' : ''); dit(lCr, nC > 12 ? 'cristaux de sel' : ''); dit(lVap, nV > 3 ? 'vapeur d\'eau' : '');
         ex.set(f <= 0 ? 'Tout le liquide s\'est transformé en vapeur : il ne reste que les <mark>cristaux de sel</mark>. On a récupéré le solide qui était dissout : c\'est l\'<mark>évaporation</mark>.'
           : ch < 0.02 && f > 0.98 ? 'Dans le verre de montre : de l\'eau salée, un <mark>mélange homogène</mark> (le sel est dissout : on ne le voit pas). Fais chauffer avec le curseur.'
             : ch < 0.02 ? 'Sans chaleur, le liquide s\'évapore très lentement. Remonte le curseur.'
