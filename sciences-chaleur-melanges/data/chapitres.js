@@ -228,32 +228,20 @@ export const CHAPITRES = [
       { id: 'cycle-eau', titre: 'Le cycle de l\'eau', sous: 'Où se cachent les changements d\'état ?' },
     ],
     lecon: `
+{{w:priorites}}
+{{w:video}}
 <div class="bloc essentiel">
   <h2>L'idée en 20 secondes</h2>
   <p>La matière peut se présenter sous <b>3 états</b> : l'état <mark>solide</mark>, l'état <mark>liquide</mark> et l'état
-  <mark>gazeux</mark>. Une matière qui reçoit ou perd de la chaleur peut changer d'état.</p>
-  <p>Point commun entre un liquide et un gaz : <b>les molécules se déplacent</b>. Un corps dont les molécules se déplacent sera
-  appelé <mark>FLUIDE</mark> (par opposition au solide).</p>
+  <mark>gazeux</mark>. Une matière qui <b>reçoit ou perd de la chaleur</b> peut changer d'état.</p>
+  <p>Point commun entre un liquide et un gaz : les molécules se déplacent. Un corps dont les molécules se déplacent sera appelé
+  <mark>FLUIDE</mark> (par opposition au solide).</p>
 </div>
-<div class="bloc">
-  <h2>Le triangle à connaître par cœur</h2>
-  {{schema:triangle}}
-  <p class="attention"><b>Attention :</b> dans ton cours, « <b>condensation</b> » sert deux fois : gaz → liquide <b>et</b> gaz →
-  solide. Et la <b>vaporisation</b> peut se faire de deux façons : par <b>évaporation</b> ou par <b>ébullition</b>.</p>
-</div>
-<div class="bloc">
-  <h2>La manipulation (marquée ⚠ dans ton cours)</h2>
-  <table class="tab">
-    <tr><th>Ce qu'on fait</th><th>Ce qu'on observe</th><th>Interprétation</th><th>Phénomène</th></tr>
-    <tr><td>Les glaçons chauffent dans le bécher</td><td>les glaçons fondent</td><td>l'eau passe de l'état solide à l'état liquide</td><td><mark>FUSION</mark></td></tr>
-    <tr><td>L'eau bout</td><td>des bulles se forment au sein du liquide ; de la vapeur se dégage</td><td>c'est l'ébullition : l'eau passe, au sein du liquide, de l'état liquide à l'état gazeux</td><td><mark>VAPORISATION</mark></td></tr>
-    <tr><td>Quelques gouttes d'éther dans un verre de montre</td><td>après quelques minutes le liquide a disparu</td><td>c'est l'évaporation : l'éther est passé, à la surface du liquide, de l'état liquide à l'état gazeux</td><td><mark>VAPORISATION</mark></td></tr>
-    <tr><td>Le verre de montre posé au-dessus de l'eau qui bout</td><td>des gouttes apparaissent</td><td>l'eau passe de l'état gazeux à l'état liquide</td><td><mark>CONDENSATION</mark></td></tr>
-    <tr><td>Un bloc réfrigérant sorti du congélateur</td><td>du givre apparaît sur le bloc</td><td>l'eau contenue dans l'air ambiant passe de l'état gazeux à l'état solide</td><td><mark>CONDENSATION</mark></td></tr>
-    <tr><td>Une ou deux gouttes d'eau sur le bloc réfrigérant</td><td>les gouttes d'eau gèlent</td><td>l'eau passe de l'état liquide à l'état solide</td><td><mark>SOLIDIFICATION</mark></td></tr>
-    <tr><td>La tige chauffée d'une cuillère à combustion posée sur un glaçon</td><td>la glace se transforme en vapeur</td><td>l'eau passe de l'état solide à l'état gazeux</td><td><mark>SUBLIMATION</mark></td></tr>
-  </table>
-</div>
+{{w:triangle}}
+<p class="attention"><b>Les 2 pièges du contrôle :</b> « <b>condensation</b> » sert deux fois (gaz → liquide <b>et</b> gaz →
+solide) ; et la <b>vaporisation</b> se fait de deux façons : par <b>évaporation</b> (à la surface) ou par <b>ébullition</b> (au
+sein du liquide).</p>
+{{w:cartes}}
 <div class="retiens">
   <p>Une matière qui reçoit ou perd de la chaleur peut changer d'état.<br>Les changements d'états sont donc des
   <mark>phénomènes réversibles</mark> :</p>
@@ -283,7 +271,9 @@ export const CHAPITRES = [
   <li>la <b>solidification</b> (neige, grêle…) ;</li><li>la <b>fusion</b> (glaciers…).</li></ul>
   <p class="astuce">Tous ces changements d'états ont lieu grâce à un échange d'énergie (apport ou retrait). L'apport d'énergie dans
   le cycle de l'eau provient du <b>SOLEIL</b>.</p>
-</div>`,
+</div>
+{{w:prof}}
+`,
     mots: [
       ['Fusion', 'Le passage de l\'état solide à l\'état liquide.'],
       ['Solidification', 'Le passage de l\'état liquide à l\'état solide.'],

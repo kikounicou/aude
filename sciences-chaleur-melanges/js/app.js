@@ -4,6 +4,10 @@ import { QUESTIONS } from '../data/questions.js';
 import { AUDIO } from '../data/audio.js';
 import { lancerQuiz, melange } from './quiz.js';
 import { schemaAvecLegende } from './schemas.js';
+import { PRIO } from '../data/priorites.js';
+import { hydrater } from './widgets.js';
+
+for (const c of CHAPITRES) Object.assign(c, PRIO[c.id] || {});
 
 const app = document.getElementById('app');
 const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
@@ -15,7 +19,7 @@ for (const c of CHAPITRES) (QUESTIONS[c.id] || []).forEach((q, i) => { q.id = c.
 /* ---------- progression (localStorage) ---------- */
 const CLE = 'rs2e-progression-v1';
 const P = (() => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } })();
-P.q = P.q || {}; P.sims = P.sims || {}; P.lu = P.lu || {};
+P.q = P.q || {}; P.sims = P.sims || {}; P.lu = P.lu || {}; P.coche = P.coche || {}; P.prof = P.prof || {};
 const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(P)); } catch { /* navigation privée */ } };
 const noter = (q, ok) => { const r = (P.q[q.id] = P.q[q.id] || { ok: 0, ko: 0 }); ok ? r.ok++ : r.ko++; r.dernier = ok; sauver(); };
 const reussie = (q) => P.q[q.id] && P.q[q.id].dernier === true;
@@ -28,6 +32,7 @@ function avancement(c) {
 
 /* ---------- expériences 3D : montage paresseux, démontage propre ---------- */
 let simsActives = [];
+let finWidgets = null;
 function demonterSims() { simsActives.forEach((s) => { try { s && s.dispose && s.dispose(); } catch (e) { console.warn(e); } }); simsActives = []; }
 function carteSim(sim) {
   const carte = h('section', 'sim-carte', `<header><h3>${sim.titre}</h3><span>${sim.sous || ''}</span></header>`);
@@ -109,6 +114,24 @@ function accueil() {
     <div class="tuile"><b>${CHAPITRES.filter((c) => avancement(c).pct >= 80).length}<small style="font-size:16px;color:var(--encre2)"> / ${CHAPITRES.length}</small></b><span>chapitres maîtrisés</span></div>
     <div class="tuile"><b>${TOUTES.filter(ratee).length}</b><span>erreurs à refaire</span></div>
   </section>`;
+  // Plan express : dans quel ordre réviser la veille, et combien de temps
+  const plan = h('section', 'plan');
+  const ordre = CHAPITRES.slice().sort((a, b) => b.etoiles - a.etoiles || CHAPITRES.indexOf(a) - CHAPITRES.indexOf(b));
+  const total = CHAPITRES.reduce((n, c) => n + (c.minutes || 0), 0);
+  const total3 = ordre.filter((c) => c.etoiles === 3).reduce((n, c) => n + (c.minutes || 0), 0);
+  plan.innerHTML = `<div class="theme-titre"><span class="kicker">Pour demain</span><h2>Le plan express</h2></div>
+    <p class="plan-intro">Tu as déjà travaillé le cours : inutile de tout relire. Fais les chapitres <b>★★★ d'abord</b>. Pour chacun : la case
+    « Si tu n'as que 10 minutes », puis « L'essentiel ★ » dans S'entraîner. Compte environ <b>${total} minutes</b> pour tout, ou
+    <b>${total3} minutes</b> pour les ★★★ seulement.</p>`;
+  const lp = h('div', 'plan-liste');
+  ordre.forEach((c) => {
+    const ess = (QUESTIONS[c.id] || []).filter((q) => q.prio), okE = ess.filter(reussie).length, fait = ess.length && okE === ess.length;
+    const coches = (c.prio || []).filter((_, i) => P.coche[c.id + ':' + i]).length;
+    const a = h('a', 'plan-item' + (fait ? ' fait' : ''), `<span class="plan-et">${'★'.repeat(c.etoiles)}</span><span class="plan-t"><b>${c.titre}</b><small>${(c.prio || []).map((p) => p[0]).join(' · ')}</small></span><span class="plan-m">${c.minutes || 5} min</span><span class="plan-a">${fait ? '✓ acquis' : `${coches}/${(c.prio || []).length} cochés · ${okE}/${ess.length} ★`}</span>`);
+    a.href = '#/c/' + c.id; a.dataset.theme = c.theme; lp.appendChild(a);
+  });
+  plan.appendChild(lp); w.appendChild(plan);
+
   for (const t of [5, 6]) {
     const sec = h('section'); sec.dataset.theme = t;
     sec.innerHTML = `<div class="theme-titre"><span class="kicker">Thème ${t}</span><h2>${THEMES[t].titre}</h2></div>`;
@@ -143,8 +166,12 @@ function chapitre(id, onglet) {
 
   if (onglet === 'comprendre') {
     const la = lecteurAudio(c); if (la) corps.appendChild(la);
-    const lec = h('div', '', c.lecon.replace(/\{\{schema:([\w-]+)\}\}/g, (_, s) => schemaAvecLegende(s)));
+    let source = c.lecon;
+    if (c.prio && !source.includes('{{w:priorites}}')) source = '{{w:priorites}}' + source;
+    if (c.prof && !source.includes('{{w:prof}}')) source += '{{w:prof}}';
+    const lec = h('div', '', source.replace(/\{\{schema:([\w-]+)\}\}/g, (_, s) => schemaAvecLegende(s)).replace(/\{\{w:([\w-]+)\}\}/g, '<div data-w="$1"></div>'));
     corps.appendChild(lec);
+    finWidgets = hydrater(lec, c, { P, sauver });
     const nav = h('div', 'hero-cta'); nav.style.margin = '8px 0 30px';
     nav.innerHTML = (c.sims.length ? `<a class="btn chaud" href="#/c/${id}/experience">Faire l'expérience →</a>` : '') + `<a class="btn ${c.sims.length ? 'ghost' : 'chaud'}" href="#/c/${id}/exercices">M'entraîner</a>`;
     corps.appendChild(nav);
@@ -265,7 +292,7 @@ function heroAnimation(cv) {
 
 /* ---------- routeur ---------- */
 function route() {
-  demonterSims(); if (heroStop) { heroStop(); heroStop = null; } if (audioEnCours) audioEnCours.pause();
+  demonterSims(); if (finWidgets) { finWidgets(); finWidgets = null; } if (heroStop) { heroStop(); heroStop = null; } if (audioEnCours) audioEnCours.pause();
   app.innerHTML = '';
   const [, r, a, b] = location.hash.replace(/^#/, '').split('/');
   const actif = r === 'c' ? 'accueil' : r === 'mots' ? 'mots' : r === 'examen' ? 'examen' : 'accueil';
