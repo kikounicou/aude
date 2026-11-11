@@ -18,6 +18,7 @@ export const PRIO = {
     ],
   },
   thermoscope: {
+    video: { id: 'thermoscope', titre: 'Le thermoscope : il compare, il ne mesure pas', duree: 'à regarder avant tout le reste' },
     minutes: 6,
     prio: [
       ['Dilatation et contraction', 'Plus d\'agitation moléculaire → plus d\'espace → le niveau monte. Et l\'inverse.'],
