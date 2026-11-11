@@ -3,6 +3,7 @@
 // minutes : temps conseillé la veille du contrôle.  Source : cours/05-ca-va-chauffer.md et cours/06-les-melanges.md.
 export const PRIO = {
   energie: {
+    video: { id: 'energie', titre: 'La chaîne d’énergie : réservoir, transformateur, receveur', duree: 'à regarder avant tout le reste' },
     minutes: 5,
     prio: [
       ['Réservoir → transformateur(s) → receveur', 'L\'ordre de la chaîne, et le rôle de chacun.'],
