@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banc d'essai d'une expérience</title>
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/controls/OrbitControls.js": "./vendor/three/OrbitControls.js" } }
+</script>
+</head>
+<body>
+<!-- Banc d'essai : sim.html?s=thermoscope ouvre sims/thermoscope.js seul. -->
+<div class="wrap" style="padding-top:20px">
+  <div class="sim-carte"><header><h3 id="t">Expérience</h3><span>banc d'essai</span></header><div id="sim"></div></div>
+  <pre id="err" style="color:#c8321c;white-space:pre-wrap"></pre>
+</div>
+<script type="module">
+const id = new URLSearchParams(location.search).get('s') || 'thermoscope';
+document.getElementById('t').textContent = id;
+window.addEventListener('error', (e) => { document.getElementById('err').textContent += e.message + '\n'; });
+window.addEventListener('unhandledrejection', (e) => { document.getElementById('err').textContent += (e.reason && e.reason.stack || e.reason) + '\n'; });
+try {
+  const mod = await import(`./sims/${id}.js`);
+  window.__sim = mod.default(document.getElementById('sim'));
+  document.title = 'OK ' + id;
+} catch (e) { document.getElementById('err').textContent += (e.stack || e) + '\n'; document.title = 'ERREUR ' + id; }
+</script>
+</body>
+</html>
