@@ -59,7 +59,7 @@ function carteSim(sim) {
 /* ---------- lecteur audio (résumé raconté) ---------- */
 let audioEnCours = null;
 function lecteurAudio(c) {
-  if (!AUDIO.includes(c.id)) return null;
+  if (!AUDIO.includes(c.id) || c.video) return null; // la capsule vidéo remplace le résumé audio
   const box = h('div', 'audio', `<button type="button" aria-label="Écouter le résumé">▶</button><div class="t"><b>Écoute le résumé</b><span>L'essentiel du chapitre, raconté</span><progress value="0" max="1"></progress></div>`);
   const bt = box.querySelector('button'), pr = box.querySelector('progress');
   const a = new Audio(`audio/${c.id}.mp3`); a.preload = 'none';
