@@ -169,6 +169,7 @@ function chapitre(id, onglet) {
     let source = c.lecon;
     if (c.prio && !source.includes('{{w:priorites}}')) source = '{{w:priorites}}' + source;
     if (c.prof && !source.includes('{{w:prof}}')) source += '{{w:prof}}';
+    if (c.video && !source.includes('{{w:video}}')) source = source.replace('{{w:priorites}}', '{{w:priorites}}{{w:video}}');
     const lec = h('div', '', source.replace(/\{\{schema:([\w-]+)\}\}/g, (_, s) => schemaAvecLegende(s)).replace(/\{\{w:([\w-]+)\}\}/g, '<div data-w="$1"></div>'));
     corps.appendChild(lec);
     finWidgets = hydrater(lec, c, { P, sauver });
