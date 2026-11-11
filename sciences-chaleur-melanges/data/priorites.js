@@ -105,6 +105,7 @@ export const PRIO = {
     ],
   },
   propagation: {
+    video: { id: 'propagation', titre: 'Conduction, convection, rayonnement en une minute', duree: 'à regarder avant tout le reste' },
     minutes: 8,
     prio: [
       ['Conduction', 'Dans les solides : la matière ne se déplace pas mais sert de support.'],
