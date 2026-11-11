@@ -32,6 +32,7 @@ export const PRIO = {
     ],
   },
   thermometre: {
+    video: { id: 'thermometre', titre: 'Le thermomètre : d’où viennent le 0 et le 100 ?', duree: 'à regarder avant tout le reste' },
     minutes: 5,
     prio: [
       ['Les 2 repères', '0 = glace fondante ; 100 = eau en ébullition (pression atmosphérique normale).'],
