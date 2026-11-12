@@ -8,7 +8,7 @@ export function coulisses({ chapitres, exercices, experiences, capsules }) {
     ['Écrire les leçons', 'Mêmes mots, mêmes définitions, mêmes schémas que le cours.', 'ia'],
     ['Construire les expériences', 'Une expérience 3D par idée, à manipuler.', 'ia'],
     ['Préparer les exercices', 'Neuf formes de questions, chaque erreur expliquée.', 'ia'],
-    ['Tourner les capsules', 'Une minute par chapitre, dessinée et racontée.', 'ia'],
+    ['Tourner les capsules', 'Une courte vidéo par chapitre, dessinée et racontée.', 'ia'],
     ['Essayer et corriger', 'L\'élève essaie, l\'adulte dit ce qui ne va pas, on recommence.', 'humain'],
   ];
   const regles = [
@@ -30,7 +30,7 @@ export function coulisses({ chapitres, exercices, experiences, capsules }) {
     <div class="tuile"><b>${chapitres}</b><span>chapitres expliqués</span></div>
     <div class="tuile"><b>${experiences}</b><span>expériences 3D à manipuler</span></div>
     <div class="tuile"><b>${exercices}</b><span>exercices corrigés</span></div>
-    <div class="tuile"><b>${capsules}</b><span>capsules vidéo d'une minute</span></div>
+    <div class="tuile"><b>${capsules}</b><span>courtes capsules vidéo</span></div>
     <div class="tuile"><b>&lt; 1 €</b><span>de voix et de vidéo générées</span></div>
   </section>
 

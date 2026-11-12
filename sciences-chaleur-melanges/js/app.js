@@ -118,7 +118,7 @@ function accueil() {
   // Comment se servir du site : le même chemin dans chaque chapitre.
   w.appendChild(h('section', 'chemin', `<div class="theme-titre"><span class="kicker">Mode d'emploi</span><h2>Dans chaque chapitre, quatre étapes</h2></div>
     <ol class="chemin-liste">
-      <li><i>1</i><b>Regarde</b><span>la capsule vidéo d'une minute</span></li>
+      <li><i>1</i><b>Regarde</b><span>la courte capsule vidéo</span></li>
       <li><i>2</i><b>Comprends</b><span>la leçon, avec les mots de ton cours</span></li>
       <li><i>3</i><b>Manipule</b><span>l'expérience en 3D</span></li>
       <li><i>4</i><b>Entraîne-toi</b><span>chaque erreur est expliquée</span></li>

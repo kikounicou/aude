@@ -94,7 +94,7 @@ export const PRIO = {
   },
   graphique: {
     minutes: 10,
-    video: { id: 'graphique', titre: 'Le graphique et le palier en une minute', duree: 'à regarder avant tout le reste' },
+    video: { id: 'graphique', titre: 'Le palier : la courbe qui devient plate', duree: 'à regarder avant tout le reste' },
     prio: [
       ['Le palier', 'La température reste constante pendant le changement d\'état.'],
       ['Variable contrôlée / dépendante', 'Le temps (axe horizontal, min) ; la température (axe vertical, °C).'],
@@ -110,7 +110,7 @@ export const PRIO = {
     ],
   },
   propagation: {
-    video: { id: 'propagation', titre: 'Conduction, convection, rayonnement en une minute', duree: 'à regarder avant tout le reste' },
+    video: { id: 'propagation', titre: 'Conduction, convection, rayonnement : trois façons de voyager', duree: 'à regarder avant tout le reste' },
     minutes: 8,
     prio: [
       ['Conduction', 'Dans les solides : la matière ne se déplace pas mais sert de support.'],
