@@ -45,7 +45,7 @@ function el(tag, cls, html) {
 
 /**
  * Prépare la structure d'une expérience dans `root` :
- *   .sim-stage (la scène 3D)  +  .sim-side (.sim-panel = réglages, .sim-explain = « ce qui se passe »)
+ *   .sim-main (.sim-stage = la scène 3D, .sim-explain = « ce qui se passe »)  +  .sim-side (.sim-panel = réglages)
  * Retourne { stageEl, panelEl, explainEl }.
  */
 export function layout(root) {
@@ -56,22 +56,18 @@ export function layout(root) {
   const panelEl = el('div', 'sim-panel');
   const explainEl = el('div', 'sim-explain');
   explainEl.setAttribute('aria-live', 'polite');
-  side.append(panelEl, explainEl);
-  root.append(stageEl, side);
+  // Le message « ce qui se passe » est placé juste SOUS la scène : le bloc scène + message reste à l'écran pendant qu'on
+  // manipule les réglages (ordinateur, tablette, téléphone). Styles : .sim-v2 dans css/widgets.css.
+  const main = el('div', 'sim-main');
+  main.append(stageEl, explainEl);
+  side.append(panelEl);
+  root.append(main, side);
+  root.classList.add('sim-v2');
   return { stageEl, panelEl, explainEl };
 }
 
-/**
- * Variante de mise en page (à l'essai) : le message « ce qui se passe » vient se placer juste SOUS la scène, et le bloc
- * scène + message reste à l'écran pendant qu'on manipule les réglages (tablette et téléphone compris).
- * À appeler juste après layout(root) : messageSousScene(root, stageEl, explainEl).
- */
-export function messageSousScene(root, stageEl, explainEl) {
-  const main = el('div', 'sim-main');
-  root.insertBefore(main, stageEl);
-  main.append(stageEl, explainEl);
-  root.classList.add('sim-v2');
-}
+/** Conservée pour compatibilité : layout() place déjà le message sous la scène. */
+export function messageSousScene() {}
 
 /**
  * Crée la scène three.js dans `stageEl`.

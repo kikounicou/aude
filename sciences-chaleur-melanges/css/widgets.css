@@ -177,7 +177,7 @@ body.quiz-en-cours .nav-chap { display: none; }
 .w-prof-r .legende-liste { margin-bottom: 10px; }
 @media (max-width: 520px) { .w-prof-vis.deux-g { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- expériences, variante à l'essai : le message « ce qui se passe » sous la scène, toujours visible ---------- */
+/* ---------- expériences : le message « ce qui se passe » sous la scène, toujours visible (kit.js, layout) ---------- */
 .sim-v2 .sim-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .sim-v2 .sim-explain { flex: none; min-height: 78px; border: 3px solid var(--fluo); }
 .sim-v2 .sim-explain::before { content: "Ce qui se passe"; display: block; font: 700 11px/1 var(--texte); letter-spacing: .1em; text-transform: uppercase; color: var(--encre2); margin-bottom: 5px; }
@@ -193,3 +193,5 @@ body.quiz-en-cours .nav-chap { display: none; }
   .sim-v2 .sim-stage { height: min(36vh, 300px); }
   .sim-v2 .sim-explain { max-height: 22vh; overflow-y: auto; }
 }
+/* les changements d'état : la scène porte ses propres commandes et reste haute ; sur petit écran le bloc ne se colle pas */
+@media (max-width: 860px) { .sim-v2.em-sim .sim-main { position: static; box-shadow: none; } }

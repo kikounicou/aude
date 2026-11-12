@@ -369,15 +369,15 @@ export default function mount(root) {
     slS.set(70); soleil = 0.7; choixMode.set('decouvrir'); setMode('decouvrir');
   }
 
-  // Fenêtre de question (mode « Me tester »), posée sur la scène, du côté opposé au point touché
+  // Fenêtre de question (mode « Me tester ») : placée SOUS la scène (elle ne recouvre plus l'animation)
   const quiz = document.createElement('div');
-  Object.assign(quiz.style, { position: 'absolute', left: '8px', right: '8px', bottom: '8px', zIndex: 5, display: 'none', background: 'rgba(20,18,38,.94)', border: '1px solid rgba(255,255,255,.28)', borderRadius: '16px', padding: '8px 10px 10px', color: '#fff' });
+  Object.assign(quiz.style, { display: 'none', background: 'rgba(20,18,38,.94)', border: '1px solid rgba(255,255,255,.28)', borderRadius: '16px', padding: '8px 10px 10px', color: '#fff' });
   quiz.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b style="flex:1">Quel changement d'état se produit ici ?</b>` +
     '<button type="button" class="sim-btn" aria-label="Fermer" style="min-width:40px;padding:0">✕</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>';
   quiz.querySelector('button').onclick = () => fermer();
   const qb = quiz.lastChild;
   for (const v of Object.keys(NOMS)) { const b = document.createElement('button'); b.type = 'button'; b.className = 'sim-btn'; b.style.padding = '6px 8px'; b.textContent = NOMS[v]; b.onclick = () => repondre(v); qb.appendChild(b); }
-  stageEl.appendChild(quiz);
+  stageEl.after(quiz);
 
   function majLabel(pt) {
     const e = pt.lbl.el; e.classList.remove('juste', 'faux', 'fluo');
@@ -403,7 +403,6 @@ export default function mount(root) {
     }
     fermer(); ouvert = pt; pt.lbl.el.style.outline = '3px solid #ffe45c'; quiz.style.display = '';
     const r = pt.lbl.el.getBoundingClientRect(), rs = stageEl.getBoundingClientRect(), enBas = r.top + r.height / 2 - rs.top > rs.height * 0.5;
-    quiz.style.top = enBas ? '8px' : ''; quiz.style.bottom = enBas ? '' : '8px';
   }
   function repondre(v) {
     const pt = ouvert; if (!pt) return; fermer();
