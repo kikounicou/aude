@@ -80,3 +80,48 @@
 .w-verrou input { font: 600 17px var(--texte); border: 2px solid #fff; border-radius: 99px; padding: 9px 14px; min-width: 0; flex: 1 1 160px; background: #fff; color: var(--encre); }
 .w-verrou i { font-style: normal; font-size: 14px; color: var(--fluo); min-height: 1.2em; }
 .w-video > video { width: 100%; aspect-ratio: 16/9; border-radius: 14px; background: var(--nuit); display: block; }
+
+/* ---------- page « Coulisses » ---------- */
+footer.pied a { font-weight: 600; text-underline-offset: 3px; }
+.co-chiffres { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 6px 0 10px; }
+.co-chiffres .tuile b { color: var(--chaud); }
+.co-etapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.co-etapes li { position: relative; background: var(--carte); border: 1px solid var(--trait); border-top: 5px solid var(--menthe); border-radius: var(--r); padding: 14px 16px 38px; }
+.co-etapes li.humain { border-top-color: var(--chaud); }
+.co-etapes i { font: 800 15px/26px var(--titre); font-style: normal; width: 26px; height: 26px; border-radius: 50%; background: var(--encre); color: var(--papier); display: inline-block; text-align: center; margin-bottom: 8px; }
+.co-etapes b { display: block; font: 700 18px/1.2 var(--titre); margin-bottom: 4px; }
+.co-etapes span { color: var(--encre2); font-size: 14.5px; line-height: 1.4; display: block; }
+.co-etapes em { position: absolute; left: 16px; bottom: 12px; font: 700 11px/1 var(--texte); font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--menthe); }
+.co-etapes li.humain em { color: var(--chaud); }
+.co-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.co-col { border-radius: 22px; padding: 20px 22px; background: var(--nuit); color: #fff; }
+.co-col.humain { background: var(--carte); color: var(--encre); border: 2px solid var(--chaud); }
+.co-col h3 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+.co-col.ia h3 { color: var(--fluo); }
+.co-col ul { margin: 0; padding-left: 1.1em; }
+.co-col li { margin-bottom: 5px; }
+.co-regles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.co-regles h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+.co-regles p { color: var(--encre2); font-size: 15px; margin: 0; line-height: 1.45; }
+.co-limites { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.co-limites div { border: 2px dashed var(--encre2); border-radius: var(--r); padding: 14px 16px; }
+.co-limites b { display: block; font: 700 18px/1.25 var(--titre); margin-bottom: 4px; }
+.co-limites span, .co-outils span { color: var(--encre2); font-size: 15px; line-height: 1.45; display: block; }
+.co-outils { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.co-outils div { background: var(--papier2); border-radius: var(--r); padding: 12px 16px; }
+.co-outils b { font: 700 17px/1.3 var(--titre); }
+.co-recette { margin: 0; padding-left: 1.3em; max-width: 46em; }
+.co-recette li { margin-bottom: 8px; }
+@media (max-width: 860px) {
+  .co-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .co-etapes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .co-duo, .co-limites { grid-template-columns: minmax(0, 1fr); }
+  .co-regles, .co-outils { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) { .co-etapes { grid-template-columns: minmax(0, 1fr); } }
+
+/* version de la famille (capsule chiffrée, repliée sous la capsule publique) */
+.w-famille { margin-top: 12px; border-top: 1px dashed var(--trait); padding-top: 10px; }
+.w-famille summary { cursor: pointer; font-weight: 600; font-size: 14.5px; color: var(--encre2); }
+.w-famille p { color: var(--encre2); font-size: 14.5px; margin: 8px 0 10px; }
+.w-famille video { width: 100%; aspect-ratio: 16/9; border-radius: 14px; background: var(--nuit); display: block; }

@@ -49,7 +49,7 @@ const EXP = {
   evapRiv: "Au-dessus de la rivière et du lac, l'eau passe de l'état liquide à l'état gazeux à la <mark>surface libre</mark> du liquide : c'est l'<mark>évaporation</mark>, une forme de <mark>vaporisation</mark>. L'eau des végétaux s'évapore aussi.",
   evapMer: "Le soleil chauffe la mer : à sa surface libre, l'eau passe de l'état liquide à l'état gazeux. C'est l'<mark>évaporation</mark>, une forme de <mark>vaporisation</mark>. La vapeur d'eau monte dans l'atmosphère.",
   cond: "En altitude, la vapeur d'eau perd de l'énergie : elle passe de l'état gazeux à l'état liquide, en fines gouttelettes. C'est la <mark>condensation</mark> : les nuages se forment, puis il pleut.",
-  soleil: "Tous ces changements d'états ont lieu grâce à un <mark>échange d'énergie</mark> (apport ou retrait). L'apport d'énergie dans le cycle de l'eau provient du <mark>SOLEIL</mark>. Plus de soleil : le cycle va plus vite.",
+  soleil: "Tous ces changements d'états ont lieu grâce à un <mark>échange d'énergie</mark> (apport ou retrait). L'apport d'énergie dans le cycle de l'eau provient du <mark>SOLEIL</mark>. Davantage de soleil : le cycle va plus vite.",
   sansSoleil: "Sans <mark>soleil</mark>, plus d'apport d'énergie : plus d'évaporation, plus de fusion. Les nuages se vident, les rivières s'arrêtent : le <mark>cycle</mark> s'arrête.",
   test: "Mode « Me tester » : touche un <b>?</b> et choisis le changement d'état qui se produit à cet endroit. Il y a 5 points à trouver.",
 };

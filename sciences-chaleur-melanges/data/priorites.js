@@ -3,7 +3,7 @@
 // minutes : temps conseillé la veille du contrôle.  Source : cours/05-ca-va-chauffer.md et cours/06-les-melanges.md.
 export const PRIO = {
   energie: {
-    video: { id: 'energie', titre: 'La chaîne d’énergie : réservoir, transformateur, receveur', duree: 'à regarder avant tout le reste' },
+    video: { id: 'energie', titre: 'La chaîne d\'énergie : réservoir, transformateur, receveur', duree: 'à regarder avant tout le reste' },
     minutes: 5,
     prio: [
       ['Réservoir → transformateur(s) → receveur', 'L\'ordre de la chaîne, et le rôle de chacun.'],
@@ -33,7 +33,7 @@ export const PRIO = {
     ],
   },
   thermometre: {
-    video: { id: 'thermometre', titre: 'Le thermomètre : d’où viennent le 0 et le 100 ?', duree: 'à regarder avant tout le reste' },
+    video: { id: 'thermometre', titre: 'Le thermomètre : d\'où viennent le 0 et le 100 ?', duree: 'à regarder avant tout le reste' },
     minutes: 5,
     prio: [
       ['Les 2 repères', '0 = glace fondante ; 100 = eau en ébullition (pression atmosphérique normale).'],
@@ -65,7 +65,7 @@ export const PRIO = {
   etats: {
     minutes: 12,
     prio: [
-      ['Les 6 noms du triangle', 'Fusion, solidification, vaporisation, condensation, sublimation, condensation.'],
+      ['Les 6 flèches du triangle', 'Fusion, solidification, vaporisation, condensation, sublimation, condensation.'],
       ['« Condensation » sert deux fois', 'Gaz → liquide (les gouttes) ET gaz → solide (le givre).'],
       ['Évaporation ≠ ébullition', 'Deux façons de vaporiser : à la surface libre du liquide, ou au sein même du liquide.'],
       ['Fluide', 'Un corps dont les molécules se déplacent : les liquides et les gaz.'],
@@ -164,7 +164,7 @@ export const PRIO = {
     ],
     prof: [
       ['Complète : le liquide dans lequel le corps se dissout est appelé … ; le corps dissous s\'appelle le … ; le liquide obtenu est une … .', 'Le solvant ; le soluté ; une solution (un mélange homogène).', 'Texte à trous'],
-      ['Le sucre « fond »-il dans le café ? Justifie.', 'Non, il se dissout. La fusion est le passage de l\'état solide à l\'état liquide sous l\'effet de la chaleur ; la dissolution est la désagrégation d\'un corps au moyen d\'un solvant.', 'Vrai ou faux à justifier'],
+      ['Peut-on dire que le sucre « fond » dans le café ? Justifie.', 'Non, il se dissout. La fusion est le passage de l\'état solide à l\'état liquide sous l\'effet de la chaleur ; la dissolution est la désagrégation d\'un corps au moyen d\'un solvant.', 'Question à justifier'],
       ['Je dissous 20 g de sel dans 200 g d\'eau. Quelle est la masse de la solution ? Pourquoi ?', '220 g : il y a conservation de la masse, la masse de la solution est égale à la somme des masses du solvant et du soluté.', 'Calcul'],
       ['Que se passe-t-il si on continue d\'ajouter du sucre dans l\'eau ?', 'À partir d\'une certaine quantité, le soluté ne se dissout plus : la solution est saturée. Si on en ajoute encore, il se dépose : il y a sursaturation et le mélange devient hétérogène.', 'Explication'],
     ],

@@ -15,9 +15,9 @@ const RES = {
 const TRA = {
   feu: { label: 'Feu ouvert', nom: 'Feu ouvert', attend: 'bois', sortie: 'énergie thermique<br>et énergie lumineuse',
     regle: 'Dans le texte, le <b>feu ouvert</b> brûle des <b>bûches de bois</b>.', perte: 'par la cheminée, avec la fumée,' },
-  chaudiere: { label: 'Chaudière + radiateurs', nom: 'Chaudière<br>et radiateurs', attend: 'mazout', sortie: 'énergie thermique',
+  chaudiere: { label: 'Chaudière + radiateurs', nom: 'Chaudière<br>et radiateurs', attend: null, sortie: 'énergie thermique',
     regle: 'Dans le texte, la <b>chaudière</b> marche au <b>mazout</b>.', perte: 'par la cheminée de la chaudière, par les tuyaux' },
-  poele: { label: 'Poêle à charbon', nom: 'Poêle à charbon', attend: 'charbon', sortie: 'énergie thermique',
+  poele: { label: 'Poêle à charbon', nom: 'Poêle à charbon', attend: null, sortie: 'énergie thermique',
     regle: 'Dans le texte, le <b>poêle</b> est un poêle à <b>charbon</b>.', perte: 'par le tuyau du poêle, avec la fumée,' },
   cuisiniere: { label: 'Cuisinière électrique', nom: 'Cuisinière<br>électrique', attend: null },
   elle: { label: 'Églantine', nom: 'Églantine', attend: 'aliments', sortie: 'énergie thermique' },
@@ -35,6 +35,8 @@ function pasBon(r, t) {
   if (r === 'soleil') return "Le <b>soleil</b> est bien un <mark>réservoir naturel</mark> d'énergie, mais aucun de ces <mark>transformateurs</mark> ne fonctionne avec lui. Dans le texte, il réchauffe Églantine sur les pistes. Pour le salon, essaie un autre réservoir.";
   if (t === 'cuisiniere') return `La <b>cuisinière électrique</b> est bien un <mark>transformateur</mark>, mais elle reçoit de l'<mark>énergie électrique</mark> : ${R.le} ne la lui ${R.le.startsWith('les') ? 'donnent' : 'donne'} pas directement. Dans le texte, elle sert à préparer la raclette, pas à chauffer le salon.`;
   if (t === 'elle') return `Églantine ne transforme pas l'énergie ${R.du} : son corps transforme l'<mark>énergie chimique</mark> des <b>aliments</b> qu'elle mange. Change le <mark>réservoir</mark> ou le <mark>transformateur</mark>.`;
+  if (r === 'mazout' && t === 'chaudiere') return "Le <b>mazout</b> est bien le <mark>réservoir</mark> de la <b>chaudière</b>, un <mark>transformateur</mark>. Mais dans le texte, la chaudière et ses radiateurs chauffent <b>les chambres</b>, pas le salon. Dans le salon, c'est le <b>feu ouvert</b> qui chauffe.";
+  if (t === 'poele') return "Dans le texte, papa a remplacé le vieux <b>poêle à charbon</b> par des radiateurs : il n'y a plus de poêle. Pour le salon, regarde ce qui brûle dans le feu ouvert.";
   if (r === 'aliments') return "On ne chauffe pas le salon en brûlant de la raclette ! L'<mark>énergie chimique</mark> des aliments, c'est le corps d'Églantine qui la transforme.";
   return `${T.regle} Avec ${R.le}, la chaîne ne fonctionne pas : change le <mark>réservoir</mark> ou le <mark>transformateur</mark>.`;
 }

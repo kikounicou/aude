@@ -24,7 +24,7 @@ const TXT = {
   boilOk: "Le niveau est stable : c'est la température de l'<mark>eau en ébullition</mark> (la vapeur juste au-dessus de l'eau qui bout). Marque le <mark>repère 100</mark>.",
   mark100: "Tu as tes <mark>deux repères</mark>. Il reste à diviser l'espace entre 0 et 100 en 100 parties égales.",
   divide: 'On divise en 100 parties égales…',
-  done: "Chaque partie vaut 1 degré : c'est l'<mark>échelle Celsius</mark> (°C). Le <mark>thermomètre</mark> est un <mark>thermoscope gradué</mark> qui permet de <mark>repérer la température</mark>. À la <mark>pression atmosphérique normale</mark> : repère 0 = glace fondante, repère 100 = eau en ébullition.",
+  done: "Pour aller plus loin : chaque partie vaut 1 degré. C'est l'<mark>échelle Celsius</mark> (°C). Le <mark>thermomètre</mark> est un <mark>thermoscope gradué</mark> qui permet de <mark>repérer la température</mark>. À la <mark>pression atmosphérique normale</mark> : repère 0 = glace fondante, repère 100 = eau en ébullition.",
   corps: "37,6 °C est la <mark>température</mark> du corps humain. Lis-la sur la <mark>graduation</mark> : le liquide s'arrête un peu au-dessus de 37.",
   glace: "Dans la <mark>glace fondante</mark>, le liquide s'arrête pile au <mark>repère 0</mark> : 0 °C.",
   ebul: "Dans la vapeur de l'<mark>eau en ébullition</mark>, le liquide s'arrête au <mark>repère 100</mark> : 100 °C.",
@@ -230,7 +230,7 @@ export default function mount(root) {
   const [bMain] = ui.buttons([{ label: BOUTON[0], primary: true, onClick: action }, { label: 'Recommencer', onClick: reset }]);
   const freeBox = document.createElement('div'); freeBox.style.cssText = 'display:none;flex-direction:column;gap:12px'; panelEl.appendChild(freeBox);
   const fu = panel(freeBox);
-  const cObj = fu.choice({ label: 'Mesure avec ton thermomètre', value: null, onChange: pick, options: [
+  const cObj = fu.choice({ label: 'Repère la température avec ton thermomètre', value: null, onChange: pick, options: [
     { value: 'corps', label: 'corps humain' }, { value: 'glace', label: 'glace fondante' },
     { value: 'ebul', label: 'eau en ébullition' }, { value: 'montagne', label: "montagne d'Églantine" }] });
   const sAir = fu.slider({ label: 'Ou règle la température du milieu', min: -10, max: 110, step: 0.1, value: 20, unit: '°C', format: nb, onInput: setAir });

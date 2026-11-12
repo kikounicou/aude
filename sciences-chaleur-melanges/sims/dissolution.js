@@ -274,7 +274,7 @@ export default function mount(root) {
       : 'Non : aucun liquide ne le désagrège. C\'est la chaleur qui le fait passer de l\'état solide à l\'état liquide : il <mark>fond</mark>, c\'est une <mark>fusion</mark>.';
     else last = v === 'dissout'
       ? 'Oui : le sucre <mark>se dissout</mark>. La <mark>dissolution</mark> est la désagrégation d\'un corps au moyen d\'un solvant (ici, l\'eau).'
-      : 'Non ! On dit souvent « le sucre fond dans le café », mais il n\'est pas chauffé : c\'est l\'eau, le <mark>solvant</mark>, qui le désagrège. Il <mark>se dissout</mark> : c\'est une <mark>dissolution</mark>.';
+      : 'Non ! On dit souvent « le sucre fond dans le café », mais ce n\'est pas la chaleur qui le fait disparaître : c\'est l\'eau, le <mark>solvant</mark>, qui le désagrège. Il <mark>se dissout</mark> : c\'est une <mark>dissolution</mark>.';
   }
   function stepB(dt) {
     if (running) { melt = Math.min(1, melt + dt / 9); diss = Math.min(1, diss + dt / 9); }

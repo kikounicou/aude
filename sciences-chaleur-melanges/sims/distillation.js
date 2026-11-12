@@ -183,7 +183,7 @@ export default function mount(root) {
     Wb = mix === 'sel' ? V0 : V0 * 0.7; Ab = V0 - Wb; Wd = Ad = lost = acc = 0; T = 20; done = false;
     P.forEach((p) => { p.st = 0; }); heatS.set(0); setWater(false); setLevel(H0);
     noteMix.innerHTML = mix === 'sel'
-      ? "<b>L'eau de mer</b> : du sel dissous dans l'eau, un mélange homogène (une solution aqueuse)."
+      ? "<b>L'eau de mer</b> : du sel dissout dans l'eau, un mélange homogène (une solution aqueuse)."
       : "<b>L'eau et l'alcool</b> sont deux liquides miscibles ; l'alcool a la température d'ébullition la plus basse (pour aller plus loin : environ 78 °C, contre 100 °C pour l'eau). En vrai, les deux sont incolores : les couleurs servent à les suivre.";
   }
   const tEb = () => (mix === 'sel' ? 100 + 6 * (1 - Wb / V0) : interp(TEB_ALC, Ab / Math.max(1e-6, Ab + Wb)));

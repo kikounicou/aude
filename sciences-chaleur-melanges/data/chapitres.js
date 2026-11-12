@@ -59,7 +59,7 @@ export const CHAPITRES = [
 <div class="bloc essentiel">
   <h2>L'idée en 20 secondes</h2>
   <p>Les sensations de chaud ou de froid sont perçues par la peau de façon différente et sont <mark>subjectives</mark>.</p>
-  <p>Un <mark>thermoscope</mark> (un ballon, un bouchon, un tube en verre fin, de l'eau colorée, un repère) permet de
+  <p>Un <mark>thermoscope</mark> (un ballon à fond plat ou un erlenmeyer, un bouchon, un tube en verre fin, de l'eau colorée, un repère) permet de
   <b>comparer</b> : plus la température est élevée et plus l'eau colorée monte dans le tube.</p>
 </div>
 <div class="deux">
@@ -221,7 +221,7 @@ export const CHAPITRES = [
   },
   {
     id: 'etats', theme: 5, titre: 'Les changements d\'état',
-    accroche: 'Solide, liquide, gazeux : six passages, six noms à connaître sur le bout des doigts.',
+    accroche: 'Solide, liquide, gazeux : six passages à connaître sur le bout des doigts.',
     etoiles: 3,
     sims: [
       { id: 'etats-matiere', titre: 'Les 3 états de la matière', sous: 'Chauffe, refroidis et regarde les molécules' },
@@ -352,8 +352,8 @@ sein du liquide).</p>
   <mark>corps pur</mark> et le deuxième, un <mark>mélange</mark>.</p>
   <p>Lors de l'ébullition, on observe simultanément 2 états de la matière : l'état liquide et l'état gazeux. Si en plus, on observe
   un palier alors on est en présence d'un corps pur.</p>
-  <p class="plus-loin">ces phrases à trous n'étaient pas complétées sur ta feuille : vérifie les mots avec ton cahier ou ton
-  professeur.</p>
+  <p class="attention"><b>À vérifier :</b> les mots en gras de ces deux phrases sont déduits du reste du cours (palier → corps
+  pur ; pas de palier → mélange). Vérifie-les dans ton cahier ou avec ton professeur.</p>
 </div>
 <div class="retiens">
   <p>Lors de l'étude de l'ébullition de l'eau :</p>
@@ -404,8 +404,8 @@ sein du liquide).</p>
     <h2>Le manche de la casserole</h2>
     <p>Le manche de la casserole est très chaud s'il ne possède pas de poignée isolante, car la chaleur est répartie sur toute la
     surface de la casserole : il y a <mark>CONDUCTION</mark>.</p>
-    <p class="attention"><b>À vérifier dans ton cahier :</b> sur ta feuille, le mot écrit en rouge ressemble à « condensation ».
-    D'après ton « JE RETIENS », le bon mot ici est <b>conduction</b> (la condensation, c'est un changement d'état).</p>
+    <p class="attention"><b>Ne confonds pas :</b> la <b>conduction</b> est un mode de propagation de la chaleur ; la
+    <b>condensation</b> est un changement d'état (gaz → liquide ou gaz → solide).</p>
   </div>
 </div>
 <div class="retiens">
@@ -496,19 +496,11 @@ sein du liquide).</p>
       récipient.</p></div>
   </div>
 </div>
-<div class="deux">
-  <div class="bloc">
-    <h2>2. Le tamisage</h2>
-    <p>→ Séparation de mélanges hétérogènes composés de deux solides dont l'un est sous forme de morceaux plus petits que l'autre.</p>
-    <p><b>Principe :</b> il faut faire passer les solides au travers d'un <mark>tamis</mark> qui retiendra les éléments les plus
-    gros.</p>
-  </div>
-  <div class="bloc">
-    <h2>4. L'évaporation</h2>
-    <p>→ Séparation de mélanges homogènes formés d'un solide dissout dans un liquide.</p>
-    <p><b>Principe :</b> méthode consistant à transformer le liquide du mélange homogène en vapeur afin de récupérer le solide qui
-    était dissout. Matériel : un verre de montre, une source de chaleur.</p>
-  </div>
+<div class="bloc">
+  <h2>2. Le tamisage</h2>
+  <p>→ Séparation de mélanges hétérogènes composés de deux solides dont l'un est sous forme de morceaux plus petits que l'autre.</p>
+  <p><b>Principe :</b> il faut faire passer les solides au travers d'un <mark>tamis</mark> qui retiendra les éléments les plus
+  gros.</p>
 </div>
 <div class="bloc">
   <h2>3. La filtration</h2>
@@ -516,6 +508,12 @@ sein du liquide).</p>
   <p><b>Principe :</b> il faut faire passer le mélange à travers un <mark>filtre</mark> qui retiendra les particules solides.</p>
   <p><mark>Filtrat</mark> = résultat d'une filtration.</p>
   {{schema:filtration}}
+</div>
+<div class="bloc">
+  <h2>4. L'évaporation</h2>
+  <p>→ Séparation de mélanges homogènes formés d'un solide dissout dans un liquide.</p>
+  <p><b>Principe :</b> méthode consistant à transformer le liquide du mélange homogène en vapeur afin de récupérer le solide qui
+  était dissout. Matériel : un verre de montre, une source de chaleur.</p>
 </div>
 <div class="bloc">
   <h2>5. La distillation <span class="etoile"></span></h2>
@@ -644,7 +642,7 @@ sein du liquide).</p>
     <h2>Un mélange : l'air</h2>
     <p>L'air est un mélange gazeux <mark>incolore, inodore et insipide</mark> (sans goût). Par rapport à l'eau, il a une faible
     masse : 1 litre d'air a une masse d'environ <b>1,2 g</b>.</p>
-    <p>L'air contient : <b>azote</b> (environ <b>78 %</b> en volume), <b>oxygène</b> (environ <b>21 %</b> en volume) et, en très
+    <p>L'air contient, en proportions variables, des substances dont les molécules sont simplement juxtaposées : <b>azote</b> (environ <b>78 %</b> en volume), <b>oxygène</b> (environ <b>21 %</b> en volume) et, en très
     faibles proportions, de l'eau, du dioxyde de carbone et parfois des poussières, des polluants atmosphériques…</p>
     <p>Bien que mélangées, ces substances conservent leurs propriétés dans l'air.</p>
   </div>
@@ -653,8 +651,8 @@ sein du liquide).</p>
     <p>L'eau potable <b>n'est pas un corps pur</b>. C'est une solution qui répond à une réglementation très stricte : elle doit
     être limpide et ne peut contenir de produits toxiques, de microbes et certaines substances en excès. Son goût, son odeur et sa
     couleur sont également contrôlés.</p>
-    <p><b>a) L'épuration des eaux usées</b> (station d'épuration) : pour obtenir une eau limpide (mais non potable) rejetée dans un
-    cours d'eau : le dégrillage et le tamisage, la décantation, la filtration.</p>
+    <p><b>a) L'épuration des eaux usées</b> (station d'épuration) : pour obtenir une eau limpide (mais non potable) qui sera rejetée
+    dans un cours d'eau, plusieurs étapes de traitement sont nécessaires : le dégrillage et le tamisage, la décantation, la filtration.</p>
     <p><b>b) Le traitement des eaux de distribution :</b> les eaux souterraines sont captées, parfois mélangées à des eaux de
     surface, puis analysées, traitées (décantation, filtration…), désinfectées et contrôlées avant d'être distribuées.</p>
     <p>Les boissons sont des solutions aqueuses contenant un grand nombre de solutés (sucres, dioxyde de carbone…) et souvent des

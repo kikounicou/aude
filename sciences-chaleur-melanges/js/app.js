@@ -6,6 +6,7 @@ import { lancerQuiz, melange } from './quiz.js';
 import { schemaAvecLegende } from './schemas.js';
 import { PRIO } from '../data/priorites.js';
 import { hydrater } from './widgets.js';
+import { coulisses } from './coulisses.js';
 
 for (const c of CHAPITRES) Object.assign(c, PRIO[c.id] || {});
 
@@ -119,7 +120,7 @@ function accueil() {
   const ordre = CHAPITRES.slice().sort((a, b) => b.etoiles - a.etoiles || CHAPITRES.indexOf(a) - CHAPITRES.indexOf(b));
   const total = CHAPITRES.reduce((n, c) => n + (c.minutes || 0), 0);
   const total3 = ordre.filter((c) => c.etoiles === 3).reduce((n, c) => n + (c.minutes || 0), 0);
-  plan.innerHTML = `<div class="theme-titre"><span class="kicker">Pour demain</span><h2>Le plan express</h2></div>
+  plan.innerHTML = `<div class="theme-titre"><span class="kicker">La veille du contrôle</span><h2>Le plan express</h2></div>
     <p class="plan-intro">Tu as déjà travaillé le cours : inutile de tout relire. Fais les chapitres <b>★★★ d'abord</b>. Pour chacun : la case
     « Si tu n'as que 10 minutes », puis « L'essentiel ★ » dans S'entraîner. Compte environ <b>${total} minutes</b> pour tout, ou
     <b>${total3} minutes</b> pour les ★★★ seulement.</p>`;
@@ -242,7 +243,7 @@ function examen() {
     const modes = h('div', 'modes');
     const mode = (titre, sous, f) => { const b = h('button', 'mode', `<b>${titre}</b><span>${sous}</span>`); b.type = 'button'; b.onclick = () => jouer(f()); modes.appendChild(b); };
     const t = (n) => TOUTES.filter((q) => parId[q.chapId].theme === n);
-    mode('Les deux thèmes', '20 questions, comme demain', () => tirage(TOUTES, 20));
+    mode('Les deux thèmes', '20 questions, comme au contrôle', () => tirage(TOUTES, 20));
     mode('Thème 5 seulement', '15 questions · Ça va chauffer…', () => tirage(t(5), 15));
     mode('Thème 6 seulement', '15 questions · Les mélanges', () => tirage(t(6), 15));
     mode('Révision express', '10 questions essentielles, 5 minutes', () => melange(TOUTES.filter((q) => q.prio)).slice(0, 10).map((q) => Object.assign({}, q, { chap: parId[q.chapId].titre })));
@@ -259,6 +260,13 @@ function examen() {
     },
   });
   app.appendChild(w); choisir();
+}
+
+function pageCoulisses() {
+  document.body.dataset.theme = '5';
+  const w = h('div', 'wrap coulisses');
+  w.innerHTML = coulisses({ chapitres: CHAPITRES.length, exercices: TOUTES.length, experiences: CHAPITRES.reduce((n, c) => n + c.sims.length, 0), capsules: CHAPITRES.filter((c) => c.video).length });
+  app.appendChild(w);
 }
 
 /* ---------- animation d'accueil : des molécules qu'on chauffe du doigt (canvas 2D, léger) ---------- */
@@ -291,6 +299,16 @@ function heroAnimation(cv) {
   heroStop = () => { cancelAnimationFrame(raf); ro.disconnect(); };
 }
 
+/* ---------- typographie : espaces insécables avant : ; ? ! et dans les guillemets (texte des leçons seulement) ---------- */
+function typographie(racine) {
+  const tw = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement && n.parentElement.closest('script,style,textarea,input,svg,.quiz,.sim-carte') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+  const noeuds = []; while (tw.nextNode()) noeuds.push(tw.currentNode);
+  for (const n of noeuds) {
+    const t = n.nodeValue.replace(/ ([;!?])/g, '\u202f$1').replace(/ :(?=\s|$)/g, '\u00a0:').replace(/« /g, '«\u00a0').replace(/ »/g, '\u00a0»');
+    if (t !== n.nodeValue) n.nodeValue = t;
+  }
+}
+
 /* ---------- routeur ---------- */
 function route() {
   demonterSims(); if (finWidgets) { finWidgets(); finWidgets = null; } if (heroStop) { heroStop(); heroStop = null; } if (audioEnCours) audioEnCours.pause();
@@ -298,7 +316,8 @@ function route() {
   const [, r, a, b] = location.hash.replace(/^#/, '').split('/');
   const actif = r === 'c' ? 'accueil' : r === 'mots' ? 'mots' : r === 'examen' ? 'examen' : 'accueil';
   document.querySelectorAll('#nav a').forEach((l) => l.classList.toggle('on', l.dataset.r === actif));
-  if (r === 'c') chapitre(a, b); else if (r === 'mots') pageMots(); else if (r === 'examen') examen(); else accueil();
+  if (r === 'c') chapitre(a, b); else if (r === 'mots') pageMots(); else if (r === 'examen') examen(); else if (r === 'coulisses') pageCoulisses(); else accueil();
+  if (r !== 'examen' && b !== 'exercices' && b !== 'experience') typographie(app);
   if (!b || b === 'comprendre') window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);

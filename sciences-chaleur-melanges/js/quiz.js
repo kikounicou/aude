@@ -152,7 +152,7 @@ export function lancerQuiz(root, questions, opts = {}) {
 
   function fin() {
     const pct = Math.round((bonnes / questions.length) * 100);
-    const msg = pct === 100 ? 'Sans faute. Tu peux être fière.' : pct >= 80 ? 'Très solide. Encore un petit tour sur tes erreurs et c\'est bon.' : pct >= 50 ? 'C\'est en route. Refais tes erreurs : c\'est là que tu gagnes des points.' : 'Pas grave : relis « Comprendre », refais l\'expérience, puis reviens.';
+    const msg = pct === 100 ? 'Sans faute. Bravo !' : pct >= 80 ? 'Très solide. Encore un petit tour sur tes erreurs et c\'est bon.' : pct >= 50 ? 'C\'est en route. Refais tes erreurs : c\'est là que tu gagnes des points.' : 'Pas grave : relis « Comprendre », refais l\'expérience, puis reviens.';
     box.innerHTML = `<div class="q fin"><div class="score">${bonnes}/${questions.length}</div><p>${msg}</p>
       ${ratees.length ? `<div class="revoir"><b>À revoir :</b><ul>${ratees.map((q) => `<li>${q.q || (q.texte ? q.texte.replace(/\{([^}]+)\}/g, '…') : 'Schéma')}</li>`).join('')}</ul></div>` : ''}
       <div class="q-actions" style="justify-content:center"></div></div>`;

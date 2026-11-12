@@ -277,7 +277,7 @@ export default function mount(root) {
   const gWrap = document.createElement('div'); panelEl.appendChild(gWrap);
   const legend = ui.note('');
   const vocab = document.createElement('details'); vocab.className = 'sim-note';
-  vocab.innerHTML = '<summary style="cursor:pointer;min-height:28px"><b>Les variables du graphique</b></summary><b>Variable contrôlée</b> : le temps (axe horizontal, en minutes).<br><b>Variable dépendante</b> : la température (axe vertical, en °C).<br><b>Maintenus constants</b> : le débit d\'énergie thermique et la masse d\'eau chauffée.';
+  vocab.innerHTML = '<summary style="cursor:pointer;min-height:28px"><b>Les variables du graphique</b></summary><b>Variable contrôlée</b> : le temps (axe horizontal, en minutes).<br><b>Variable dépendante</b> : la température (axe vertical, en °C).<br><b>Variables maintenues constantes</b> : le débit d\'énergie thermique et la masse d\'eau chauffée.';
   panelEl.appendChild(vocab);
   let graph = null, graphCfg = '';
 
@@ -327,7 +327,7 @@ export default function mount(root) {
   function texte() {
     const started = t > 0 || playing, fin = t >= tMax - 1e-6;
     if (cmp) {
-      if (!started) return 'Les deux béchers reçoivent la même énergie. Appuie sur <b>Chauffer</b> : les deux courbes se tracent sur le <mark>même graphique</mark>, avec la même échelle.';
+      if (!started) return 'Appuie sur <b>Chauffer</b> : les deux courbes se tracent sur le <mark>même graphique</mark>, avec la même échelle.';
       if (fin) return 'Sur le premier graphique (eau pure), on constate la présence d\'un <mark>palier</mark> qui n\'apparaît pas sur le deuxième (eau salée). Le premier est un <mark>corps pur</mark>, le deuxième un <mark>mélange</mark>.';
       if (t >= 10) return 'L\'eau pure <mark>bout</mark> et sa température reste constante : <mark>palier</mark>. L\'eau salée, elle, n\'a pas de palier : sa température a continué de monter.';
       if (t >= 6) return 'L\'eau salée <mark>bout</mark> (des bulles se forment au sein du liquide) mais sa température <mark>continue de monter</mark>. L\'eau pure, elle, chauffe encore.';
@@ -346,7 +346,7 @@ export default function mount(root) {
       if (fin) return 'Pendant le palier, l\'eau <mark>bout</mark> : c\'est la <mark>température d\'ébullition</mark>, environ 100 °C (le tableau indique 99 °C). Un palier → l\'eau pure est un <mark>corps pur</mark>.';
       return 'À un moment donné, la température reste constante : on note la présence d\'un <mark>palier</mark>. Durant ce laps de temps, l\'énergie apportée est utilisée pour effectuer le <mark>changement d\'état</mark> : l\'eau passe de l\'état liquide à l\'état gazeux.';
     }
-    if (fin) return 'Pas de palier → l\'' + nom + ' n\'est pas un corps pur : c\'est un <mark>mélange</mark>.' + (key === 'salee' ? ' Appuie sur <b>Comparer</b> pour la voir à côté de l\'eau pure.' : ' Si en plus on observe un palier, on est en présence d\'un corps pur.');
+    if (fin) return 'Pas de palier → l\'' + nom + ' n\'est pas un corps pur : c\'est un <mark>mélange</mark>.' + (key === 'salee' ? ' Appuie sur <b>Comparer</b> pour la voir à côté de l\'eau pure.' : ' S\'il y avait eu un palier, on aurait été en présence d\'un corps pur.');
     if (key === 'grenadine') return 'Lors de l\'ébullition, on observe simultanément <mark>2 états</mark> de la matière : l\'état liquide et l\'état gazeux. Mais la température continue de monter : <mark>pas de palier</mark>.';
     return 'Des <mark>bulles</mark> se forment au sein du liquide : l\'eau salée bout… mais sa température <mark>continue de monter</mark> : pas de palier.';
   }
