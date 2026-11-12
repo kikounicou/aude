@@ -1,7 +1,7 @@
 // melanges.js — « Homogène ou hétérogène ? » (cours, thème 6, p. 1)
 // Guidé en 5 étapes : 1 choisir ce qu'on ajoute à l'eau du tube à essai → 2 agiter → 3 prédire → 4 laisser reposer → 5 conclure
 // (et regarder à la loupe). Les étapes faites restent manipulables ; « Autre mélange » relance le parcours.
-import { THREE, C, layout, createStage, panel, explain, glassMaterial, liquidMaterial, ground, molecules, clamp, lerp, rand } from './kit.js';
+import { THREE, C, layout, createStage, panel, explain, glassMaterial, liquidMaterial, ground, molecules, clamp, lerp, rand, messageSousScene } from './kit.js';
 
 // ---------- Guidage par étapes : composant local, IDENTIQUE dans melanges, separations, distillation et dissolution
 // (candidat pour kit.js). Chaque étape est un bloc numéroté qui porte ses commandes : l'étape en cours est surlignée et sa
@@ -160,6 +160,7 @@ const melanger = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Ma
 export default function mount(root) {
   const retirerStyle = gxStyle();
   const { stageEl, panelEl, explainEl } = layout(root);
+  messageSousScene(root, stageEl, explainEl); // essai : le message reste visible, sous la scène
   const st = createStage(stageEl, { camera: { pos: [0.9, 2.2, 6.5], target: [0.9, 1.4, 0] } });
   const { scene, camera } = st;
   const ex = explain(explainEl);

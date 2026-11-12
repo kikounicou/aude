@@ -176,3 +176,20 @@ body.quiz-en-cours .nav-chap { display: none; }
 .w-prof-vis.un-g svg, .w-prof-vis.deux-g svg { border: 1px solid var(--trait); border-radius: 10px; }
 .w-prof-r .legende-liste { margin-bottom: 10px; }
 @media (max-width: 520px) { .w-prof-vis.deux-g { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- expériences, variante à l'essai : le message « ce qui se passe » sous la scène, toujours visible ---------- */
+.sim-v2 .sim-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sim-v2 .sim-explain { flex: none; min-height: 78px; border: 3px solid var(--fluo); }
+.sim-v2 .sim-explain::before { content: "Ce qui se passe"; display: block; font: 700 11px/1 var(--texte); letter-spacing: .1em; text-transform: uppercase; color: var(--encre2); margin-bottom: 5px; }
+@media (min-width: 861px) {
+  .sim-v2 .sim-main { position: sticky; top: 124px; }
+  .sim-v2 .sim-stage { position: relative; top: auto; height: clamp(300px, calc(100vh - 124px - 190px), 560px); min-height: 0; }
+}
+@media (max-width: 860px) {
+  .sim-v2 .sim-explain { font-size: 14.5px; padding: 10px 12px; min-height: 0; }
+}
+@media (max-width: 860px) and (min-height: 600px) {
+  .sim-v2 .sim-main { position: sticky; top: 112px; z-index: 6; background: var(--nuit); padding: 4px 0 8px; margin: -4px 0 0; box-shadow: 0 10px 14px -10px rgba(0,0,0,.6); }
+  .sim-v2 .sim-stage { height: min(36vh, 300px); }
+  .sim-v2 .sim-explain { max-height: 22vh; overflow-y: auto; }
+}

@@ -62,6 +62,18 @@ export function layout(root) {
 }
 
 /**
+ * Variante de mise en page (à l'essai) : le message « ce qui se passe » vient se placer juste SOUS la scène, et le bloc
+ * scène + message reste à l'écran pendant qu'on manipule les réglages (tablette et téléphone compris).
+ * À appeler juste après layout(root) : messageSousScene(root, stageEl, explainEl).
+ */
+export function messageSousScene(root, stageEl, explainEl) {
+  const main = el('div', 'sim-main');
+  root.insertBefore(main, stageEl);
+  main.append(stageEl, explainEl);
+  root.classList.add('sim-v2');
+}
+
+/**
  * Crée la scène three.js dans `stageEl`.
  * opts : { camera: {pos:[x,y,z], target:[x,y,z], fov}, orbit: true, background: couleur|null, lights: true,
  *          minDistance, maxDistance }
