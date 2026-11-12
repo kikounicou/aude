@@ -275,7 +275,8 @@ footer.pied { color: var(--encre2); font-size: 13.5px; padding: 40px 0 50px; tex
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
 /* garde-fous mobile */
-html, body { overflow-x: hidden; }
+html { overflow-x: hidden; }
+body { overflow-x: clip; } /* « hidden » sur body cassait tous les position: sticky (en-tête, onglets) */
 .hero > *, .deux > *, .sim > * { min-width: 0; }
 .bloc { overflow-x: auto; }
 @media (max-width: 860px) {

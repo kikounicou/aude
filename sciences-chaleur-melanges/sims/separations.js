@@ -1,6 +1,82 @@
 // separations.js — « Séparer un mélange » : décantation, tamisage, filtration, évaporation (cours, thème 6, méthodes 1 à 4).
 // Quatre mini-labos manipulables + un petit défi « quel mélange → quelle méthode ? ». (La distillation est dans un autre fichier.)
+// Chaque labo est guidé par étapes ; une méthode menée au bout est cochée, la suivante clignote, puis le défi passe en avant.
 import { THREE, C, layout, createStage, panel, explain, glassMaterial, liquidMaterial, beaker, ground, clamp, lerp, rand } from './kit.js';
+
+// ---------- Guidage par étapes : composant local, IDENTIQUE dans melanges, separations, distillation et dissolution
+// (candidat pour kit.js). Chaque étape est un bloc numéroté qui porte ses commandes : l'étape en cours est surlignée et sa
+// commande principale clignote doucement, les étapes faites sont cochées (et restent manipulables), les suivantes sont
+// grisées ; si on touche une commande grisée, elle dit pourquoi et l'étape en cours s'allume. ----------
+const GX_CSS = `
+.gx-etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.gx-e{border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:9px 10px 10px;display:flex;flex-direction:column;gap:9px;transition:border-color .25s,background-color .25s}
+.gx-t{display:flex;align-items:center;gap:9px;font:600 14.5px/1.25 var(--texte);color:#cfc8ff}
+.gx-n{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);font:800 13px/1 var(--texte);color:#fff}
+.gx-c{display:flex;flex-direction:column;gap:10px}.gx-c:empty{display:none}
+.gx-info{margin:0;font-size:14px;line-height:1.4;color:#f4f1ff}.gx-info:empty{display:none}.gx-info mark{color:var(--encre)}
+.gx-pq{margin:0;font-size:13px;line-height:1.35;color:#b9b1e6;display:none}
+.gx-e.cur{border-color:var(--fluo);background:rgba(255,228,92,.07)}
+.gx-e.cur .gx-n{background:var(--fluo);border-color:var(--fluo);color:var(--encre)}
+.gx-e.cur .gx-t{color:#fff;font-weight:700}
+.gx-e.fait .gx-n{border-color:var(--fluo);color:var(--fluo)}
+.gx-e.verrou .gx-t{color:#8f88bf}.gx-e.verrou .gx-n{border-style:dashed;border-color:#6f6a9a;color:#8f88bf}
+.gx-e.verrou .gx-c{opacity:.42;filter:saturate(.3)}
+.gx-e.verrou:not(.suite):not(.dit) .gx-c,.gx-e.fait .gx-c:not(:has(button:enabled,input:enabled)){display:none}
+.gx-e.verrou.suite .gx-pq,.gx-e.verrou.dit .gx-pq{display:block}.gx-e.dit .gx-pq{color:#fff;font-weight:700}
+.gx-e.appel{animation:gx-appel .9s ease-out}@keyframes gx-appel{25%{box-shadow:0 0 0 6px rgba(255,228,92,.45)}}
+.gx-go{animation:gx-go 1.7s ease-in-out infinite}.gx-go:disabled{animation:none}.sim-seg button.gx-go{border-color:var(--fluo)}.sim-slider.gx-go{border-radius:12px}
+@keyframes gx-go{50%{box-shadow:0 0 0 6px rgba(255,228,92,.3)}}
+.gx-fin{font-weight:700;color:var(--fluo)}
+`;
+function gxStyle() {      // injecté une fois, retiré au dernier dispose() (plusieurs expériences peuvent partager la page)
+  let s = document.getElementById('gx-style');
+  if (!s) { s = document.createElement('style'); s.id = 'gx-style'; s.textContent = GX_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+/**
+ * const E = etapes(parent, [{ t:'Agite le tube', pq:"D'abord l'étape 1 : …", avant:false }, …]);   (avant : le retour au-dessus des commandes)
+ * E.c(i) : conteneur des commandes de l'étape i (à donner à panel()) ; E.go(i, el, jaune=true) : commande principale ;
+ * E.set(i) : étape en cours (i = nombre d'étapes → tout est fait) ; E.info(i, html) : retour sous l'étape ; E.titre(i, html).
+ */
+function etapes(parent, liste) {
+  const ol = document.createElement('ol'); ol.className = 'gx-etapes'; parent.appendChild(ol);
+  let cur = -1;
+  const B = liste.map((e, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<div class="gx-t"><span class="gx-n" aria-hidden="true"></span><span></span></div><div class="gx-c"></div><p class="gx-info" aria-live="polite"></p><p class="gx-pq"></p>';
+    const [t, c, info, pq] = li.children;
+    t.lastChild.innerHTML = e.t; pq.textContent = '🔒 ' + (e.pq || `D'abord l'étape ${i}.`);
+    if (e.avant) li.insertBefore(info, c);
+    const signaler = () => {      // une commande grisée ne fait rien… mais dit pourquoi, et l'étape en cours s'allume
+      li.classList.add('dit'); const k = B[cur]; if (k) { k.li.classList.remove('appel'); void k.li.offsetWidth; k.li.classList.add('appel'); }
+    };
+    li.addEventListener('click', (ev) => { if (li.classList.contains('verrou')) { ev.stopPropagation(); ev.preventDefault(); signaler(); } }, true);
+    li.addEventListener('pointerdown', () => { if (li.classList.contains('verrou')) signaler(); }, true);   // un curseur désactivé n'émet pas de click
+    ol.appendChild(li);
+    return { li, t: t.lastChild, n: t.firstChild, c, info, go: [] };
+  });
+  const api = {
+    el: ol,
+    c: (i) => B[i].c,
+    titre(i, html) { const b = B[i]; if (b.vt !== html) { b.vt = html; b.t.innerHTML = html; } },      // n'écrit que si ça change
+    info(i, html) { const b = B[i]; if (b.vi !== html) { b.vi = html; b.info.innerHTML = html; } },
+    go(i, el, jaune = true) { B[i].go.push([el, jaune]); const c = cur; cur = -1; api.set(c); },
+    get cur() { return cur; },
+    set(c) {
+      if (c === cur) return; cur = c;
+      B.forEach((b, i) => {
+        const st = i < c ? 'fait' : i === c ? 'cur' : 'verrou';
+        b.li.className = 'gx-e ' + st + (i === c + 1 ? ' suite' : '');
+        b.n.textContent = i < c ? '✓' : String(i + 1);
+        if (i === c) b.li.setAttribute('aria-current', 'step'); else b.li.removeAttribute('aria-current');
+        b.c.querySelectorAll('input').forEach((x) => { x.disabled = st === 'verrou'; });
+        for (const [el, jaune] of b.go) { el.classList.toggle('gx-go', i === c); if (jaune) el.classList.toggle('primary', i === c); }
+      });
+    },
+  };
+  return api;
+}
 
 const sm = (x) => x * x * (3 - 2 * x);
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -88,6 +164,7 @@ function jeter(o) {
 }
 
 export default function mount(root) {
+  const retirerStyle = gxStyle();
   const { stageEl, panelEl, explainEl } = layout(root);
   const st = createStage(stageEl, { camera: { pos: [0, 2.2, 7], target: [0, 1.4, 0] } });
   const { scene, camera, controls } = st;
@@ -100,8 +177,23 @@ export default function mount(root) {
   // ---------- réglages communs ----------
   const ui = panel(panelEl);
   ui.title('Séparer un mélange');
+  const consigne = ui.note('');
   const chM = ui.choice({ label: 'Méthode', options: METHODES, value: 'decantation', onChange: (v) => ouvrir(v) });
   const zone = document.createElement('div'); zone.style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(zone);
+  // les méthodes menées jusqu'au bout sont cochées ; quand les quatre sont faites, le défi passe en avant
+  const reussies = new Set();
+  function majMethodes() {
+    chM.el.querySelectorAll('button').forEach((b) => { const s = METHODES.find((m) => m.value === b.dataset.v).label + (reussies.has(b.dataset.v) ? ' ✓' : ''); if (b.textContent !== s) b.textContent = s; });
+    const tout = reussies.size === METHODES.length;
+    consigne.innerHTML = tout ? '<b style="color:#ffe45c">Bravo, tu as essayé les quatre méthodes !</b> Teste-toi avec le défi, en bas.'
+      : `<b style="color:#fff">Choisis une méthode, puis suis ses étapes.</b> Méthodes essayées : ${reussies.size} / 4.`;
+    bDefi.classList.toggle('primary', tout && defi.style.display === 'none');     // (appelée seulement une fois le défi créé)
+  }
+  function reussi(id) { if (!reussies.has(id)) { reussies.add(id); majMethodes(); } }
+  // fin d'un labo : la prochaine méthode à essayer clignote (une seule action principale) ; tout fait → le défi (en jaune)
+  const prochaine = () => (METHODES.find((m) => !reussies.has(m.value)) || {}).value;
+  function suite(fin) { const p = fin && prochaine(); chM.el.querySelectorAll('button').forEach((b) => b.classList.toggle('gx-go', !!p && b.dataset.v === p)); }
+  const apres = () => (prochaine() ? '<br>➜ Essaie une autre méthode, en haut.' : '<br>➜ Tu as essayé les quatre : fais le défi, en bas !');
 
   // ---------- gestion des mini-labos ----------
   let lab = null, grp = null, labels = [], box = null, fw = 0, fh = 0, tw = null;
@@ -179,10 +271,18 @@ export default function mount(root) {
     // réglages
     note(u, COURS.decantation, COURS.decL);
     u.choice({ label: 'Le mélange', options: [{ value: 'L', label: 'Eau + huile' }, { value: 'S', label: 'Eau boueuse' }], value: 'L', onChange: (v) => v === 'S' && ouvrir('decantation', 'S') });
-    const [bRepos, bRe] = u.buttons([{ label: 'Laisser reposer', primary: true, onClick: () => { if (phase === 'agite') phase = 'repos'; } }, { label: 'Recommencer', onClick: () => init() }]);
-    const chR = u.choice({ label: 'Le robinet', options: [{ value: 'ferme', label: 'Fermé' }, { value: 'entre', label: 'Entrouvert' }, { value: 'ouvert', label: 'Ouvert' }], value: 'ferme', onChange: (v) => robinet(v) });
-    const lu = u.readout('Dans le bécher');
-    void bRe;
+    const E = etapes(u.el, [
+      { t: 'Laisse reposer le mélange' },
+      { t: "Ouvre le robinet, puis ferme-le juste avant l'huile", pq: "D'abord l'étape 1 : laisse reposer, les deux liquides doivent se séparer." },
+      { t: 'Conclus', pq: "D'abord l'étape 2 : fais couler l'eau dans le bécher.", avant: true },
+    ]);
+    const [bRepos] = panel(E.c(0)).buttons([{ label: 'Laisser reposer', onClick: () => { if (phase === 'agite') { phase = 'repos'; msg = ''; } } }]);
+    const u1 = panel(E.c(1));
+    const chR = u1.choice({ label: 'Le robinet', options: [{ value: 'ferme', label: 'Fermé' }, { value: 'entre', label: 'Entrouvert' }, { value: 'ouvert', label: 'Ouvert' }], value: 'ferme', onChange: (v) => robinet(v) });
+    const lu = u1.readout('Dans le bécher');
+    const [bRe] = panel(E.c(2)).buttons([{ label: 'Recommencer', onClick: () => init() }]);
+    E.go(0, bRepos); E.set(0);
+    const bOuv = chR.el.querySelector('[data-v=ouvert]'), bFer = chR.el.querySelector('[data-v=ferme]');
     const VW0 = tv.V(0.92), VO0 = tv.V(1.42) - VW0;
     let Vw, Vo, Bw, Bo, phase, rob, msg, ang = Math.PI / 2;
     function init() {
@@ -243,6 +343,20 @@ export default function mount(root) {
         dit(l1, (!mel || sp >= 0.5) && yT - yI > 0.05 ? 'le liquide 1<br>(huile)' : '');
         dit(l2, (!mel || sp >= 0.5) && yI > 0.3 ? 'le liquide 2<br>(eau)' : '');
         bRepos.disabled = phase !== 'agite';
+        // étapes : où on en est, et le geste à faire maintenant (ouvrir, puis fermer au bon moment)
+        const fin = phase === 'fini' || phase === 'rate';
+        E.set(fin ? 2 : phase === 'separe' ? 1 : 0);
+        E.info(0, phase === 'repos' ? "On laisse reposer… les gouttes d'huile remontent." : '');
+        E.info(1, phase !== 'separe' ? '' : msg ? "Il reste de l'eau dans l'ampoule : rouvre un peu le robinet."
+          : coule === 'huile' ? "⚠ Stop ! C'est l'huile qui coule : ferme le robinet !"
+            : coule && Vw < 0.3 * VW0 ? '⚠ La limite entre les deux liquides approche du robinet : entrouvre, puis ferme !'
+              : coule ? "L'eau s'écoule. Surveille la limite entre les deux liquides." : '');
+        if (phase === 'fini') reussi('decantation');
+        E.info(2, phase === 'fini' ? "✓ Réussi : <b>le liquide 2</b> (l'eau) est dans le bécher, <b>le liquide 1</b> (l'huile) est resté dans l'ampoule." + apres()
+          : phase === 'rate' ? "✗ Trop tard : de l'huile est passée dans le bécher. Recommence !" : '');
+        bRe.classList.toggle('primary', phase === 'rate'); suite(phase === 'fini');
+        bOuv.classList.toggle('gx-go', phase === 'separe' && rob === 'ferme' && !msg && Bw === 0);
+        bFer.classList.toggle('gx-go', phase === 'separe' && rob !== 'ferme' && (Vw < 0.3 * VW0 || coule === 'huile'));
         // ce qui se passe
         let h;
         if (phase === 'agite') h = 'Eau + huile : deux liquides <mark>non miscibles</mark>, qu\'on vient d\'agiter dans <mark>une ampoule à décanter</mark>. Appuie sur <b>Laisser reposer</b>.';
@@ -274,7 +388,13 @@ export default function mount(root) {
     lbl('un bécher', V3(R + 0.02, 1.15, 0), 'd', 'discret');
     note(u, COURS.decantation, COURS.decS);
     u.choice({ label: 'Le mélange', options: [{ value: 'L', label: 'Eau + huile' }, { value: 'S', label: 'Eau boueuse' }], value: 'S', onChange: (v) => v === 'L' && ouvrir('decantation', 'L') });
-    const [bAtt, bRem] = u.buttons([{ label: 'On attend', primary: true, onClick: () => { if (phase === 'suspension') phase = 'attente'; } }, { label: 'Remuer', onClick: () => remuer() }]);
+    const E = etapes(u.el, [
+      { t: 'Laisse reposer le mélange' },
+      { t: 'Conclus', pq: "D'abord l'étape 1 : laisse reposer.", avant: true },
+    ]);
+    const [bAtt, bRem] = panel(E.c(0)).buttons([{ label: 'On attend', onClick: () => { if (phase === 'suspension') phase = 'attente'; } }, { label: 'Remuer', onClick: () => remuer() }]);
+    const [bRe] = panel(E.c(1)).buttons([{ label: 'Remuer et recommencer', onClick: () => remuer() }]);
+    E.go(0, bAtt); E.set(0);
     let phase = 'suspension', tRem = 0;
     function remuer() { tRem = 1.2; phase = 'suspension'; for (const q of grains.P) { q.st = 'libre'; q.r = rand(0.011, 0.028); q.vt = 0.08 + q.r * q.r * 500; q.s = 1; q.y = rand(0.05, NIV - 0.05); const a = rand(6.28), rr = (R - 0.06) * Math.sqrt(Math.random()); q.x = Math.cos(a) * rr; q.z = Math.sin(a) * rr; } }
     remuer(); tRem = 0;
@@ -304,7 +424,12 @@ export default function mount(root) {
         aLiq.position.set(-R - 0.03, 0.72, 0); aSol.position.set(R + 0.03, avant ? 0.45 : Math.max(0.06, hd / 2), 0);
         dit(lLiq, avant ? 'le liquide' : 'le liquide<br>au-dessus'); dit(lSol, avant ? 'le solide<br>en suspension' : susp < 0.5 ? 'le solide<br>au fond' : '');
         dit(lT, phase === 'attente' ? 'temps accéléré : quelques minutes…' : '');
-        bAtt.disabled = phase !== 'suspension'; void bRem;
+        bAtt.disabled = phase !== 'suspension'; bRem.disabled = phase === 'fini';
+        E.set(phase === 'fini' ? 1 : 0);
+        E.info(0, phase === 'attente' ? 'On laisse reposer… (temps accéléré)' : '');
+        if (phase === 'fini') reussi('decantation');
+        E.info(1, phase === 'fini' ? "✓ Le liquide au-dessus, le solide au fond : c'est la <b>décantation</b> d'un mélange solide + liquide." + apres() : '');
+        suite(phase === 'fini');
         ex.set(phase === 'suspension' ? 'Eau boueuse : un solide et un liquide. Les particules de terre sont <mark>en suspension</mark> dans le liquide. Appuie sur <b>On attend</b>.'
           : phase === 'attente' ? 'On laisse reposer le mélange : les particules en suspension dans le liquide <mark>se déposent dans le fond du récipient</mark>.'
             : 'Fini : <mark>le liquide au-dessus</mark>, <mark>le solide au fond</mark>. C\'est la <mark>décantation</mark> d\'un mélange solide + liquide.');
@@ -330,8 +455,17 @@ export default function mount(root) {
     lbl('un tamis', V3(RT + 0.06, YT + 0.12, 0), 'd', 'fluo');
     const lHaut = lbl('', aG, 'g'), lBas = lbl('', V3(-RB - 0.1, 0.18, 0), 'g');
     note(u, COURS.tamisage, COURS.tamP);
-    const [bV, bS, bR] = u.buttons([{ label: 'Verser le mélange', primary: true, onClick: () => verser() }, { label: 'Secouer', onClick: () => { if (verse) tSec = 1.8; } }, { label: 'Recommencer', onClick: () => init() }]);
-    const lu = u.readout('Sable passé à travers le tamis');
+    const E = etapes(u.el, [
+      { t: 'Verse le mélange sur le tamis' },
+      { t: "Secoue le tamis jusqu'à ce que tout le sable soit passé", pq: "D'abord l'étape 1 : verse le mélange." },
+      { t: 'Conclus', pq: "D'abord l'étape 2 : secoue jusqu'au bout.", avant: true },
+    ]);
+    const [bV] = panel(E.c(0)).buttons([{ label: 'Verser le mélange', onClick: () => verser() }]);
+    const u1 = panel(E.c(1));
+    const [bS] = u1.buttons([{ label: 'Secouer', onClick: () => { if (verse) tSec = 1.8; } }]);
+    const lu = u1.readout('Sable passé à travers le tamis');
+    const [bR] = panel(E.c(2)).buttons([{ label: 'Recommencer', onClick: () => init() }]);
+    E.go(0, bV); E.go(1, bS); E.set(0);
     let verse = false, tSec = 0, tV = 0, nb = 0, secoue = false, fPrev = 0;
     function init() { verse = false; tSec = 0; secoue = false; nb = 0; fPrev = 0; for (const p of [sable, caillou]) { for (const q of p.P) q.st = 'off'; p.commit(); } tamis.position.set(0, YT, 0); }
     function verser() {
@@ -368,7 +502,13 @@ export default function mount(root) {
         lu.set(verse ? pct(f) : '—');
         dit(lHaut, !verse ? '' : f > 0.6 ? 'les éléments<br>les plus gros' : 'le mélange :<br>sable + cailloux');
         dit(lBas, f > 0.15 ? 'les morceaux<br>plus petits' : '');
-        bV.disabled = verse; bS.disabled = !verse || tSec > 0; void bR;
+        const fin = secoue && f >= 0.97 && tSec <= 0;
+        bV.disabled = verse; bS.disabled = !verse || tSec > 0 || fin;
+        E.set(fin ? 2 : verse ? 1 : 0);
+        E.info(1, tSec > 0 ? 'Ça secoue… le sable passe au travers.' : secoue && !fin ? 'Il reste du sable sur le tamis : secoue encore !' : '');
+        if (fin) reussi('tamisage');
+        E.info(2, fin ? '✓ Le tamis a retenu <b>les éléments les plus gros</b> (les cailloux) ; le sable est passé au travers.' + apres() : '');
+        suite(fin);
         ex.set(!verse ? 'Le mélange : du sable et des cailloux, deux solides de tailles différentes. Appuie sur <b>Verser le mélange</b>.'
           : !secoue ? 'Le mélange est sur le tamis. Appuie sur <b>Secouer</b>.'
             : tSec > 0 ? 'Le sable, en morceaux plus petits que les trous du tamis, passe au travers…'
@@ -414,7 +554,14 @@ export default function mount(root) {
     const lPart = lbl('', V3(0.2, 2.14, 0), 'd'), aF = new THREE.Object3D(); g.add(aF);
     const lFiltrat = lbl('', aF, 'd', 'fluo');
     note(u, COURS.filtration, COURS.filP);
-    const [bV, bR] = u.buttons([{ label: 'Verser', primary: true, onClick: () => { versant = !versant && L > 0; } }, { label: 'Recommencer', onClick: () => init() }]);
+    const E = etapes(u.el, [
+      { t: 'Verse le mélange dans le filtre' },
+      { t: 'Attends : le liquide traverse le filtre', pq: "D'abord l'étape 1 : verse tout le mélange." },
+      { t: 'Conclus', pq: "D'abord l'étape 2 : attends la fin de la filtration.", avant: true },
+    ]);
+    const [bV] = panel(E.c(0)).buttons([{ label: 'Verser', onClick: () => { versant = !versant && L > 0; } }]);
+    const [bR] = panel(E.c(2)).buttons([{ label: 'Recommencer', onClick: () => init() }]);
+    E.go(0, bV); E.set(0);
     const VS = 0.16;
     let L, Vf, F, versant, tilt, tg;
     function init() { L = 1; Vf = 0; F = 0; versant = false; tilt = 0; tg = 0; }
@@ -447,8 +594,14 @@ export default function mount(root) {
         if (debit > 0.001 && debit <= 0.02 && tg > 0.012 / debit) { tg = 0; const m = gouttes.find((x) => !x.visible); if (m) { m.visible = true; m.position.set(0, 0.84, 0); m.userData.v = 0; } }
         aF.position.set(0.52, 0.065 + hF / 2 + 0.04, 0);
         dit(lFiltrat, F > 0.004 ? 'le filtrat' : ''); dit(lPart, ff > 0.15 ? 'les particules<br>solides' : '');
-        bV.textContent = versant ? 'Arrêter' : 'Verser'; bV.disabled = L <= 0; void bR;
+        bV.textContent = versant ? 'Arrêter' : 'Verser'; bV.disabled = L <= 0;
         const fini = L <= 0 && Vf < 0.0005;
+        E.set(fini ? 2 : L <= 0 ? 1 : 0);
+        E.info(0, versant ? "Le mélange coule le long de l'agitateur…" : L < 1 && L > 0 ? 'Il reste du mélange dans le bécher : verse encore.' : '');
+        E.info(1, L <= 0 && !fini ? 'Le liquide limpide qui tombe dans le bécher, c\'est <b>le filtrat</b>…' : '');
+        if (fini) reussi('filtration');
+        E.info(2, fini ? "✓ Les <b>particules solides</b> sont restées sur le filtre ; le liquide limpide dans le bécher, c'est <b>le filtrat</b>." + apres() : '');
+        suite(fini);
         ex.set(fini ? 'Fini ! Les <mark>particules solides</mark> (la boue) sont restées sur le filtre ; le liquide limpide dans le bécher, c\'est <mark>le filtrat</mark>. C\'est la <mark>filtration</mark>.'
           : F > 0.01 ? 'Le liquide limpide qui tombe dans le bécher, c\'est <mark>le filtrat</mark> (filtrat = résultat d\'une filtration). Le filtre retient les particules solides.'
             : versant || Vf > 0 ? 'Le mélange coule le long de <mark>l\'agitateur</mark> dans <mark>le filtre</mark>, posé dans <mark>l\'entonnoir</mark>…'
@@ -492,10 +645,15 @@ export default function mount(root) {
     lbl('un verre<br>de montre', V3(0.66, GT + 0.13, 0), 'd');
     const lEau = lbl('', V3(-0.6, GT + 0.15, 0), 'g'), lCr = lbl('', V3(-0.5, GT - 0.12, 0), 'g', 'fluo'), lVap = lbl('', V3(0.28, GT + 0.8, 0), 'd', 'discret');
     note(u, COURS.evaporation, COURS.evaP);
-    const sl = u.slider({ label: 'Chaleur', min: 0, max: 100, step: 1, value: 0, unit: '%', onInput: () => {} });
-    const [bR] = u.buttons([{ label: 'Recommencer', onClick: () => init() }]);
-    const lu = u.readout('Liquide restant');
-    void bR;
+    const E = etapes(u.el, [
+      { t: 'Chauffe : pousse le curseur « Chaleur »' },
+      { t: 'Attends que tout le liquide se transforme en vapeur', pq: "D'abord l'étape 1 : chauffe." },
+      { t: 'Conclus', pq: "D'abord l'étape 2 : attends qu'il n'y ait plus de liquide.", avant: true },
+    ]);
+    const sl = panel(E.c(0)).slider({ label: 'Chaleur', min: 0, max: 100, step: 1, value: 0, unit: '%', onInput: () => {} });
+    const lu = panel(E.c(1)).readout('Liquide restant');
+    const [bR] = panel(E.c(2)).buttons([{ label: 'Recommencer', onClick: () => { sl.set(0); init(); } }]);
+    E.go(0, sl.el, false); E.set(0);
     const V0 = tv.V(0.095);
     let V, tSp;
     function init() { V = V0; tSp = 0; crist.P.forEach((q) => { q.s = 0; }); }
@@ -524,6 +682,12 @@ export default function mount(root) {
           s.scale.setScalar(0.12 + 0.5 * k); s.material.opacity = 0.42 * Math.min(1, d.age / 0.3) * (1 - k);
         }
         lu.set(pct(f));
+        const etape = f <= 0 ? 2 : ch > 0.02 || f < 0.98 ? 1 : 0;
+        E.set(etape);
+        if (f <= 0) reussi('evaporation');
+        E.info(1, etape !== 1 ? '' : ch < 0.02 ? 'Sans chaleur, ça va très lentement : remonte le curseur (étape 1).' : 'Le liquide se transforme en vapeur : le niveau baisse.');
+        E.info(2, f <= 0 ? "✓ Il ne reste que les <b>cristaux de sel</b> : on a récupéré le solide qui était dissout." + apres() : '');
+        suite(f <= 0);
         dit(lEau, f > 0.02 ? 'eau salée' : ''); dit(lCr, nC > 12 ? 'cristaux de sel' : ''); dit(lVap, nV > 3 ? 'vapeur d\'eau' : '');
         ex.set(f <= 0 ? 'Tout le liquide s\'est transformé en vapeur : il ne reste que les <mark>cristaux de sel</mark>. On a récupéré le solide qui était dissout : c\'est l\'<mark>évaporation</mark>.'
           : ch < 0.02 && f > 0.98 ? 'Dans le verre de montre : de l\'eau salée, un <mark>mélange homogène</mark> (le sel est dissout : on ne le voit pas). Fais chauffer avec le curseur.'
@@ -537,31 +701,32 @@ export default function mount(root) {
   const LABS = { decantation: (g, u, v) => (v === 'S' ? becherBoue(g, u) : ampoule(g, u)), tamisage, filtration, evaporation };
 
   // ---------- défi : quel mélange → quelle méthode ? ----------
-  const [bDefi] = ui.buttons([{ label: 'Défi : quel mélange → quelle méthode ?', onClick: () => { const on = defi.style.display === 'none'; defi.style.display = on ? 'flex' : 'none'; bDefi.classList.toggle('on', on); if (on && !dq.innerHTML) suivante(); } }]);
+  const [bDefi] = ui.buttons([{ label: 'Défi : quel mélange → quelle méthode ?', onClick: () => { const on = defi.style.display === 'none'; defi.style.display = on ? 'flex' : 'none'; bDefi.classList.toggle('on', on); majMethodes(); if (on && !dq.innerHTML) suivante(); } }]);
   const defi = document.createElement('div'); defi.style.cssText = 'display:none;flex-direction:column;gap:10px'; panelEl.appendChild(defi);
   const dp = panel(defi);
   const dq = dp.note('');
   const dB = dp.buttons(METHODES.map((m) => ({ label: m.label, onClick: () => repondre(m.value) })));
   const dRes = dp.note('');
-  dp.buttons([{ label: 'Question suivante', onClick: () => suivante() }]);
+  const [bSuiv] = dp.buttons([{ label: 'Question suivante', onClick: () => suivante() }]);
   const dScore = dp.readout('Bonnes réponses'); dScore.set('0 / 0');
   let ordre = [], iq = -1, bons = 0, faits = 0, repondu = false;
   function suivante() {
     if (!ordre.length || iq >= ordre.length - 1) { ordre = DEFI.map((d, i) => i).sort(() => Math.random() - 0.5); iq = -1; }
     iq++; repondu = false; const d = DEFI[ordre[iq]];
     dq.innerHTML = `Quelle méthode pour séparer : <b style="color:#fff;font-size:17px">${d.q}</b> ?`; dRes.innerHTML = '';
-    dB.forEach((b) => b.classList.remove('on'));
+    dB.forEach((b) => b.classList.remove('on')); bSuiv.classList.remove('primary');
   }
   function repondre(m) {
     if (repondu) return; repondu = true; faits++;
     const d = DEFI[ordre[iq]], ok = d.ok.includes(m); if (ok) bons++;
     dB.forEach((b, i) => b.classList.toggle('on', d.ok.includes(METHODES[i].value)));
     dRes.innerHTML = (ok ? '<b style="color:#7ee2a8">Oui !</b> ' : '<b style="color:#ff9b85">Non.</b> ') + d.q + ' : ' + d.pq;
-    dScore.set(`${bons} / ${faits}`);
+    dScore.set(`${bons} / ${faits}`); bSuiv.classList.add('primary');   // la suite logique : la question suivante
   }
 
   // banc d'essai : ?lab=<méthode>&v=S&auto=1 ouvre un labo et lance le geste principal
   const auto = qs.get('auto') === '1';
+  majMethodes();
   ouvrir(LABS[qs.get('lab')] ? qs.get('lab') : 'decantation', qs.get('v') || 'L');
-  return { dispose() { if (grp) jeter(grp); st.dispose(); } };
+  return { dispose() { if (grp) jeter(grp); st.dispose(); retirerStyle(); } };
 }

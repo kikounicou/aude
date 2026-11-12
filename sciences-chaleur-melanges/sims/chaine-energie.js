@@ -4,6 +4,61 @@
 // rouge = énergie thermique non désirée (forme dégradée d'énergie).
 import { THREE, C, layout, createStage, panel, explain, ground, molecules, clamp, rand } from './kit.js';
 
+// ---------- Guide pas à pas ----------
+// Composant local, IDENTIQUE dans chaine-energie, thermoscope, thermometre et deux-bechers (à mettre en commun dans kit.js).
+//   const g = guide(panelEl, ['Étape 1', 'Étape 2'], { avant: noeud, onRecommencer });
+//   g.set(cur, faits, html, fin) : étape en cours (−1 = fini), Set des étapes faites, retour + consigne (HTML)
+//   g.appel(bouton, on) : l'action principale pulse · g.zone(el, on) : cadre la zone à manipuler
+//   g.verrou(el, on, pourquoi, apres) : grise une commande ET dit pourquoi, juste en dessous (ou sous `apres`)
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.gd.gd-fini{background:rgba(255,228,92,.1)}
+.gd-pas{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.gd-pas li{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;font:600 13px/1.2 var(--texte);color:#9d96cc;border:1.5px solid rgba(255,255,255,.14)}
+.gd-pas li b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);color:#cfc8ff;font-size:12.5px}
+.gd-pas li.fait{color:#fff;border-color:rgba(255,228,92,.45)}.gd-pas li.fait b{background:var(--fluo);color:var(--encre)}
+.gd-pas li.cur{color:var(--encre);background:var(--fluo);border-color:var(--fluo)}.gd-pas li.cur b{background:var(--encre);color:var(--fluo)}
+.gd-msg{margin:0;font:500 14.5px/1.4 var(--texte);color:#fff}.gd-msg b{color:var(--fluo)}.gd mark{color:var(--encre)}
+.gd .sim-btn{align-self:flex-start}
+.gd-appel{box-shadow:0 0 0 3px rgba(255,228,92,.85);animation:gd-appel 1.4s ease-in-out infinite}
+@keyframes gd-appel{50%{box-shadow:0 0 0 8px rgba(255,228,92,.22)}}
+.gd-zone{outline:2px dashed rgba(255,228,92,.75);outline-offset:3px;border-radius:12px}
+.gd-lock{opacity:.45}.gd-lock button{cursor:not-allowed}
+.gd-pourquoi{flex-basis:100%;margin:-4px 0 0;font-size:13.5px;color:#ffd9a8}
+`;
+function guide(parent, noms, o = {}) {
+  let css = document.getElementById('gd-style');
+  if (!css) { css = document.createElement('style'); css.id = 'gd-style'; css.textContent = GD_CSS; document.head.appendChild(css); }
+  css.dataset.n = (+css.dataset.n || 0) + 1;
+  const box = document.createElement('div'); box.className = 'gd';
+  box.innerHTML = `<ol class="gd-pas" aria-label="Les étapes">${noms.map((n, i) => `<li><b>${i + 1}</b><span>${n}</span></li>`).join('')}</ol><p class="gd-msg" aria-live="polite"></p>`;
+  const lis = [...box.querySelectorAll('li')], msg = box.querySelector('.gd-msg'), raisons = new Map();
+  let bR = null, cle = '';
+  if (o.onRecommencer) {
+    bR = document.createElement('button'); bR.type = 'button'; bR.className = 'sim-btn'; bR.textContent = '↺ Recommencer'; bR.hidden = true;
+    bR.addEventListener('click', o.onRecommencer); box.appendChild(bR);
+  }
+  parent.insertBefore(box, o.avant || null);
+  return {
+    el: box,
+    set(cur, faits, html, fin = false) {
+      const k = cur + '|' + [...faits].join(',') + '|' + html + fin; if (k === cle) return; cle = k;
+      lis.forEach((li, i) => { const f = faits.has(i); li.className = f ? 'fait' : i === cur ? 'cur' : ''; li.firstChild.textContent = f ? '✓' : i + 1; if (i === cur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+      msg.innerHTML = html; box.classList.toggle('gd-fini', fin); if (bR) bR.hidden = !fin;
+    },
+    appel(b, on) { b.classList.toggle('gd-appel', !!on); },
+    zone(e, on) { e.classList.toggle('gd-zone', !!on); },
+    verrou(e, on, pourquoi = '', apres = e) {
+      e.classList.toggle('gd-lock', !!on);
+      (e.tagName === 'BUTTON' ? [e] : e.querySelectorAll('button')).forEach((b) => { b.disabled = !!on; });
+      let p = raisons.get(e);
+      if (on && !p) { p = document.createElement('p'); p.className = 'gd-pourquoi'; raisons.set(e, p); apres.after(p); }
+      if (p) { p.hidden = !on; p.textContent = '🔒 ' + pourquoi; }
+    },
+    dispose() { box.remove(); raisons.forEach((p) => p.remove()); css.dataset.n = +css.dataset.n - 1; if (+css.dataset.n <= 0) css.remove(); },
+  };
+}
+
 // ---------- Le contenu (mots du cours) ----------
 const RES = {
   bois: { label: 'Bûches de bois', nom: 'Bûches de bois', le: 'les <b>bûches de bois</b>', du: 'des <b>bûches de bois</b>' },
@@ -44,6 +99,12 @@ function txtDegrade(t) {
   if (t === 'elle') return "Les particules rouges : de l'<mark>énergie thermique</mark> qui s'échappe de son corps vers l'air froid, perdue pour elle. Sa doudoune <mark>ralentit les échanges de chaleur</mark> entre son corps et l'extérieur.";
   return `Les particules rouges : de l'<mark>énergie thermique non désirée</mark> qui s'échappe ${TRA[t].perte} et par l'échauffement des objets. Perdue pour le montage, c'est une <mark>forme dégradée d'énergie</mark>.`;
 }
+// Avant que la chaîne soit construite (phrases du cours, p. 2 et « Je retiens »)
+const DEBUT = "Construis une chaîne ayant pour <mark>receveur</mark> le salon d'Églantine. Il est nécessaire de partir d'un <mark>réservoir</mark> d'énergie accompagné d'un ou de plusieurs <mark>transformateurs</mark>.";
+const avecRes = (R) => `Ton <mark>réservoir</mark> : ${R.le}. Il te faut maintenant un <mark>transformateur</mark> : il reçoit de l'énergie sous une certaine forme et la restitue sous la même forme ou sous une autre forme.`;
+// Le parcours guidé : choisir → choisir → observer → montrer l'énergie perdue
+const PAS = ['Réservoir', 'Transformateur', 'Le salon chauffe ?', 'Énergie dégradée'];
+const FIN = "<b>✓ Chaîne complète !</b> La production d'énergie thermique a pour but de fournir cette énergie à un <mark>receveur</mark>. Il faut partir d'un <mark>réservoir</mark> d'énergie accompagné d'un ou de plusieurs <mark>transformateurs</mark>. L'énergie thermique non désirée, perdue pour le montage, est une <mark>forme dégradée d'énergie</mark>. À toi : essaie les autres réservoirs du texte.";
 
 // ---------- Petits outils 3D ----------
 const std = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.65 }, o));
@@ -262,14 +323,17 @@ export default function mount(root) {
   for (let i = 0; i < ND; i++) { dp.push(new THREE.Vector3()); dv.push(new THREE.Vector3()); P.setColor(D0 + i, COL.degrade); }
 
   // ---------- État ----------
-  let res = RES[q.get('r')] ? q.get('r') : 'bois';
-  let tra = TRA[q.get('t')] ? q.get('t') : 'feu';
+  // Au départ, rien n'est choisi : c'est l'élève qui construit la chaîne (?r=bois&t=feu&d=1 pour le banc d'essai).
+  let res = RES[q.get('r')] ? q.get('r') : null;
+  let tra = TRA[q.get('t')] ? q.get('t') : null;
   let degOn = q.get('d') === '1';
   let ok = false, onAmt = 0, warm = 0, amp1 = 0, amp2 = 0, degAmt = 0, spawnAcc = 0;
+  const faits = new Set();
 
   // ---------- Réglages ----------
   const ui = panel(panelEl);
   ui.title("Construis la chaîne du salon d'Églantine");
+  const gd = guide(panelEl, PAS, { onRecommencer: recommencer });
   ui.note('Schéma du cours : <b>(E) Réservoir → transformateur(s) → receveur</b>. Ici, le receveur est le salon.');
   const chR = ui.choice({ label: '1. Choisis un réservoir', options: Object.entries(RES).map(([v, o]) => ({ value: v, label: o.label })), value: res, onChange: (v) => { res = v; changed(); } });
   const chT = ui.choice({ label: '2. Choisis un transformateur', options: Object.entries(TRA).map(([v, o]) => ({ value: v, label: o.label })), value: tra, onChange: (v) => { tra = v; changed(); } });
@@ -280,32 +344,58 @@ export default function mount(root) {
   const roChaine = ui.readout('La chaîne'), roSalon = ui.readout('Le salon');
 
   function changed() { amp1 = 0; refresh(); }
+  function recommencer() { res = tra = null; degOn = false; faits.clear(); chR.set(null); chT.set(null); changed(); }
   function refresh() {
-    ok = TRA[tra].attend === res;
-    const R = RES[res], T = TRA[tra], elle = ok && tra === 'elle';
-    lNomR.set(R.nom);
-    lNomT.set(elle ? 'Églantine<br>(receveur : elle-même)' : T.nom);
+    const R = res && RES[res], T = tra && TRA[tra];
+    ok = !!(R && T) && T.attend === res;
+    const elle = ok && tra === 'elle';
+    lNomR.set(R ? R.nom : '? à choisir');
+    lNomT.set(elle ? 'Églantine<br>(receveur : elle-même)' : T ? T.nom : '? à choisir');
     lRoleT.set(tra === 'chaudiere' ? 'Transformateurs' : 'Transformateur');
-    lE1.set(res === 'soleil' ? 'énergie du soleil' : 'énergie chimique');
-    lE2.set(T.sortie || ''); lE2.show(ok && tra !== 'elle');
-    lHalo.show(elle); lX.show(!ok);
+    lE1.set(res === 'soleil' ? 'énergie du soleil' : 'énergie chimique'); lE1.show(!!R);
+    lE2.set((T && T.sortie) || ''); lE2.show(ok && tra !== 'elle');
+    lHalo.show(elle); lX.show(!!(R && T) && !ok);
     lRoleS.el.style.opacity = lNomS.el.style.opacity = ok && !elle ? '1' : '0.45';
     lDeg.set(elle ? 'énergie thermique perdue' : "énergie thermique non désirée<br>= forme dégradée d'énergie");
     if (elle) posDeg.set(XT + 0.95, 2.05, 0); else posDeg.set(tra === 'chaudiere' ? XT - 0.42 : XT, 3.0, 0);
     lDeg.show(degOn && ok);
     bDeg.classList.toggle('on', degOn);
     bDeg.textContent = degOn ? "Cacher l'énergie dégradée" : "Montrer l'énergie dégradée";
-    roChaine.set(ok ? (elle ? '✓ receveur : Églantine' : '✓ elle fonctionne') : '<span style="color:#ff8a6a">✕ à revoir</span>');
+    roChaine.set(!(R && T) ? 'à construire' : ok ? (elle ? '✓ receveur : Églantine' : '✓ elle fonctionne') : '<span style="color:#ff8a6a">✕ à revoir</span>');
     roSalon.set(ok && !elle ? 'se réchauffe' : 'reste froid');
     let html;
-    if (!ok) html = pasBon(res, tra) + (degOn ? " <i>L'énergie dégradée apparaîtra quand la chaîne fonctionnera.</i>" : '');
+    if (!R) html = DEBUT;
+    else if (!T) html = avecRes(R);
+    else if (!ok) html = pasBon(res, tra) + (degOn ? " <i>L'énergie dégradée apparaîtra quand la chaîne fonctionnera.</i>" : '');
     else if (degOn) html = (elle ? 'Aliments (<mark>réservoir</mark>) → Églantine (<mark>transformateur</mark>). ' : `${R.label} (<mark>réservoir</mark>) → ${T.label} (<mark>transformateur</mark>) → salon (<mark>receveur</mark>). `) + txtDegrade(tra);
     else html = OK[tra];
     ex.set(html);
+    majGuide();
+  }
+  // Le guide : ce qui vient de se passer, puis la prochaine action ; une seule action mise en avant à la fois.
+  function majGuide() {
+    if (res) faits.add(0);
+    if (tra) faits.add(1);
+    if (ok && tra !== 'elle') faits.add(2);
+    if (faits.has(2) && degOn && ok) faits.add(3);
+    const cur = [0, 1, 2, 3].find((i) => !faits.has(i)) ?? -1, R = res && RES[res];
+    let html;
+    if (cur === 0) html = '<b>1.</b> Choisis un <b>réservoir</b> d\'énergie repris dans le texte.';
+    else if (cur === 1) html = `✓ Réservoir : ${R ? R.label.toLowerCase() : '?'}. <b>2.</b> Choisis maintenant un <b>transformateur</b>.`;
+    else if (cur === 2) html = ok ? '✓ Chaîne juste, mais son receveur est Églantine, pas le salon. <b>3.</b> Cherche la chaîne qui chauffe le salon.'
+      : "✕ Cette chaîne ne chauffe pas le salon (pourquoi : plus bas). <b>3.</b> Change le réservoir ou le transformateur jusqu'à ce que le salon se réchauffe.";
+    else if (cur === 3) html = '✓ Le salon se réchauffe : ta chaîne fonctionne ! <b>4.</b> Touche « Montrer l\'énergie dégradée » et regarde ce qui s\'échappe.';
+    else html = FIN;
+    gd.set(cur, faits, html, cur < 0);
+    gd.zone(chR.el, cur === 0 || cur === 2); gd.zone(chT.el, cur === 1 || cur === 2);
+    gd.verrou(chT.el, !res && !faits.has(1), "Choisis d'abord un réservoir (étape 1).");
+    gd.verrou(bDeg, !faits.has(2), "D'abord une chaîne qui chauffe le salon (étape 3).");
+    gd.appel(bDeg, cur === 3); bDeg.classList.toggle('primary', cur === 3);
   }
 
   // Une particule rouge s'échappe du transformateur ou du trajet vers le salon.
   function spawn() {
+    if (!tra) return;              // « Recommencer » : l'énergie dégradée s'éteint en douceur, sans transformateur
     let i = -1;
     for (let k = 0; k < ND; k++) if (dage[k] >= dlife[k]) { i = k; break; }
     if (i < 0) return;
@@ -352,7 +442,7 @@ export default function mount(root) {
     const elle = ok && tra === 'elle';
     onAmt += ((ok ? 1 : 0) - onAmt) * slow(3);
     warm += ((ok && !elle ? 1 : 0) - warm) * slow(0.9);
-    amp1 += (1 - amp1) * slow(2.5);
+    amp1 += ((res ? 1 : 0) - amp1) * slow(2.5);
     amp2 += ((ok ? 1 : 0) - amp2) * slow(2.5);
     degAmt += ((degOn && ok ? 1 : 0) - degAmt) * k;
     for (const [key, g] of Object.entries(resObjs)) grow(g, key === res, k, dt, t);
@@ -361,7 +451,7 @@ export default function mount(root) {
     // le salon se réchauffe ; la lumière du feu (ou du brûleur) vacille
     salon.mur.emissiveIntensity = warm * 0.3;
     salonLight.intensity = warm * (tra === 'feu' ? 5 : 3.5);
-    const lp = traObjs[tra].userData.lightPos;
+    const lp = tra && traObjs[tra].userData.lightPos;
     if (lp) feuLight.position.set(XT + lp[0], lp[1], lp[2]);
     feuLight.intensity = lp ? onAmt * (2.5 + 0.6 * Math.sin(t * 11) + 0.3 * Math.sin(t * 27)) : 0;
     a2.mat.opacity = 0.05 + 0.21 * (elle ? 0 : amp2);
@@ -412,5 +502,5 @@ export default function mount(root) {
   refresh();
   // Banc d'essai : ?avance=3 fait tourner 3 s de simulation tout de suite (captures sans écran).
   for (let i = 0, n = clamp(+q.get('avance') || 0, 0, 10) * 60; i < n; i++) frame(1 / 60);
-  return { dispose() { st.dispose(); } };
+  return { dispose() { gd.dispose(); st.dispose(); } };
 }

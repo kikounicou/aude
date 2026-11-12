@@ -1,6 +1,82 @@
 // dissolution.js — « Dissoudre : solvant, soluté, solution, saturation, concentration » (thème 6).
 // Modèle du cours : molécules d'eau claires, molécules de sucre sombres. Second mode : « Fondre ou dissoudre ? ».
+// Guidé par étapes : ajouter → agiter et regarder → ajouter jusqu'à la saturation → conclure ; et lancer → glaçon → sucre → à retenir.
 import { THREE, C, layout, createStage, panel, explain, beaker, ground, molecules, liquidMaterial, glassMaterial, clamp, lerp, rand } from './kit.js';
+
+// ---------- Guidage par étapes : composant local, IDENTIQUE dans melanges, separations, distillation et dissolution
+// (candidat pour kit.js). Chaque étape est un bloc numéroté qui porte ses commandes : l'étape en cours est surlignée et sa
+// commande principale clignote doucement, les étapes faites sont cochées (et restent manipulables), les suivantes sont
+// grisées ; si on touche une commande grisée, elle dit pourquoi et l'étape en cours s'allume. ----------
+const GX_CSS = `
+.gx-etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.gx-e{border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:9px 10px 10px;display:flex;flex-direction:column;gap:9px;transition:border-color .25s,background-color .25s}
+.gx-t{display:flex;align-items:center;gap:9px;font:600 14.5px/1.25 var(--texte);color:#cfc8ff}
+.gx-n{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);font:800 13px/1 var(--texte);color:#fff}
+.gx-c{display:flex;flex-direction:column;gap:10px}.gx-c:empty{display:none}
+.gx-info{margin:0;font-size:14px;line-height:1.4;color:#f4f1ff}.gx-info:empty{display:none}.gx-info mark{color:var(--encre)}
+.gx-pq{margin:0;font-size:13px;line-height:1.35;color:#b9b1e6;display:none}
+.gx-e.cur{border-color:var(--fluo);background:rgba(255,228,92,.07)}
+.gx-e.cur .gx-n{background:var(--fluo);border-color:var(--fluo);color:var(--encre)}
+.gx-e.cur .gx-t{color:#fff;font-weight:700}
+.gx-e.fait .gx-n{border-color:var(--fluo);color:var(--fluo)}
+.gx-e.verrou .gx-t{color:#8f88bf}.gx-e.verrou .gx-n{border-style:dashed;border-color:#6f6a9a;color:#8f88bf}
+.gx-e.verrou .gx-c{opacity:.42;filter:saturate(.3)}
+.gx-e.verrou:not(.suite):not(.dit) .gx-c,.gx-e.fait .gx-c:not(:has(button:enabled,input:enabled)){display:none}
+.gx-e.verrou.suite .gx-pq,.gx-e.verrou.dit .gx-pq{display:block}.gx-e.dit .gx-pq{color:#fff;font-weight:700}
+.gx-e.appel{animation:gx-appel .9s ease-out}@keyframes gx-appel{25%{box-shadow:0 0 0 6px rgba(255,228,92,.45)}}
+.gx-go{animation:gx-go 1.7s ease-in-out infinite}.gx-go:disabled{animation:none}.sim-seg button.gx-go{border-color:var(--fluo)}.sim-slider.gx-go{border-radius:12px}
+@keyframes gx-go{50%{box-shadow:0 0 0 6px rgba(255,228,92,.3)}}
+.gx-fin{font-weight:700;color:var(--fluo)}
+`;
+function gxStyle() {      // injecté une fois, retiré au dernier dispose() (plusieurs expériences peuvent partager la page)
+  let s = document.getElementById('gx-style');
+  if (!s) { s = document.createElement('style'); s.id = 'gx-style'; s.textContent = GX_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+/**
+ * const E = etapes(parent, [{ t:'Agite le tube', pq:"D'abord l'étape 1 : …", avant:false }, …]);   (avant : le retour au-dessus des commandes)
+ * E.c(i) : conteneur des commandes de l'étape i (à donner à panel()) ; E.go(i, el, jaune=true) : commande principale ;
+ * E.set(i) : étape en cours (i = nombre d'étapes → tout est fait) ; E.info(i, html) : retour sous l'étape ; E.titre(i, html).
+ */
+function etapes(parent, liste) {
+  const ol = document.createElement('ol'); ol.className = 'gx-etapes'; parent.appendChild(ol);
+  let cur = -1;
+  const B = liste.map((e, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<div class="gx-t"><span class="gx-n" aria-hidden="true"></span><span></span></div><div class="gx-c"></div><p class="gx-info" aria-live="polite"></p><p class="gx-pq"></p>';
+    const [t, c, info, pq] = li.children;
+    t.lastChild.innerHTML = e.t; pq.textContent = '🔒 ' + (e.pq || `D'abord l'étape ${i}.`);
+    if (e.avant) li.insertBefore(info, c);
+    const signaler = () => {      // une commande grisée ne fait rien… mais dit pourquoi, et l'étape en cours s'allume
+      li.classList.add('dit'); const k = B[cur]; if (k) { k.li.classList.remove('appel'); void k.li.offsetWidth; k.li.classList.add('appel'); }
+    };
+    li.addEventListener('click', (ev) => { if (li.classList.contains('verrou')) { ev.stopPropagation(); ev.preventDefault(); signaler(); } }, true);
+    li.addEventListener('pointerdown', () => { if (li.classList.contains('verrou')) signaler(); }, true);   // un curseur désactivé n'émet pas de click
+    ol.appendChild(li);
+    return { li, t: t.lastChild, n: t.firstChild, c, info, go: [] };
+  });
+  const api = {
+    el: ol,
+    c: (i) => B[i].c,
+    titre(i, html) { const b = B[i]; if (b.vt !== html) { b.vt = html; b.t.innerHTML = html; } },      // n'écrit que si ça change
+    info(i, html) { const b = B[i]; if (b.vi !== html) { b.vi = html; b.info.innerHTML = html; } },
+    go(i, el, jaune = true) { B[i].go.push([el, jaune]); const c = cur; cur = -1; api.set(c); },
+    get cur() { return cur; },
+    set(c) {
+      if (c === cur) return; cur = c;
+      B.forEach((b, i) => {
+        const st = i < c ? 'fait' : i === c ? 'cur' : 'verrou';
+        b.li.className = 'gx-e ' + st + (i === c + 1 ? ' suite' : '');
+        b.n.textContent = i < c ? '✓' : String(i + 1);
+        if (i === c) b.li.setAttribute('aria-current', 'step'); else b.li.removeAttribute('aria-current');
+        b.c.querySelectorAll('input').forEach((x) => { x.disabled = st === 'verrou'; });
+        for (const [el, jaune] of b.go) { el.classList.toggle('gx-go', i === c); if (jaune) el.classList.toggle('primary', i === c); }
+      });
+    },
+  };
+  return api;
+}
 
 const MOL_G = 5;            // 1 molécule de sucre dessinée = 0,2 g
 const SAT = 20;             // DANS CETTE EXPÉRIENCE : l'eau est saturée à 20 g de sucre dissous par litre
@@ -34,6 +110,7 @@ function walk(p, v, i, dt, ag, rin, y0, y1) {
 }
 
 export default function mount(root) {
+  const retirerStyle = gxStyle();
   const { stageEl, panelEl, explainEl } = layout(root);
   const st = createStage(stageEl, { camera: { pos: [0, 2.9, 5.6], target: [0, 1.3, 0], fov: 42 } });
   const S = st.scene, ex = explain(explainEl);
@@ -111,10 +188,21 @@ export default function mount(root) {
   const ui = panel(panelEl);
   const part = () => { const e = document.createElement('div'); e.style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(e); return e; };
   const modeC = ui.choice({ options: [{ value: 'dis', label: 'Dissoudre' }, { value: 'comp', label: 'Fondre ou dissoudre ?' }], value: 'dis', onChange: (v) => setMode(v) });
-  const partA = part(), partB = part(), ua = panel(partA), ub = panel(partB);
-  const volS = ua.slider({ label: "Volume d'eau (le solvant)", min: 0.25, max: 2, step: 0.25, value: 1, unit: 'L', format: (v) => fr(v), onInput: (v) => { V = v; reset(); } });
-  const [bC, bP, bA] = ua.buttons([{ label: '+ 1 cuillère de sucre (5 g)', primary: true, onClick: () => ajouter(5) }, { label: '+ 1 pincée (1 g)', onClick: () => ajouter(1) },
-    { label: 'Agiter', onClick: () => { agUntil = clock + 3; } }, { label: 'Recommencer', onClick: () => reset() }]);
+  const partA = part(), partB = part(), ua = panel(partA);
+  // « Dissoudre », étape par étape : ajouter → agiter et regarder → ajouter jusqu'à la saturation → conclure
+  // (les messages « verrouillé » évitent le mot « étape » : le schéma du cours numérote déjà ses étapes, de la 1re à la 5e)
+  const EA = etapes(partA, [
+    { t: "Ajoute du sucre (le soluté) dans l'eau (le solvant)" },
+    { t: 'Agite et regarde le sucre se disperser', pq: "Ajoute d'abord du sucre." },
+    { t: "Ajoute du sucre jusqu'à ce qu'il en reste au fond", pq: "Attends d'abord que le sucre soit réparti partout." },
+    { t: 'Conclus', pq: "Ajoute d'abord du sucre jusqu'à ce qu'il en reste au fond.", avant: true },
+  ]);
+  const [bC, bP] = panel(EA.c(0)).buttons([{ label: '+ 1 cuillère de sucre (5 g)', onClick: () => ajouter(5) }, { label: '+ 1 pincée (1 g)', onClick: () => ajouter(1) }]);
+  const [bA] = panel(EA.c(1)).buttons([{ label: 'Agiter', onClick: () => { agUntil = clock + 3; } }]);
+  const [bC2] = panel(EA.c(2)).buttons([{ label: '+ 1 cuillère de sucre (5 g)', onClick: () => ajouter(5) }]);
+  const [bRA] = panel(EA.c(3)).buttons([{ label: 'Recommencer', onClick: () => reset() }]);
+  EA.go(0, bC); EA.go(1, bA); EA.go(2, bC2); EA.set(0);
+  let vuHomog = false, vuDepot = false, finiA = false, finiB = false;   // étapes franchies (elles le restent)
   // conservation de la masse en tuiles : solvant + soluté = ce que montre la balance
   const grid = document.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px';
@@ -136,13 +224,32 @@ export default function mount(root) {
   const jauge = jWrap.lastChild.firstChild;
   ua.note('<span style="color:#eef7ff">●</span> molécule d\'eau &nbsp;<span style="color:#8f7fd6">●</span> molécule de sucre (sombre). Modèle : molécules énormément grossies.<br>'
     + '<b>Dans cette expérience</b>, l\'eau est saturée à 20 g de sucre par litre, pour aller vite. En vrai, il en faut beaucoup plus.');
-  ub.buttons([{ label: 'Lancer les deux expériences', primary: true, onClick: () => { running = true; } }, { label: 'Recommencer', onClick: () => resetB() }]);
-  const qG = ub.choice({ label: 'Le glaçon…', options: [{ value: 'fond', label: 'il fond' }, { value: 'dissout', label: 'il se dissout' }], value: '', onChange: (v) => repondre('glacon', v) });
-  const qS = ub.choice({ label: "Le sucre dans l'eau…", options: [{ value: 'fond', label: 'il fond' }, { value: 'dissout', label: 'il se dissout' }], value: '', onChange: (v) => repondre('sucre', v) });
+  // le volume d'eau (il sert dans C = m ÷ V) : le changer relance l'expérience
+  const volS = ua.slider({ label: "Volume d'eau (le solvant)", min: 0.25, max: 2, step: 0.25, value: 1, unit: 'L', format: (v) => fr(v), onInput: (v) => { V = v; reset(); } });
+  // « Fondre ou dissoudre ? », étape par étape
+  const EB = etapes(partB, [
+    { t: 'Lance les deux expériences et regarde' },
+    { t: 'Le glaçon…', pq: "Lance d'abord les expériences, et regarde." },
+    { t: "Le sucre dans l'eau…", pq: "Réponds d'abord pour le glaçon." },
+    { t: 'À retenir', pq: "Réponds d'abord pour le sucre.", avant: true },
+  ]);
+  const [bL] = panel(EB.c(0)).buttons([{ label: 'Lancer les deux expériences', onClick: () => { running = true; } }]);
+  const qG = panel(EB.c(1)).choice({ options: [{ value: 'fond', label: 'il fond' }, { value: 'dissout', label: 'il se dissout' }], value: '', onChange: (v) => repondre('glacon', v) });
+  const qS = panel(EB.c(2)).choice({ options: [{ value: 'fond', label: 'il fond' }, { value: 'dissout', label: 'il se dissout' }], value: '', onChange: (v) => repondre('sucre', v) });
+  const [bRB] = panel(EB.c(3)).buttons([{ label: 'Recommencer', onClick: () => resetB() }]);
+  EB.go(0, bL); EB.set(0);
+  // fin d'un parcours : l'autre parcours clignote (une seule action principale) ; les deux faits → « Recommencer » en jaune
+  function suiteMode() {
+    const fA = mode === 'dis' && finiA, fB = mode === 'comp' && finiB;
+    modeC.el.querySelector('[data-v=comp]').classList.toggle('gx-go', fA && !finiB);
+    modeC.el.querySelector('[data-v=dis]').classList.toggle('gx-go', fB && !finiA);
+    bRA.classList.toggle('primary', fA && finiB); bRB.classList.toggle('primary', fB && finiA);
+  }
 
   // ===== Dissoudre =====
   function reset() {
     nS = 0; added = 0; assigned = 0; clumps.length = 0; queue.length = 0; spoonT = -1; spoon.visible = false; Sst.fill(0);
+    vuHomog = vuDepot = false;
     for (let i = 0; i < NS; i++) sm.setPos(i, 0, -99, 0);
     nW = Math.round(V * 140);
     for (let i = 0; i < NW; i++) {
@@ -241,8 +348,30 @@ export default function mount(root) {
     put(conc, '<b>Concentration</b> : C = m ÷ V = ' + fr(md, 1) + ' g ÷ ' + fr(V) + ' L = <b style="color:#ffe45c;font-size:16px">' + fr(Cg, 2) + ' g/L</b><br><small>m = la masse de sucre <i>dissous</i> (le sucre resté au fond ne compte pas).</small>');
     jauge.style.width = clamp((Cg / SAT) * 100, 0, 100) + '%';
     const full = nS + queue.reduce((a, b) => a + b, 0) * MOL_G >= NS - 4;
-    bC.disabled = full; bP.disabled = full;
+    bC.disabled = full; bP.disabled = full; bC2.disabled = full;
+    guiderA(nFree, nAtt, nDep, top, sat, full);
     ex.set(texteA(nFree, nAtt, nDep, top, sat, full, md));
+  }
+
+  // Étapes de « Dissoudre » ; le retour cite les étapes du schéma du cours (1re à 5e)
+  function guiderA(nFree, nAtt, nDep, top, sat, full) {
+    const vol = clumps.some((c) => c.ph < 2) || queue.length > 0 || spoonT >= 0, fond = clumps.find((c) => c.ph === 2);
+    if ((nFree > 0 && nAtt === 0 && top / nFree >= 0.36) || nDep > 0) vuHomog = true;
+    if (nDep > 0 && nAtt === 0 && !vol) vuDepot = true;     // tout ce qui pouvait se dissoudre l'est, le reste est au fond
+    const c = vuDepot ? 3 : vuHomog ? 2 : nS > 0 ? 1 : 0;
+    if (c === 3) finiA = true;
+    EA.set(c);
+    EA.info(0, vol && c < 2 ? "Le sucre tombe dans l'eau…" : '');
+    EA.info(1, c > 1 ? '✓ 3e étape du schéma : il est réparti partout.' : c < 1 || vol ? ''
+      : fond && fond.det === 0 ? '1re étape du schéma : le sucre est au fond.'
+        : '2e étape du schéma : il commence à se disperser.' + (ag < 0.3 ? ' Agite pour aller plus vite.' : ''));
+    EA.info(2, c !== 2 ? '' : nDep > 0 ? 'Une partie du sucre ne se dissout plus : regarde le fond…'
+      : vol || nAtt > 0 ? 'Le sucre ajouté se dissout… attends, puis ajoute encore.'
+      : sat ? 'La solution est <b>saturée</b> : le prochain sucre ne se dissoudra plus. Ajoute-en encore !'
+        : '4e étape du schéma : le sucre ajouté peut encore se dissoudre. Ajoute encore !');
+    EA.info(3, c !== 3 ? '' : "✓ 5e étape du schéma : le sucre ajouté reste à l'état solide, au fond. La solution est <b>saturée</b> ; avec ce sucre en plus, il y a <b>sursaturation</b> : le mélange devient <b>hétérogène</b>."
+      + (full ? '<br>Le bécher est plein.' : '') + (finiB ? '' : '<br>➜ Essaie « Fondre ou dissoudre ? », en haut.'));
+    suiteMode();
   }
 
   function texteA(nFree, nAtt, nDep, top, sat, full, md) {
@@ -290,6 +419,15 @@ export default function mount(root) {
     for (let i = 0; i < n2; i++) { walk(P2, V2, i, dt, 0, 0.44, 0.04, 0.66); sm2.setPos(i, 1.35 + P2[i * 3], P2[i * 3 + 1], P2[i * 3 + 2]); }   // …et diffuse dans l'eau
     sm2.commit();
     lIce.show(melt < 0.97); lSuc.show(diss < 0.97); lFus.show(!!rep.glacon); lDis.show(!!rep.sucre);
+    // étapes : lancer → répondre pour le glaçon → répondre pour le sucre → à retenir (une bonne réponse fait avancer)
+    const okG = rep.glacon === 'fond', okS = rep.sucre === 'dissout', c = !running ? 0 : !okG ? 1 : !okS ? 2 : 3;
+    if (c === 3) finiB = true;
+    bL.disabled = running; EB.set(c);
+    EB.info(1, !rep.glacon ? '' : okG ? "✓ Il fond : c'est une <b>fusion</b>." : "✗ Pas tout à fait : lis l'explication, puis réessaie.");
+    EB.info(2, !rep.sucre ? '' : okS ? "✓ Il se dissout : c'est une <b>dissolution</b>." : "✗ Pas tout à fait : lis l'explication, puis réessaie.");
+    EB.info(3, c !== 3 ? '' : "✓ La <b>fusion</b> se fait sous l'effet de la chaleur ; la <b>dissolution</b>, au moyen d'un solvant."
+      + (finiA ? '' : '<br>➜ Essaie « Dissoudre », en haut.'));
+    suiteMode();
     const resume = rep.glacon && rep.sucre ? '<br><b>À retenir :</b> la <mark>fusion</mark> est le passage de l\'état solide à l\'état liquide sous l\'effet de la chaleur ; la <mark>dissolution</mark> est la désagrégation d\'un corps au moyen d\'un solvant.' : '';
     ex.set(last ? last + resume : running
       ? 'Regarde bien : qu\'est-ce qui fait disparaître le glaçon ? Et le sucre ? Réponds aux deux questions.'
@@ -336,5 +474,5 @@ export default function mount(root) {
     else { ajouter(5); run(etat === 'diffuse' ? 6 : 25); }
   }
 
-  return { dispose() { st.dispose(); } };
+  return { dispose() { st.dispose(); retirerStyle(); } };
 }

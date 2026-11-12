@@ -1,3 +1,4 @@
+import { schemaSVG, SCHEMAS } from './schemas.js';
 // Éléments interactifs des pages « Comprendre » : priorités à cocher, capsule vidéo, triangle vivant,
 // cartes « j'observe → je nomme », questions probables de la prof.
 // Chaque widget : (el, chapitre, outils) -> fonction de nettoyage (ou rien).
@@ -193,16 +194,44 @@ function prof(el, c, { P, sauver }) {
   el.innerHTML = `<div class="w-tri-tete"><span class="kicker">Questions de contrôle</span><h2>Ce qu'on peut te demander au contrôle</h2><p>Réponds à voix haute ou sur une feuille, <b>puis</b> regarde la réponse. Sois honnête avec toi-même.</p></div>`;
   const compte = h('div', 'w-prio-compte');
   const maj = () => { const n = c.prof.filter((_, i) => P.prof[c.id + ':' + i] === 1).length; compte.innerHTML = `<b>${n} / ${c.prof.length}</b> questions que tu sais répondre`; };
-  c.prof.forEach(([q, r, type], i) => {
+  c.prof.forEach(([q, r, type, vis], i) => {
     const k = c.id + ':' + i;
     const it = h('div', 'w-prof-item' + (P.prof[k] === 1 ? ' ok' : P.prof[k] === 2 ? ' ko' : ''));
-    it.innerHTML = `<div class="w-prof-q"><span class="w-prof-type">${type || 'Question'}</span><b>${q}</b></div><button type="button" class="btn ghost petit">Voir une bonne réponse</button><div class="w-prof-r" hidden><p>${r}</p><div class="w-prof-auto"><button type="button" data-v="1">✓ Je savais</button><button type="button" data-v="2">✗ À revoir</button></div></div>`;
+    it.innerHTML = `<div class="w-prof-q"><span class="w-prof-type">${type || 'Question'}</span><b>${q}</b></div>${visuelQuestion(vis)}<button type="button" class="btn ghost petit">Voir une bonne réponse</button><div class="w-prof-r" hidden><p>${r}</p>${visuelReponse(vis)}<div class="w-prof-auto"><button type="button" data-v="1">✓ Je savais</button><button type="button" data-v="2">✗ À revoir</button></div></div>`;
     const bt = it.querySelector('.btn'), rep = it.querySelector('.w-prof-r');
     bt.onclick = () => { rep.hidden = !rep.hidden; bt.textContent = rep.hidden ? 'Voir une bonne réponse' : 'Cacher la réponse'; };
     rep.querySelectorAll('[data-v]').forEach((b) => (b.onclick = () => { P.prof[k] = +b.dataset.v; it.classList.toggle('ok', P.prof[k] === 1); it.classList.toggle('ko', P.prof[k] === 2); sauver(); maj(); }));
     el.appendChild(it);
   });
   el.appendChild(compte); maj();
+}
+
+/* ---------- visuels des questions de contrôle : le schéma muet dans la question, sa légende dans la réponse ---------- */
+// Valeurs du cours : ébullition de l'eau pure (palier à 99 °C) et de l'eau salée (pas de palier).
+const COURBES = { pure: { t: [0, 3, 5, 7, 9, 10, 12, 14], th: [20, 49, 69, 89, 96, 99, 99, 99] }, salee: { t: [0, 2, 4, 6, 8, 9, 10], th: [48, 67, 92, 100, 103, 104, 105] } };
+function graphe(cle, lettre) {
+  const d = COURBES[cle], X = (t) => 46 + (t / 14) * 230, Y = (th) => 168 - (th / 110) * 150;
+  const grille = [20, 40, 60, 80, 100].map((v) => `<line x1="46" y1="${Y(v)}" x2="280" y2="${Y(v)}" stroke="#e3d9c4"/><text x="40" y="${Y(v) + 4}" text-anchor="end" font-size="10" fill="#5b556f">${v}</text>`).join('')
+    + [0, 2, 4, 6, 8, 10, 12, 14].map((v) => `<text x="${X(v)}" y="182" text-anchor="middle" font-size="10" fill="#5b556f">${v}</text>`).join('');
+  return `<svg viewBox="0 0 300 200" role="img" aria-label="Graphique ${lettre || ''}"><rect width="300" height="200" rx="10" fill="#fffdf8"/>${grille}
+    <line x1="46" y1="168" x2="286" y2="168" stroke="#1d1b2f" stroke-width="2"/><line x1="46" y1="168" x2="46" y2="10" stroke="#1d1b2f" stroke-width="2"/>
+    <text x="286" y="196" text-anchor="end" font-size="11" font-weight="700" fill="#1d1b2f">t (min)</text><text x="52" y="16" font-size="11" font-weight="700" fill="#1d1b2f">θ (°C)</text>
+    <polyline points="${d.t.map((t, i) => `${X(t)},${Y(d.th[i])}`).join(' ')}" fill="none" stroke="#ff5a36" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    ${d.t.map((t, i) => `<circle cx="${X(t)}" cy="${Y(d.th[i])}" r="3.5" fill="#1d1b2f"/>`).join('')}
+    ${lettre ? `<text x="270" y="150" text-anchor="middle" font-size="26" font-weight="800" fill="#1d1b2f">${lettre}</text>` : ''}</svg>`;
+}
+function visuelQuestion(vis) {
+  if (!vis) return '';
+  if (vis.schema) return `<div class="w-prof-vis">${schemaSVG(vis.schema)}</div>`;
+  if (vis.graphe === 'deux') return `<div class="w-prof-vis deux-g">${graphe('pure', 'A')}${graphe('salee', 'B')}</div>`;
+  if (vis.graphe) return `<div class="w-prof-vis un-g">${graphe(vis.graphe)}</div>`;
+  return '';
+}
+function visuelReponse(vis) {
+  if (!vis) return '';
+  if (vis.schema && SCHEMAS[vis.schema]) return `<div class="legende-liste">${SCHEMAS[vis.schema].labels.map((l, i) => `<div class="l"><i>${i + 1}</i><b>${l}</b></div>`).join('')}</div>`;
+  if (vis.graphe === 'deux') return '<p><b>A</b> : l\'eau pure (palier). <b>B</b> : l\'eau salée (pas de palier).</p>';
+  return '';
 }
 
 export const WIDGETS = { priorites, video, triangle, cartes, prof };

@@ -84,10 +84,70 @@ function canvasTex(w, h, draw) {
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
+const CLE = 'sciences2e.propagation';
+const lireMemo = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } };
+const ecrireMemo = (o) => { try { localStorage.setItem(CLE, JSON.stringify(Object.assign(lireMemo(), o))); } catch { /* navigation privée */ } };
+
+// ---------- Guide pas à pas : copie locale, IDENTIQUE dans cycle-eau.js, ebullition-graphique.js et propagation.js
+// (même allure que la mission d'etats-matiere ; à mettre en commun dans kit.js) ----------
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:9px 12px 10px;color:#fff;font:500 14.5px/1.35 var(--texte)}
+.gd p{margin:0}.gd b{color:var(--fluo);font-weight:700}.gd .gd-l2{color:#cfc8ff;font-size:13.5px;margin-top:3px}
+.gd-num{display:inline-block;background:var(--fluo);color:var(--encre);border-radius:6px;padding:0 6px;margin-right:6px;font-weight:800}
+.gd-ok{margin-top:6px;color:#8fe3bb;font-size:13.5px}.gd-ok.ko{color:#ffb4a3}.gd mark{color:var(--encre)}
+.gd-prog{display:flex;gap:4px;margin-top:8px}.gd-prog i{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.16)}
+.gd-prog i.ok{background:var(--fluo)}.gd-prog i.cur{background:rgba(255,228,92,.42)}
+.gd-aide{margin-top:6px;color:#a9a2d6;font-size:12.5px}
+.gd.gd-fin{background:var(--nuit);border-color:var(--fluo)}.gd .gd-q{font:700 16.5px/1.25 var(--titre);margin-bottom:6px}.gd.gd-fin p+p{margin-top:6px}
+.gd .sim-btns{margin-top:10px}
+.gd-n{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin-right:6px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;font:800 12px/1 var(--texte);vertical-align:1px}.gd-n[hidden]{display:none}
+.gd-appel .gd-n{background:var(--fluo);color:var(--encre)}.on>.gd-n,.primary>.gd-n{background:var(--encre);color:#fff}.gd-fait .gd-n{background:var(--ok);color:#fff}
+.gd-tard{opacity:.5}
+.gd-appel{outline:2px solid var(--fluo);outline-offset:2px;animation:gd-appel 1.3s ease-in-out infinite}@keyframes gd-appel{50%{box-shadow:0 0 0 7px rgba(255,228,92,.45)}}
+.sim-slider.gd-appel{border-radius:12px;padding:4px 8px;margin:-4px -8px}
+`;
+function injecterGuide(id) {
+  let s = document.getElementById(id);
+  if (!s) { s = document.createElement('style'); s.id = id; s.textContent = GD_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+// Carte du parcours, posée juste après `apres` : étape en cours (Fais / Observe), retour de la dernière action, progression ; puis la conclusion.
+function guide(parent, apres) {
+  const el = document.createElement('div'); el.className = 'gd'; el.setAttribute('aria-live', 'polite');
+  parent.insertBefore(el, apres ? apres.nextSibling : parent.firstChild);
+  let cle = '';
+  return {
+    el,
+    etape({ i, total, faits, fais, obs = '', ok = '', aide = '' }) {
+      const k = [i, total, [...faits], fais, obs, ok, aide].join('|'); if (k === cle) return; cle = k;
+      el.className = 'gd';
+      el.innerHTML = `<p><span class="gd-num">${i + 1}/${total}</span><b>Fais :</b> ${fais}</p>` + (obs ? `<p class="gd-l2"><b>Observe :</b> ${obs}</p>` : '') +
+        (ok ? `<p class="gd-ok${ok[0] === '✗' ? ' ko' : ''}">${ok}</p>` : '') + `<span class="gd-prog">${Array.from({ length: total }, (_, j) => `<i class="${faits.has(j) ? 'ok' : j === i ? 'cur' : ''}"></i>`).join('')}</span>` +
+        (aide ? `<p class="gd-aide">${aide}</p>` : '');
+    },
+    fin(html, refaire) {
+      if (cle === 'fin' + html) return; cle = 'fin' + html;
+      el.className = 'gd gd-fin'; el.innerHTML = html + '<div class="sim-btns"><button type="button" class="sim-btn">↺ Refaire le parcours</button></div>';
+      el.querySelector('button').addEventListener('click', refaire);
+    },
+  };
+}
+// Numéro d'étape posé sur une commande. États : 'fait' (✓), 'appel' (prochaine action : clignote), 'tard' (pâle, étape à venir,
+// mais toujours utilisable), '' (neutre), 'off' (parcours terminé : plus de numéro).
+function marquer(elt, n) { const s = document.createElement('span'); s.className = 'gd-n'; s.textContent = n; s.setAttribute('aria-hidden', 'true'); (elt.querySelector('.sim-slider-top > span') || elt).prepend(s); return { el: elt, n: String(n), s }; }
+function etatMarque(m, etat, pourquoi = '') {
+  m.el.classList.toggle('gd-fait', etat === 'fait'); m.el.classList.toggle('gd-appel', etat === 'appel'); m.el.classList.toggle('gd-tard', etat === 'tard');
+  m.s.hidden = etat === 'off'; const tx = etat === 'fait' ? '✓' : m.n; if (m.s.textContent !== tx) m.s.textContent = tx;
+  if (etat === 'tard') m.el.title = pourquoi; else m.el.removeAttribute('title');
+}
+const AIDE = 'Boutons pâles : étapes à venir (tu peux déjà les essayer).';
+
 export default function mount(root) {
   const { stageEl, panelEl, explainEl } = layout(root);
   const st = createStage(stageEl, { lights: false, camera: { pos: [0, 2.4, 7], target: [0, 1.8, 0] }, minDistance: 3, maxDistance: 18 });
   const scene = st.scene, ex = explain(explainEl);
+  let guideOn = !lireMemo().fini;     // parcours guidé (tant qu'il n'a pas été réussi une fois)
 
   // lumières de laboratoire (comme le kit) ; dans l'espace, seul le Soleil éclaire
   const labo = new THREE.Group(); scene.add(labo);
@@ -124,7 +184,7 @@ export default function mount(root) {
       head.position.copy(curve.getPointAt(u)); head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curve.getTangentAt(u)); boucles.add(head);
     }
   }
-  let heatC = 0.6, omega = 0;
+  let heatC = guideOn ? 0 : 0.6, omega = 0;     // en parcours guidé, c'est l'élève qui allume la source de chaleur
   const cA = new THREE.Color();
   function updateConv(dt, time) {
     bConv.set(heatC, time);
@@ -319,27 +379,43 @@ export default function mount(root) {
   synth.innerHTML = '<span>Avec matière :</span>' + pill('conduction', 'conduction (elle ne se déplace pas)') + pill('convection', 'convection (elle se déplace)') + '<span>Sans matière :</span>' + pill('rayonnement', 'rayonnement');
   stageEl.appendChild(synth);
 
-  // ---------- réglages ----------
+  // ---------- réglages (la carte du parcours vient juste sous le titre) ----------
   let mode = 'convection', ex2 = 'soleil', userCam = false;
+  let dernier = '', tChauffe = 0, toucheChaud = false, toucheIso = false, nuitVue = false, feuProche = false;   // parcours guidé
+  const faits = new Set();
+  const retirerGuide = injecterGuide('gd-style-pr');
   const ui = panel(panelEl);
-  ui.title('Comment la chaleur se propage');
+  const gd = guide(panelEl, ui.title('Comment la chaleur se propage'));
   const cMode = ui.choice({ label: 'Mode de propagation', value: mode, options: [{ value: 'convection', label: 'Convection' }, { value: 'conduction', label: 'Conduction' }, { value: 'rayonnement', label: 'Rayonnement' }], onChange: (v) => setMode(v) });
   const sec = {}, inSec = (name, ...els) => { if (!sec[name]) { sec[name] = document.createElement('div'); sec[name].style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(sec[name]); } els.forEach((e) => sec[name].appendChild(e)); };
-  inSec('convection', ui.slider({ label: 'Chauffage', min: 0, max: 100, step: 1, value: 60, unit: '%', onInput: (v) => { heatC = v / 100; refresh(); } }).el);
-  inSec('conduction', ui.slider({ label: 'Plaque de cuisson', min: 0, max: 100, step: 1, value: 80, unit: '%', onInput: (v) => { heatP = v / 100; refresh(); } }).el);
-  const cManche = ui.choice({ label: 'Le manche', value: 'metal', options: [{ value: 'metal', label: 'Manche en métal' }, { value: 'iso', label: 'Poignée isolante' }], onChange: (v) => { iso = v === 'iso'; T.fill(0); refresh(); } });
+  const sHeat = ui.slider({ label: 'Chauffage', min: 0, max: 100, step: 1, value: Math.round(heatC * 100), unit: '%', onInput: (v) => {
+    if (heatC < 0.01 && v > 0 && guideOn && !faits.has(0)) dernier = "✓ La spirale tourne : elle semble entraînée par l'air chaud.";
+    heatC = v / 100; refresh();
+  } });
+  inSec('convection', sHeat.el);
+  const sPlaque = ui.slider({ label: 'Plaque de cuisson', min: 0, max: 100, step: 1, value: 80, unit: '%', onInput: (v) => { heatP = v / 100; refresh(); } });
+  inSec('conduction', sPlaque.el);
+  const cManche = ui.choice({ label: 'Le manche', value: 'metal', options: [{ value: 'metal', label: 'Manche en métal' }, { value: 'iso', label: 'Poignée isolante' }], onChange: (v) => { iso = v === 'iso'; T.fill(0); refresh(); majGuide(); } });
   inSec('conduction', cManche.el);
   const [bTouch] = ui.buttons([{ label: '✋ Toucher le manche', primary: true, onClick: () => toucher() }, { label: '↺ Recommencer', onClick: () => { T.fill(0); Tp = 0; touchUntil = 0; refresh(); } }]);
   inSec('conduction', bTouch.parentElement);
   const rBout = ui.readout('Au bout du manche'); inSec('conduction', rBout.el);
   const cEx = ui.choice({ label: 'Exemple', value: ex2, options: [{ value: 'soleil', label: 'Soleil et Terre' }, { value: 'feu', label: 'Feu ouvert d\'Églantine' }], onChange: (v) => { ex2 = v; setMode('rayonnement'); } });
   inSec('rayonnement', cEx.el);
-  const sRot = ui.slider({ label: 'Faire tourner la Terre', min: 0, max: 360, step: 5, value: 0, unit: '°', onInput: (v) => { earthAngle = THREE.MathUtils.degToRad(v); refresh(); } });
+  const sRot = ui.slider({ label: 'Faire tourner la Terre', min: 0, max: 360, step: 5, value: 0, unit: '°', onInput: (v) => {
+    earthAngle = THREE.MathUtils.degToRad(v); refresh();
+    if (guideOn && !nuitVue && Math.cos(earthAngle) < 0) { nuitVue = true; dernier = "✓ La nuit, le rayonnement du Soleil n'arrive pas sur ta face de la Terre."; }
+  } });
   const rToi = ui.readout('Là où tu es');
-  const sDist = ui.slider({ label: 'Distance au feu', min: 0.5, max: 3.5, step: 0.1, value: dist, unit: 'm', format: (v) => String(v).replace('.', ','), onInput: (v) => { dist = v; refresh(); } });
+  const sDist = ui.slider({ label: 'Distance au feu', min: 0.5, max: 3.5, step: 0.1, value: dist, unit: 'm', format: (v) => String(v).replace('.', ','), onInput: (v) => {
+    dist = v; refresh();
+    if (guideOn && !feuProche && intensite() > 0.5) { feuProche = true; dernier = '✓ Si près du feu, son visage devient très chaud : c\'est le <mark>rayonnement</mark>.'; }
+  } });
   const rVis = ui.readout('Sur son visage');
   inSec('rayonnement', sRot.el, rToi.el, sDist.el, rVis.el);
   const defNote = ui.note('');
+  // la carte du parcours se met à jour quand on lâche un curseur (rien ne bouge pendant le geste)
+  for (const s of [sHeat, sPlaque, sRot, sDist]) s.input.addEventListener('change', () => majGuide());
 
   const mots = (t) => (t < 0.15 ? 'froid' : t < 0.35 ? 'tiède' : t < 0.6 ? 'chaud' : 'très chaud');
   function toucher() {
@@ -348,6 +424,61 @@ export default function mount(root) {
       : t >= 0.35 ? 'Aïe ! Le bout du manche est ' + mots(t) + ' : il ne possède pas de poignée isolante. La chaleur est arrivée jusqu\'à ta main par <mark>conduction</mark>.'
         : 'Pour l\'instant, le bout du manche est ' + mots(t) + '… mais la chaleur avance dans le métal. Attends un peu et réessaie.';
     touchUntil = performance.now() + 4500; refresh();
+    if (guideOn) {        // retour court dans la carte du parcours
+      if (!iso && t >= 0.35) { toucheChaud = true; dernier = '✓ Aïe ! La chaleur est arrivée jusqu\'à ta main par <mark>conduction</mark>.'; }
+      else if (!iso) dernier = 'Encore froid : la chaleur avance dans le métal. Attends, puis réessaie.';
+      else if (T[0] >= 0.5) { toucheIso = true; dernier = '✓ La poignée est restée froide : c\'est un <mark>isolant thermique</mark>.'; }
+      else dernier = 'La casserole n\'est pas encore chaude : attends, puis réessaie.';
+      majGuide();
+    }
+  }
+
+  // ---------- parcours guidé : 1 convection → 2 conduction → 3 rayonnement (l'ordre du cours) ----------
+  const MODES = ['convection', 'conduction', 'rayonnement'], NOMS_M = ['Convection', 'Conduction', 'Rayonnement'];
+  const opts = (c) => { const o = {}; c.el.querySelectorAll('button').forEach((b) => { o[b.dataset.v] = b; }); return o; };
+  const optM = opts(cMode), optManche = opts(cManche), optEx = opts(cEx);
+  const MQ = MODES.map((m, j) => marquer(optM[m], j + 1));
+  const SOUS = [sHeat.el, sPlaque.el, bTouch, optManche.iso, optManche.metal, optEx.soleil, optEx.feu, sRot.el, sDist.el];   // commandes qu'on peut mettre en avant
+  const FIN = '<p class="gd-q">Parcours réussi : 3/3 ✓</p><p>La chaleur peut se propager avec ou sans intervention de la matière. Dans la <mark>conduction</mark>, la matière ne se déplace pas ' +
+    'mais constitue le support nécessaire à la propagation de la chaleur. Dans la <mark>convection</mark>, elle se déplace en propageant la chaleur.</p>' +
+    '<p>La chaleur peut aussi se propager dans le vide : c\'est le <mark>rayonnement</mark>.</p><p class="gd-l2">Tu peux maintenant tout manipuler librement.</p>';
+  function majGuide() {
+    if (guideOn) {
+      if (tChauffe >= 4 && !faits.has(0)) { faits.add(0); dernier = "✓ L'air chaud monte et il est remplacé par de l'air plus froid : c'est la <mark>convection</mark>."; }
+      if (toucheChaud && toucheIso && !faits.has(1)) { faits.add(1); dernier = '✓ Le métal conduit la chaleur : <mark>conduction</mark>. La poignée isolante, non.'; }
+      if (nuitVue && feuProche) faits.add(2);
+      if (faits.size === 3) { guideOn = false; ecrireMemo({ fini: true }); }
+    }
+    const i = guideOn ? [0, 1, 2].findIndex((j) => !faits.has(j)) : -1;
+    MQ.forEach((m, j) => etatMarque(m, i < 0 ? 'off' : faits.has(j) ? 'fait' : j === i ? (mode === MODES[j] ? '' : 'appel') : mode === MODES[j] ? '' : 'tard',
+      `Étape ${j + 1} : après « ${NOMS_M[j - 1] || ''} »`));
+    // consignes courtes (une ligne) et une seule commande mise en avant à la fois
+    let fais = '', obs = '', cible = null;
+    if (i >= 0 && mode !== MODES[i]) { fais = `Choisis « ${NOMS_M[i]} ».`; obs = ['la spirale de papier.', 'le manche de la casserole.', 'le Soleil et la Terre, puis le feu.'][i]; }
+    else if (i === 0) {
+      if (heatC < 0.01) { fais = 'Pousse le curseur « Chauffage ».'; obs = 'la spirale de papier.'; cible = sHeat.el; }
+      else if (heatC < 0.45) { fais = 'Chauffe plus fort (la moitié ou plus).'; obs = 'la spirale tourne-t-elle plus vite ?'; cible = sHeat.el; }
+      else { fais = "Regarde l'air quelques secondes."; obs = "l'air chaud monte, l'air plus froid descend."; }
+    } else if (i === 1) {
+      if (heatP < 0.01) { fais = 'Rallume la « Plaque de cuisson ».'; obs = 'le manche de la casserole.'; cible = sPlaque.el; }
+      else if (!toucheChaud && !iso) { fais = 'Attends, puis ✋ touche le manche.'; obs = 'la couleur avance dans le métal.'; if (T[S - 1] >= 0.35) cible = bTouch; }
+      else if (!toucheIso && !iso) { fais = 'Choisis « Poignée isolante ».'; obs = 'compare avec le manche en métal.'; cible = optManche.iso; }
+      else if (!toucheIso) { fais = 'Attends, puis ✋ touche la poignée.'; obs = 'la casserole chauffe… et la poignée ?'; if (T[0] >= 0.5) cible = bTouch; }
+      else { fais = 'Remets le « Manche en métal ».'; obs = 'la couleur avance dans le métal.'; cible = optManche.metal; }
+    } else if (i === 2) {
+      if (!nuitVue) { obs = 'le point jaune « toi » sur la Terre.'; if (ex2 !== 'soleil') { fais = 'Choisis « Soleil et Terre ».'; cible = optEx.soleil; } else { fais = 'Tourne la Terre jusqu\'à la nuit.'; cible = sRot.el; } }
+      else { obs = 'la couleur de son visage.'; if (ex2 !== 'feu') { fais = 'Choisis « Feu ouvert d\'Églantine ».'; cible = optEx.feu; } else { fais = 'Approche Églantine du feu.'; cible = sDist.el; } }
+    }
+    SOUS.forEach((e) => e.classList.toggle('gd-appel', e === cible));
+    bTouch.classList.toggle('primary', i < 0 || cible === bTouch);      // « Toucher » n'est en jaune que quand c'est le moment
+    if (i < 0) { gd.fin(FIN, refaireParcours); return; }
+    gd.etape({ i, total: 3, faits, fais, obs, ok: dernier, aide: i < 2 ? AIDE : '' });
+  }
+  function refaireParcours() {
+    faits.clear(); dernier = ''; tChauffe = 0; toucheChaud = toucheIso = nuitVue = feuProche = false; guideOn = true; ecrireMemo({ fini: false });
+    heatC = 0; sHeat.set(0); heatP = 0.8; sPlaque.set(80); iso = false; T.fill(0); Tp = 0; touchUntil = 0;
+    earthAngle = 0; sRot.set(0); ex2 = 'soleil'; dist = 1.5; sDist.set(1.5);
+    setMode('convection');
   }
 
   function texte() {
@@ -396,7 +527,7 @@ export default function mount(root) {
     Object.entries(Lb).forEach(([k, L]) => L.show(vis.includes(k)));
     synth.querySelectorAll('[data-m]').forEach((s) => { const on = s.dataset.m === m; s.style.background = on ? 'var(--fluo)' : 'rgba(20,18,38,.78)'; s.style.color = on ? 'var(--encre)' : '#fff'; });
     defNote.innerHTML = DEF[m];
-    refresh();
+    refresh(); majGuide();
   }
 
   // cadrage : la scène tient dans l'écran quelle que soit sa forme (tant que l'élève n'a pas tourné la caméra)
@@ -412,8 +543,12 @@ export default function mount(root) {
   }
 
   const step = st.onFrame((dt, time) => {
-    if (mode === 'convection') updateConv(dt, time);
-    if (mode === 'conduction') { updateCond(dt, time); if (Math.floor(time * 4) !== Math.floor((time - dt) * 4)) refresh(); }
+    if (mode === 'convection') {
+      updateConv(dt, time);
+      // parcours : après 4 s de chauffage franc, l'élève a vu l'air chaud monter
+      if (guideOn && !faits.has(0) && heatC >= 0.45 && (tChauffe += dt) >= 4) majGuide();
+    }
+    if (mode === 'conduction') { updateCond(dt, time); if (Math.floor(time * 4) !== Math.floor((time - dt) * 4)) { refresh(); majGuide(); } }
     if (mode === 'rayonnement') updateRay(dt, time);
     if (!userCam) fitCam(dt);
   });
@@ -437,7 +572,7 @@ export default function mount(root) {
       st.renderer.domElement.removeEventListener('pointerdown', stopCam);
       st.renderer.domElement.removeEventListener('wheel', stopCam);
       synth.remove();
-      st.dispose();
+      st.dispose(); retirerGuide();
     },
   };
 }

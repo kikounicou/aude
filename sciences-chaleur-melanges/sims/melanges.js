@@ -1,6 +1,82 @@
 // melanges.js — « Homogène ou hétérogène ? » (cours, thème 6, p. 1)
-// On ajoute quelque chose à l'eau d'un tube à essai, on agite, on prédit, on laisse reposer… et on regarde à la loupe.
+// Guidé en 5 étapes : 1 choisir ce qu'on ajoute à l'eau du tube à essai → 2 agiter → 3 prédire → 4 laisser reposer → 5 conclure
+// (et regarder à la loupe). Les étapes faites restent manipulables ; « Autre mélange » relance le parcours.
 import { THREE, C, layout, createStage, panel, explain, glassMaterial, liquidMaterial, ground, molecules, clamp, lerp, rand } from './kit.js';
+
+// ---------- Guidage par étapes : composant local, IDENTIQUE dans melanges, separations, distillation et dissolution
+// (candidat pour kit.js). Chaque étape est un bloc numéroté qui porte ses commandes : l'étape en cours est surlignée et sa
+// commande principale clignote doucement, les étapes faites sont cochées (et restent manipulables), les suivantes sont
+// grisées ; si on touche une commande grisée, elle dit pourquoi et l'étape en cours s'allume. ----------
+const GX_CSS = `
+.gx-etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.gx-e{border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:9px 10px 10px;display:flex;flex-direction:column;gap:9px;transition:border-color .25s,background-color .25s}
+.gx-t{display:flex;align-items:center;gap:9px;font:600 14.5px/1.25 var(--texte);color:#cfc8ff}
+.gx-n{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);font:800 13px/1 var(--texte);color:#fff}
+.gx-c{display:flex;flex-direction:column;gap:10px}.gx-c:empty{display:none}
+.gx-info{margin:0;font-size:14px;line-height:1.4;color:#f4f1ff}.gx-info:empty{display:none}.gx-info mark{color:var(--encre)}
+.gx-pq{margin:0;font-size:13px;line-height:1.35;color:#b9b1e6;display:none}
+.gx-e.cur{border-color:var(--fluo);background:rgba(255,228,92,.07)}
+.gx-e.cur .gx-n{background:var(--fluo);border-color:var(--fluo);color:var(--encre)}
+.gx-e.cur .gx-t{color:#fff;font-weight:700}
+.gx-e.fait .gx-n{border-color:var(--fluo);color:var(--fluo)}
+.gx-e.verrou .gx-t{color:#8f88bf}.gx-e.verrou .gx-n{border-style:dashed;border-color:#6f6a9a;color:#8f88bf}
+.gx-e.verrou .gx-c{opacity:.42;filter:saturate(.3)}
+.gx-e.verrou:not(.suite):not(.dit) .gx-c,.gx-e.fait .gx-c:not(:has(button:enabled,input:enabled)){display:none}
+.gx-e.verrou.suite .gx-pq,.gx-e.verrou.dit .gx-pq{display:block}.gx-e.dit .gx-pq{color:#fff;font-weight:700}
+.gx-e.appel{animation:gx-appel .9s ease-out}@keyframes gx-appel{25%{box-shadow:0 0 0 6px rgba(255,228,92,.45)}}
+.gx-go{animation:gx-go 1.7s ease-in-out infinite}.gx-go:disabled{animation:none}.sim-seg button.gx-go{border-color:var(--fluo)}.sim-slider.gx-go{border-radius:12px}
+@keyframes gx-go{50%{box-shadow:0 0 0 6px rgba(255,228,92,.3)}}
+.gx-fin{font-weight:700;color:var(--fluo)}
+`;
+function gxStyle() {      // injecté une fois, retiré au dernier dispose() (plusieurs expériences peuvent partager la page)
+  let s = document.getElementById('gx-style');
+  if (!s) { s = document.createElement('style'); s.id = 'gx-style'; s.textContent = GX_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+/**
+ * const E = etapes(parent, [{ t:'Agite le tube', pq:"D'abord l'étape 1 : …", avant:false }, …]);   (avant : le retour au-dessus des commandes)
+ * E.c(i) : conteneur des commandes de l'étape i (à donner à panel()) ; E.go(i, el, jaune=true) : commande principale ;
+ * E.set(i) : étape en cours (i = nombre d'étapes → tout est fait) ; E.info(i, html) : retour sous l'étape ; E.titre(i, html).
+ */
+function etapes(parent, liste) {
+  const ol = document.createElement('ol'); ol.className = 'gx-etapes'; parent.appendChild(ol);
+  let cur = -1;
+  const B = liste.map((e, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<div class="gx-t"><span class="gx-n" aria-hidden="true"></span><span></span></div><div class="gx-c"></div><p class="gx-info" aria-live="polite"></p><p class="gx-pq"></p>';
+    const [t, c, info, pq] = li.children;
+    t.lastChild.innerHTML = e.t; pq.textContent = '🔒 ' + (e.pq || `D'abord l'étape ${i}.`);
+    if (e.avant) li.insertBefore(info, c);
+    const signaler = () => {      // une commande grisée ne fait rien… mais dit pourquoi, et l'étape en cours s'allume
+      li.classList.add('dit'); const k = B[cur]; if (k) { k.li.classList.remove('appel'); void k.li.offsetWidth; k.li.classList.add('appel'); }
+    };
+    li.addEventListener('click', (ev) => { if (li.classList.contains('verrou')) { ev.stopPropagation(); ev.preventDefault(); signaler(); } }, true);
+    li.addEventListener('pointerdown', () => { if (li.classList.contains('verrou')) signaler(); }, true);   // un curseur désactivé n'émet pas de click
+    ol.appendChild(li);
+    return { li, t: t.lastChild, n: t.firstChild, c, info, go: [] };
+  });
+  const api = {
+    el: ol,
+    c: (i) => B[i].c,
+    titre(i, html) { const b = B[i]; if (b.vt !== html) { b.vt = html; b.t.innerHTML = html; } },      // n'écrit que si ça change
+    info(i, html) { const b = B[i]; if (b.vi !== html) { b.vi = html; b.info.innerHTML = html; } },
+    go(i, el, jaune = true) { B[i].go.push([el, jaune]); const c = cur; cur = -1; api.set(c); },
+    get cur() { return cur; },
+    set(c) {
+      if (c === cur) return; cur = c;
+      B.forEach((b, i) => {
+        const st = i < c ? 'fait' : i === c ? 'cur' : 'verrou';
+        b.li.className = 'gx-e ' + st + (i === c + 1 ? ' suite' : '');
+        b.n.textContent = i < c ? '✓' : String(i + 1);
+        if (i === c) b.li.setAttribute('aria-current', 'step'); else b.li.removeAttribute('aria-current');
+        b.c.querySelectorAll('input').forEach((x) => { x.disabled = st === 'verrou'; });
+        for (const [el, jaune] of b.go) { el.classList.toggle('gx-go', i === c); if (jaune) el.classList.toggle('primary', i === c); }
+      });
+    },
+  };
+  return api;
+}
 
 const RI = 0.36, RO = 0.385, HT = 2.5, HE = 1.3; // rayon intérieur / extérieur du tube, hauteur du tube, hauteur d'eau
 const COL_EAU_MOL = 0x8fd0ff;
@@ -82,6 +158,7 @@ const VOIS = SLOTS.map(([x, y]) => SLOTS.map(([u, v], k) => [k, (u - x) ** 2 + (
 const melanger = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 export default function mount(root) {
+  const retirerStyle = gxStyle();
   const { stageEl, panelEl, explainEl } = layout(root);
   const st = createStage(stageEl, { camera: { pos: [0.9, 2.2, 6.5], target: [0.9, 1.4, 0] } });
   const { scene, camera } = st;
@@ -143,7 +220,8 @@ export default function mount(root) {
   // --- état ---
   const qs = new URLSearchParams(location.search), demo = AJ[qs.get('demo')] ? qs.get('demo') : null, etape = +(qs.get('etape') || 3), vite = Math.min(20, +(qs.get('vite') || 1));
   let avance = Math.min(60, +(qs.get('avance') || 0));
-  let key = 'huile', aj = AJ.huile, phase = 'verse', tPhase = 0, pred = null, bonnes = 0, total = 0;
+  let key = 'huile', aj = AJ.huile, phase = 'attente', tPhase = 0, pred = null, bonnes = 0, total = 0;
+  const essayes = new Set();   // ajouts déjà menés jusqu'à la conclusion
   let verse = 0, spawned = 0, d = 0, turb = 0, nAct = 0, swapT = 0, loupeOn = true;
   let yTop = HE, oilH = 0, dep = 0, sirH = 0, mix = 0, nFondu = 0, nVol = 0;
   const pl = () => (aj.genre === 'gouttes' ? gouttes : aj.genre === 'grains' ? grains : aj.genre === 'cristaux' ? cristaux : null);
@@ -155,8 +233,8 @@ export default function mount(root) {
     q.y = clamp(q.y, Math.max(y0, fond(Math.hypot(q.x, q.z))) + q.r, y1 - q.r);
   }
 
-  function construireLoupe() {
-    const nS = aj.genre === 'gouttes' ? SLOTS.filter(([, y]) => y > 0.02).length : aj.genre === 'grains' ? SLOTS.filter(([, y]) => y < -0.36).length : 26;
+  function construireLoupe(vide = false) {   // vide : rien n'est encore ajouté, la loupe ne montre que des molécules d'eau
+    const nS = vide ? 0 : aj.genre === 'gouttes' ? SLOTS.filter(([, y]) => y > 0.02).length : aj.genre === 'grains' ? SLOTS.filter(([, y]) => y < -0.36).length : 26;
     const ordre = SLOTS.map((s, k) => k).sort((a, b) => (aj.genre === 'gouttes' ? SLOTS[b][1] - SLOTS[a][1] : SLOTS[a][1] - SLOTS[b][1]));
     const cS = new THREE.Color(aj.col), cW = new THREE.Color(COL_EAU_MOL);
     for (let j = 0; j < NL; j++) {
@@ -206,10 +284,17 @@ export default function mount(root) {
     depot.mesh.material.color.set(aj.col); filet.material.color.set(aj.col);
     chAj.set(k); construireLoupe(); setPhase('verse');
   }
+  // « Autre mélange » : le tube redevient de l'eau seule, on repart à l'étape 1
+  function vider() {
+    for (const p of [gouttes, grains, cristaux]) { for (const q of p.P) q.st = 'off'; p.commit(); }
+    d = 0; verse = 0; spawned = 0; pred = null; turb = 0; nAct = 0; nFondu = 0; nVol = 0; tube.position.y = 0; tube.rotation.set(0, 0, 0);
+    chAj.set(''); construireLoupe(true); setPhase('attente');
+  }
   function setPhase(ph) {
     phase = ph; tPhase = 0;
     const p = pl();
     if (ph === 'agite') {
+      pred = null;   // on réagite : nouvelle prédiction à faire
       if (mix < 0.05 && aj.type === 'hetero') dispersion();
       if (p) for (let i = 0; i < nAct; i++) { const q = p.P[i]; if (q.st === 'pose' || q.st === 'chute') { q.st = 'libre'; cible(q, 0.05, yTop - 0.05); } }
     }
@@ -218,12 +303,14 @@ export default function mount(root) {
       if (aj.genre === 'gouttes') { q.st = 'monte'; q.vt = 0.3 + q.r * 5; } else if (aj.genre === 'grains') { q.st = 'chute'; q.vy = 0; }
     }
     if (ph === 'fini' && pred) { total++; if (pred === aj.type) bonnes++; score.set(`${bonnes} / ${total}`); }
+    if (ph === 'fini') essayes.add(key);
     majBoutons(); dire();
   }
   function dire() {
     const n = { homo: 'homogène', hetero: 'hétérogène' };
     let h = '';
-    if (phase === 'verse') h = `Tu verses ${aj.nom} dans l'eau du tube à essai…`;
+    if (phase === 'attente') h = "Un tube à essai rempli d'eau. Commence par l'<b>étape 1</b> : choisis ce que tu ajoutes à l'eau.";
+    else if (phase === 'verse') h = `Tu verses ${aj.nom} dans l'eau du tube à essai…`;
     else if (phase === 'pret') h = `Tu as ajouté ${aj.nom} dans l'eau. Appuie sur <b>Agiter</b> pour bien mélanger.`;
     else if (phase === 'agite') h = 'Ça secoue ! Tout se mélange…';
     else if (phase === 'melange') h = pred ? `Ta prédiction : <b>${n[pred]}</b>. Appuie sur <b>Laisser reposer</b> pour vérifier.`
@@ -233,26 +320,43 @@ export default function mount(root) {
     ex.set(h);
   }
 
-  // --- réglages ---
+  // --- réglages : les étapes de l'expérience, dans l'ordre où il faut les faire ---
   const ui = panel(panelEl);
   ui.title('Homogène ou hétérogène ?');
-  const chAj = ui.choice({ label: "Ce que tu ajoutes à l'eau", options: Object.entries(AJ).map(([value, a]) => ({ value, label: a.label })), value: key, onChange: (v) => choisir(v) });
-  const [bAgiter, bRepos] = ui.buttons([
-    { label: 'Agiter', primary: true, onClick: () => setPhase('agite') },
-    { label: 'Laisser reposer', onClick: () => setPhase('repos') },
+  const E = etapes(panelEl, [
+    { t: "Choisis ce que tu ajoutes à l'eau du tube" },
+    { t: 'Agite le tube', pq: "D'abord l'étape 1 : choisis ce que tu ajoutes à l'eau." },
+    { t: 'Prédis : après un moment de repos, ce mélange sera…', pq: "D'abord l'étape 2 : agite le tube." },
+    { t: 'Laisse reposer et observe', pq: "D'abord l'étape 3 : fais ta prédiction." },
+    { t: 'Conclus', pq: "D'abord l'étape 4 : laisse reposer.", avant: true },
   ]);
-  ui.note('Ta prédiction, avant de laisser reposer :');
+  const chAj = panel(E.c(0)).choice({ options: Object.entries(AJ).map(([value, a]) => ({ value, label: a.label })), value: '', onChange: (v) => choisir(v) });
+  const [bAgiter] = panel(E.c(1)).buttons([{ label: 'Agiter', onClick: () => setPhase('agite') }]);
   const predire = (v) => { pred = v; majBoutons(); dire(); };
-  const [bHomo, bHetero] = ui.buttons([{ label: 'Homogène', onClick: () => predire('homo') }, { label: 'Hétérogène', onClick: () => predire('hetero') }]);
-  const [bLoupe] = ui.buttons([{ label: 'Loupe : oui', onClick: (b) => { loupeOn = !loupeOn; b.textContent = loupeOn ? 'Loupe : oui' : 'Loupe : non'; } }]);
+  const [bHomo, bHetero] = panel(E.c(2)).buttons([{ label: 'Homogène', onClick: () => predire('homo') }, { label: 'Hétérogène', onClick: () => predire('hetero') }]);
+  const [bRepos] = panel(E.c(3)).buttons([{ label: 'Laisser reposer', onClick: () => setPhase('repos') }]);
+  const [bAutre] = panel(E.c(4)).buttons([{ label: 'Autre mélange →', onClick: () => vider() }]);
+  E.go(1, bAgiter); E.go(2, bHomo, false); E.go(2, bHetero, false); E.go(3, bRepos); E.go(4, bAutre);
+  ui.buttons([{ label: 'Loupe : oui', onClick: (b) => { loupeOn = !loupeOn; b.textContent = loupeOn ? 'Loupe : oui' : 'Loupe : non'; } }]);
   const score = ui.readout('Bonnes prédictions'); score.set('0 / 0');
+  const NOM = { homo: 'homogène', hetero: 'hétérogène' };
   function majBoutons() {
     bAgiter.disabled = !['pret', 'melange', 'fini'].includes(phase);
     bRepos.disabled = !(phase === 'melange' && pred);
     bHomo.disabled = bHetero.disabled = phase !== 'melange';
     bHomo.classList.toggle('on', pred === 'homo'); bHetero.classList.toggle('on', pred === 'hetero');
+    // l'étape en cours d'après la phase, et un retour court sous chaque étape
+    E.set(phase === 'attente' ? 0 : ['verse', 'pret', 'agite'].includes(phase) ? 1 : phase === 'melange' ? (pred ? 3 : 2) : phase === 'repos' ? 3 : 4);
+    E.info(0, phase === 'attente' ? '' : phase === 'verse' ? `Tu verses ${aj.nom}…` : `Tu as ajouté ${aj.nom} à l'eau.`);
+    E.info(1, phase === 'agite' ? 'Ça secoue…' : phase === 'melange' && !pred ? 'Tout est mélangé… pour l\'instant.' : '');
+    E.info(2, pred ? `Ta prédiction : <b>${NOM[pred]}</b>.` : '');
+    E.info(3, phase === 'repos' ? 'Le temps passe… regarde le tube et la loupe.' : '');
+    E.info(4, phase !== 'fini' ? '' : (pred ? (pred === aj.type ? '✓ Bien vu ! ' : '✗ Raté, cette fois. ') : '')
+      + `C'est un <span class="gx-fin">mélange ${NOM[aj.type]}</span>.<br>`
+      + (essayes.size < 6 ? `Ajouts essayés : ${essayes.size} / 6. Essaie les autres !` : 'Tu as essayé les 6 ajouts du cours !'));
+    // les ajouts déjà essayés jusqu'au bout sont cochés
+    chAj.el.querySelectorAll('button').forEach((b) => { const s = AJ[b.dataset.v].label + (essayes.has(b.dataset.v) ? ' ✓' : ''); if (b.textContent !== s) b.textContent = s; });
   }
-  void bLoupe;
 
   // --- cadrage : le tube, la loupe, et la place des étiquettes à gauche ---
   // écran large : la loupe à droite du tube ; écran étroit (téléphone) : la loupe au-dessus, à droite
@@ -288,8 +392,8 @@ export default function mount(root) {
     // grandeurs de la scène (d'après l'image précédente)
     const ext = aj.genre === 'gouttes' || aj.genre === 'sirop' ? verse : nAct ? spawned / nAct : 0;
     yTop = HE + aj.extra * ext;
-    oilH = aj.genre === 'gouttes' ? aj.extra * verse * (nFondu / nAct) : 0;
-    dep = aj.genre === 'grains' ? aj.extra * (nFondu / nAct) : 0;
+    oilH = aj.genre === 'gouttes' && nAct ? aj.extra * verse * (nFondu / nAct) : 0;
+    dep = aj.genre === 'grains' && nAct ? aj.extra * (nFondu / nAct) : 0;
     sirH = aj.genre === 'sirop' ? aj.extra * verse * (1 - d) : 0;
 
     // déroulement
@@ -322,7 +426,7 @@ export default function mount(root) {
       if (tPhase >= D) { tube.position.y = 0; tube.rotation.set(0, 0, 0); setPhase('melange'); }
     } else {
       turb = Math.max(phase === 'melange' ? 0.08 : 0, turb - dt * 0.7);
-      if (aj.genre === 'sirop') d = Math.min(1, d + dt * 0.006); // diffusion lente, même sans agiter
+      if (aj.genre === 'sirop' && phase !== 'attente') d = Math.min(1, d + dt * 0.006); // diffusion lente, même sans agiter
       if (phase === 'repos' && ((aj.type === 'homo' && tPhase > 2.6) || (aj.type === 'hetero' && nVol === 0 && tPhase > 0.5) || tPhase > 10)) setPhase('fini');
     }
 
@@ -372,7 +476,8 @@ export default function mount(root) {
     // étiquettes
     const xs = -RO - 0.05;
     let hh = '', bb = '';
-    if (aj.genre === 'gouttes') {
+    if (phase === 'attente') { bb = 'eau'; aBas.position.set(xs, yTop * 0.5, 0); }
+    else if (aj.genre === 'gouttes') {
       if (mix > 0.5) { hh = "gouttes d'huile<br>dans l'eau"; aHaut.position.set(xs, yTop * 0.55, 0); }
       else { hh = oilH > 0.06 ? 'huile' : ''; bb = 'eau'; aHaut.position.set(xs, yTop - oilH / 2, 0); aBas.position.set(xs, yEau * 0.5, 0); }
     } else if (aj.genre === 'grains') {
@@ -393,7 +498,7 @@ export default function mount(root) {
     dit(lHaut, hh); dit(lBas, bb); lTube.show(phase !== 'agite');
     dit(lHaut2, !loupeOn ? '' : phase === 'repos' ? 'temps accéléré…' : phase === 'fini' ? (aj.type === 'homo' ? 'mélange homogène' : 'mélange hétérogène') : '');
     lHaut2.el.classList.toggle('fluo', phase === 'fini'); lHaut2.el.classList.toggle('discret', phase !== 'fini');
-    dit(lLeg, loupeOn ? `à la loupe :${etroit ? '<br>' : ''} <span style="color:#${COL_EAU_MOL.toString(16)}">●</span> molécules d'eau &nbsp;<span style="color:#${new THREE.Color(aj.col).getHexString()}">●</span> ${aj.mol}` : '');
+    dit(lLeg, loupeOn ? `à la loupe :${etroit ? '<br>' : ''} <span style="color:#${COL_EAU_MOL.toString(16)}">●</span> molécules d'eau` + (phase === 'attente' ? '' : ` &nbsp;<span style="color:#${new THREE.Color(aj.col).getHexString()}">●</span> ${aj.mol}`) : '');
 
     // loupe
     loupe.visible = repere.visible = lignes.visible = loupeOn;
@@ -424,6 +529,6 @@ export default function mount(root) {
     }
   }
 
-  choisir(demo || 'huile');
-  return { dispose() { st.dispose(); } };
+  if (demo) choisir(demo); else vider();   // au départ : de l'eau seule, l'élève choisit ce qu'elle ajoute
+  return { dispose() { st.dispose(); retirerStyle(); } };
 }

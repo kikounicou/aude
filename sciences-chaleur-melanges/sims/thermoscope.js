@@ -3,6 +3,61 @@
 // (contraction). Une loupe montre l'agitation moléculaire. Bonus « dans la vraie vie » : l'espace entre 2 rails.
 import { THREE, C, layout, createStage, panel, explain, beaker, ground, molecules, glassMaterial, liquidMaterial, tempColor, clamp, rand } from './kit.js';
 
+// ---------- Guide pas à pas ----------
+// Composant local, IDENTIQUE dans chaine-energie, thermoscope, thermometre et deux-bechers (à mettre en commun dans kit.js).
+//   const g = guide(panelEl, ['Étape 1', 'Étape 2'], { avant: noeud, onRecommencer });
+//   g.set(cur, faits, html, fin) : étape en cours (−1 = fini), Set des étapes faites, retour + consigne (HTML)
+//   g.appel(bouton, on) : l'action principale pulse · g.zone(el, on) : cadre la zone à manipuler
+//   g.verrou(el, on, pourquoi, apres) : grise une commande ET dit pourquoi, juste en dessous (ou sous `apres`)
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.gd.gd-fini{background:rgba(255,228,92,.1)}
+.gd-pas{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.gd-pas li{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;font:600 13px/1.2 var(--texte);color:#9d96cc;border:1.5px solid rgba(255,255,255,.14)}
+.gd-pas li b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);color:#cfc8ff;font-size:12.5px}
+.gd-pas li.fait{color:#fff;border-color:rgba(255,228,92,.45)}.gd-pas li.fait b{background:var(--fluo);color:var(--encre)}
+.gd-pas li.cur{color:var(--encre);background:var(--fluo);border-color:var(--fluo)}.gd-pas li.cur b{background:var(--encre);color:var(--fluo)}
+.gd-msg{margin:0;font:500 14.5px/1.4 var(--texte);color:#fff}.gd-msg b{color:var(--fluo)}.gd mark{color:var(--encre)}
+.gd .sim-btn{align-self:flex-start}
+.gd-appel{box-shadow:0 0 0 3px rgba(255,228,92,.85);animation:gd-appel 1.4s ease-in-out infinite}
+@keyframes gd-appel{50%{box-shadow:0 0 0 8px rgba(255,228,92,.22)}}
+.gd-zone{outline:2px dashed rgba(255,228,92,.75);outline-offset:3px;border-radius:12px}
+.gd-lock{opacity:.45}.gd-lock button{cursor:not-allowed}
+.gd-pourquoi{flex-basis:100%;margin:-4px 0 0;font-size:13.5px;color:#ffd9a8}
+`;
+function guide(parent, noms, o = {}) {
+  let css = document.getElementById('gd-style');
+  if (!css) { css = document.createElement('style'); css.id = 'gd-style'; css.textContent = GD_CSS; document.head.appendChild(css); }
+  css.dataset.n = (+css.dataset.n || 0) + 1;
+  const box = document.createElement('div'); box.className = 'gd';
+  box.innerHTML = `<ol class="gd-pas" aria-label="Les étapes">${noms.map((n, i) => `<li><b>${i + 1}</b><span>${n}</span></li>`).join('')}</ol><p class="gd-msg" aria-live="polite"></p>`;
+  const lis = [...box.querySelectorAll('li')], msg = box.querySelector('.gd-msg'), raisons = new Map();
+  let bR = null, cle = '';
+  if (o.onRecommencer) {
+    bR = document.createElement('button'); bR.type = 'button'; bR.className = 'sim-btn'; bR.textContent = '↺ Recommencer'; bR.hidden = true;
+    bR.addEventListener('click', o.onRecommencer); box.appendChild(bR);
+  }
+  parent.insertBefore(box, o.avant || null);
+  return {
+    el: box,
+    set(cur, faits, html, fin = false) {
+      const k = cur + '|' + [...faits].join(',') + '|' + html + fin; if (k === cle) return; cle = k;
+      lis.forEach((li, i) => { const f = faits.has(i); li.className = f ? 'fait' : i === cur ? 'cur' : ''; li.firstChild.textContent = f ? '✓' : i + 1; if (i === cur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+      msg.innerHTML = html; box.classList.toggle('gd-fini', fin); if (bR) bR.hidden = !fin;
+    },
+    appel(b, on) { b.classList.toggle('gd-appel', !!on); },
+    zone(e, on) { e.classList.toggle('gd-zone', !!on); },
+    verrou(e, on, pourquoi = '', apres = e) {
+      e.classList.toggle('gd-lock', !!on);
+      (e.tagName === 'BUTTON' ? [e] : e.querySelectorAll('button')).forEach((b) => { b.disabled = !!on; });
+      let p = raisons.get(e);
+      if (on && !p) { p = document.createElement('p'); p.className = 'gd-pourquoi'; raisons.set(e, p); apres.after(p); }
+      if (p) { p.hidden = !on; p.textContent = '🔒 ' + pourquoi; }
+    },
+    dispose() { box.remove(); raisons.forEach((p) => p.remove()); css.dataset.n = +css.dataset.n - 1; if (+css.dataset.n <= 0) css.remove(); },
+  };
+}
+
 const BX = [-2.4, 0, 2.4];            // les 3 béchers
 const T_DEF = [0.18, 0.5, 0.82];      // froid, tiède, chaud : pas de °C, le thermoscope COMPARE
 const LEVEL0 = 1.62, GAIN = 1.25;     // niveau au repère (bain de départ) et sensibilité, exagérée mais plausible
@@ -29,6 +84,10 @@ const TXT = {
   sansFroid: "Ici, les rails sont posés <b>sans espace</b>. Monte la température…",
   sansChaud: "Sans espace, les rails n'ont pas la place de s'allonger : ils <mark>se déforment</mark> ! Voilà pourquoi on laisse un espace entre 2 rails : à cause de la <mark>dilatation</mark>.",
 };
+// Le parcours guidé : bain plus chaud → bain plus froid → les rails → sans espace (l'ordre des deux premiers est libre)
+const PAS = ['Plus chaud', 'Plus froid', 'Les rails', 'Sans espace'];
+const VU = ["✓ Le niveau est monté au-dessus du repère : c'est la <mark>dilatation</mark>. ", "✓ Le niveau est descendu sous le repère : c'est la <mark>contraction</mark>. "];
+const FIN = "<b>✓ Bravo !</b> Le thermoscope est un instrument qui permet de <mark>comparer</mark> de façon objective le niveau de chaud et de froid de différents corps. Plus la température est élevée et plus l'eau colorée monte dans le tube (<mark>dilatation</mark>). L'espace entre 2 rails sert à éviter que les rails se déforment lors d'une élévation importante de la température.";
 
 export default function mount(root) {
   const { stageEl, panelEl, explainEl } = layout(root);
@@ -146,11 +205,18 @@ export default function mount(root) {
   let mode = q.get('mode') === 'rails' ? 'rails' : 'thermo';
   const ui = panel(panelEl);
   ui.title('Le thermoscope');
+  const gd = guide(panelEl, PAS, { onRecommencer: recommencer });
+  const faits = new Set();
   const modeCh = ui.choice({ label: 'Expérience', options: [{ value: 'thermo', label: 'Le thermoscope' }, { value: 'rails', label: 'Dans la vraie vie : les rails' }], value: mode, onChange: (v) => setMode(v) });
+  const bRails = modeCh.el.querySelectorAll('button')[1], bThermo = modeCh.el.querySelectorAll('button')[0];
   const sub = () => { const d = document.createElement('div'); d.style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(d); return d; };
   const boxT = sub(), boxR = sub();
   const uiT = panel(boxT), uiR = panel(boxR);
   const bBtns = uiT.buttons([0, 1, 2].map((i) => ({ label: `Bécher ${i + 1}`, onClick: () => goTo(i) })));
+  // les boutons des béchers disent ce qu'ils font
+  const wrapB = document.createElement('div'); wrapB.className = 'sim-choice';
+  const lbB = document.createElement('span'); lbB.className = 'sim-choice-label'; lbB.textContent = 'Place le thermoscope dans le…';
+  bBtns[0].parentElement.before(wrapB); wrapB.append(lbB, bBtns[0].parentElement);
   // la loupe : un médaillon 2D avec les molécules d'eau colorée (la « queue » = agitation, comme dans le cours)
   const cv = document.createElement('canvas');
   cv.style.cssText = 'width:100%;height:170px;display:block;border-radius:14px;background:#1b1838';
@@ -171,11 +237,46 @@ export default function mount(root) {
 
   // ---------- Déplacer le thermoscope ----------
   let cur = 1, tgtX = BX[1], px = BX[1], py = 0.03, Tl = 0.5;
+  const slNom = sl.el.querySelector('.sim-slider-top span');
   function goTo(i) {
     cur = i; tgtX = BX[i];
     setSide(i === 2 ? -1 : 1);
     sl.set(Math.round(baths[i] * 100));
+    slNom.textContent = `Température du bain (bécher ${i + 1})`;
     bBtns.forEach((b, k) => b.classList.toggle('on', k === i));
+  }
+  function recommencer() {
+    faits.clear(); T_DEF.forEach((T, i) => { baths[i] = T; }); refreshBaths(); goTo(1);
+    railT = 0.2; slR.set(20); sansEspace = false; chR.set('avec'); setMode('thermo');
+  }
+  // Le guide : ce qui vient de se passer, puis la prochaine action (une seule mise en avant)
+  function majGuide(inBath, rel, key) {
+    if (mode === 'thermo' && inBath) { if (rel > 0.15) faits.add(0); if (rel < -0.15) faits.add(1); }
+    if (mode === 'rails' && railT >= 0.75) faits.add(sansEspace ? 3 : 2);
+    const etape = [0, 1, 2, 3].find((i) => !faits.has(i)) ?? -1;
+    const chaud = baths.indexOf(Math.max(...baths)), froid = baths.indexOf(Math.min(...baths)), vise = etape === 0 ? chaud : froid;
+    let html;
+    if (etape === 0 || etape === 1) {
+      const avant = faits.has(0) ? VU[0] : faits.has(1) ? VU[1] : '', n = `<b>${etape + 1}.</b> `;
+      if (mode === 'rails') html = n + 'Reviens au thermoscope : touche « Le thermoscope ».';
+      else if (cur === vise && !inBath) html = avant + `Le thermoscope passe dans le bécher ${vise + 1}… regarde le niveau d'eau colorée.`;
+      else if (cur === vise) html = avant + (key === 'monte' ? '▲ Le niveau monte… ' : key === 'descend' ? '▼ Le niveau descend… ' : '') + "Regarde le niveau d'eau colorée par rapport au repère.";
+      else html = avant + n + `Place le thermoscope dans le <b>bécher ${vise + 1}</b> (${mot(baths[vise])}) et regarde le niveau d'eau colorée.`;
+    } else if (etape === 2) {
+      html = mode === 'thermo' ? '✓ Plus chaud, le niveau monte ; plus froid, il descend : le thermoscope permet de <mark>comparer</mark>. <b>3.</b> Va voir les rails, dans la vraie vie.'
+        : sansEspace ? '<b>3.</b> Remets les rails « avec un espace », puis monte la température.' : "<b>3.</b> Monte la température avec le curseur et regarde l'espace entre 2 rails.";
+    } else if (etape === 3) {
+      html = mode === 'thermo' ? '<b>4.</b> Retourne aux rails et choisis « sans espace ».'
+        : (faits.has(2) ? "✓ Le métal se dilate : l'espace se referme. " : '') + (sansEspace ? '<b>4.</b> Monte la température : que deviennent les rails sans espace ?' : '<b>4.</b> Choisis « sans espace », puis monte la température.');
+    } else html = FIN;
+    gd.set(etape, faits, html, etape < 0);
+    const versBain = (etape === 0 || etape === 1) && mode === 'thermo' && cur !== vise;
+    bBtns.forEach((b, k) => gd.appel(b, versBain && k === vise));
+    gd.appel(bRails, etape >= 2 && mode === 'thermo');
+    gd.appel(bThermo, (etape === 0 || etape === 1) && mode === 'rails');
+    const railsAvec = etape === 2 && mode === 'rails' && !sansEspace, railsSans = etape === 3 && mode === 'rails';
+    gd.zone(slR.el, (railsAvec || (railsSans && sansEspace)));
+    gd.zone(chR.el, (etape === 2 && mode === 'rails' && sansEspace) || (railsSans && !sansEspace));
   }
 
   // ---------- Cadrage (tout tient dans l'écran, téléphone compris) ----------
@@ -277,6 +378,7 @@ export default function mount(root) {
       const ag = (Tl > 0.6 ? 'forte' : Tl < 0.36 ? 'faible' : 'moyenne') + (key === 'monte' ? ' (augmente)' : key === 'descend' ? ' (diminue)' : '');
       if (niv !== lastNiv) { lastNiv = niv; roNiv.set(niv); }
       if (ag !== lastAg) { lastAg = ag; roAg.set(ag); }
+      majGuide(inBath, rel, key);
       // glaçons dans un bain froid, vapeur au-dessus d'un bain chaud
       ices.forEach((ic, i) => {
         ic.amt = ease(ic.amt, baths[i] < 0.24 ? 1 : 0, dt, 3);
@@ -310,6 +412,7 @@ export default function mount(root) {
       lGap.set(sansEspace ? 'pas d\'espace' : 'espace entre 2 rails');
       lGap.el.className = 'sim-label ' + (sansEspace ? 'chaud' : 'fluo');
       ex.set(sansEspace ? (A > 0.05 ? TXT.sansChaud : TXT.sansFroid) : railT > 0.45 ? TXT.railChaud : TXT.railFroid);
+      majGuide(false, 0, '');
     }
   }
   st.onFrame(frame);
@@ -322,5 +425,5 @@ export default function mount(root) {
   if (b0 >= 1 && b0 <= 3) goTo(b0 - 1);
   // Banc d'essai : ?avance=3 fait tourner 3 s de simulation tout de suite (captures sans écran).
   for (let i = 0, n = clamp(+q.get('avance') || 0, 0, 20) * 60; i < n; i++) frame(1 / 60);
-  return { dispose() { st.dispose(); } };
+  return { dispose() { gd.dispose(); st.dispose(); } };
 }

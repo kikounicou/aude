@@ -2,6 +2,61 @@
 // « J'apprends à interpréter des données »). Les températures suivent exactement les tableaux du cours.
 import { THREE, C, layout, createStage, panel, explain, beaker, ground, molecules, liquidMaterial, tempColor, clamp, lerp, rand } from './kit.js';
 
+// ---------- Guide pas à pas ----------
+// Composant local, IDENTIQUE dans chaine-energie, thermoscope, thermometre et deux-bechers (à mettre en commun dans kit.js).
+//   const g = guide(panelEl, ['Étape 1', 'Étape 2'], { avant: noeud, onRecommencer });
+//   g.set(cur, faits, html, fin) : étape en cours (−1 = fini), Set des étapes faites, retour + consigne (HTML)
+//   g.appel(bouton, on) : l'action principale pulse · g.zone(el, on) : cadre la zone à manipuler
+//   g.verrou(el, on, pourquoi, apres) : grise une commande ET dit pourquoi, juste en dessous (ou sous `apres`)
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.gd.gd-fini{background:rgba(255,228,92,.1)}
+.gd-pas{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.gd-pas li{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;font:600 13px/1.2 var(--texte);color:#9d96cc;border:1.5px solid rgba(255,255,255,.14)}
+.gd-pas li b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);color:#cfc8ff;font-size:12.5px}
+.gd-pas li.fait{color:#fff;border-color:rgba(255,228,92,.45)}.gd-pas li.fait b{background:var(--fluo);color:var(--encre)}
+.gd-pas li.cur{color:var(--encre);background:var(--fluo);border-color:var(--fluo)}.gd-pas li.cur b{background:var(--encre);color:var(--fluo)}
+.gd-msg{margin:0;font:500 14.5px/1.4 var(--texte);color:#fff}.gd-msg b{color:var(--fluo)}.gd mark{color:var(--encre)}
+.gd .sim-btn{align-self:flex-start}
+.gd-appel{box-shadow:0 0 0 3px rgba(255,228,92,.85);animation:gd-appel 1.4s ease-in-out infinite}
+@keyframes gd-appel{50%{box-shadow:0 0 0 8px rgba(255,228,92,.22)}}
+.gd-zone{outline:2px dashed rgba(255,228,92,.75);outline-offset:3px;border-radius:12px}
+.gd-lock{opacity:.45}.gd-lock button{cursor:not-allowed}
+.gd-pourquoi{flex-basis:100%;margin:-4px 0 0;font-size:13.5px;color:#ffd9a8}
+`;
+function guide(parent, noms, o = {}) {
+  let css = document.getElementById('gd-style');
+  if (!css) { css = document.createElement('style'); css.id = 'gd-style'; css.textContent = GD_CSS; document.head.appendChild(css); }
+  css.dataset.n = (+css.dataset.n || 0) + 1;
+  const box = document.createElement('div'); box.className = 'gd';
+  box.innerHTML = `<ol class="gd-pas" aria-label="Les étapes">${noms.map((n, i) => `<li><b>${i + 1}</b><span>${n}</span></li>`).join('')}</ol><p class="gd-msg" aria-live="polite"></p>`;
+  const lis = [...box.querySelectorAll('li')], msg = box.querySelector('.gd-msg'), raisons = new Map();
+  let bR = null, cle = '';
+  if (o.onRecommencer) {
+    bR = document.createElement('button'); bR.type = 'button'; bR.className = 'sim-btn'; bR.textContent = '↺ Recommencer'; bR.hidden = true;
+    bR.addEventListener('click', o.onRecommencer); box.appendChild(bR);
+  }
+  parent.insertBefore(box, o.avant || null);
+  return {
+    el: box,
+    set(cur, faits, html, fin = false) {
+      const k = cur + '|' + [...faits].join(',') + '|' + html + fin; if (k === cle) return; cle = k;
+      lis.forEach((li, i) => { const f = faits.has(i); li.className = f ? 'fait' : i === cur ? 'cur' : ''; li.firstChild.textContent = f ? '✓' : i + 1; if (i === cur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+      msg.innerHTML = html; box.classList.toggle('gd-fini', fin); if (bR) bR.hidden = !fin;
+    },
+    appel(b, on) { b.classList.toggle('gd-appel', !!on); },
+    zone(e, on) { e.classList.toggle('gd-zone', !!on); },
+    verrou(e, on, pourquoi = '', apres = e) {
+      e.classList.toggle('gd-lock', !!on);
+      (e.tagName === 'BUTTON' ? [e] : e.querySelectorAll('button')).forEach((b) => { b.disabled = !!on; });
+      let p = raisons.get(e);
+      if (on && !p) { p = document.createElement('p'); p.className = 'gd-pourquoi'; raisons.set(e, p); apres.after(p); }
+      if (p) { p.hidden = !on; p.textContent = '🔒 ' + pourquoi; }
+    },
+    dispose() { box.remove(); raisons.forEach((p) => p.remove()); css.dataset.n = +css.dataset.n - 1; if (+css.dataset.n <= 0) css.remove(); },
+  };
+}
+
 // Manipulation 4 : [minute, thermomètre 1 (50 mL), thermomètre 2 (100 mL)]
 const TAB4 = [[0, 17, 17], [1, 30, 28], [2, 62, 47], [3, 80, 56], [4, 95, 66], [5, 95, 81]];
 const LIGNES4 = ['Avant de chauffer', '1 minute', '2 minutes', '3 minutes', '4 minutes', '5 minutes'];
@@ -34,6 +89,23 @@ const TXT = {
   C1: 'Le <mark>temps de chauffe est identique</mark> : les trois liquides reçoivent la <mark>même quantité de chaleur</mark>. Regarde les thermomètres : ils ne montent pas de la même façon.',
   C5: 'Eau 250 g : 69 °C. Eau 500 g : 45 °C. Huile 250 g : 93 °C. Une même quantité de <mark>chaleur</mark> provoque une élévation de <mark>température</mark> différente suivant la <mark>masse</mark> du liquide chauffé et suivant sa <mark>nature</mark>.',
 };
+// Le parcours guidé : les trois expériences dans l'ordre du cours (la manipulation 5 prolonge la 4)
+const PAS = ['Manip. 4', 'Manip. 5', 'Interpréter'];
+const ORDRE = ['A', 'B', 'C'], NOM = { A: 'manipulation 4', B: 'manipulation 5', C: 'interpréter des données' };
+const CONS = {
+  A0: '<b>1.</b> Les deux béchers sont sur la même flamme. Touche « Chauffer » et regarde les deux thermomètres.',
+  A1: '🔥 On chauffe… Le tableau se remplit : les deux températures montent-elles de la même façon ?',
+  Afin: '✓ Après 5 minutes : 95 °C dans le bécher 1, 81 °C dans le bécher 2.',
+  B0: "<b>2.</b> On prolonge jusqu'à l'ébullition du bécher 1. Touche « Chauffer » et surveille le thermomètre.",
+  B1: '🔥 On chauffe… la température monte vers 100 °C.',
+  B2: "L'eau bout et on chauffe toujours… que fait la température ?",
+  Bfin: "✓ L'eau bout et la température reste à 100 °C : c'est un palier.",
+  C0: '<b>3.</b> Trois liquides, trois flammes identiques. Touche « Chauffer » pour 5 minutes.',
+  C1: '🔥 Même temps de chauffe pour les trois : regarde les thermomètres.',
+  Cfin: '✓ Eau 250 g : 69 °C · eau 500 g : 45 °C · huile 250 g : 93 °C.',
+  p: 'En pause. Touche « Reprendre » pour continuer à chauffer.',
+};
+const FIN = "<b>✓ Bravo, les trois expériences sont faites !</b> Même quantité de chaleur, températures différentes : <mark>chaleur et température sont deux grandeurs différentes</mark>. La quantité de chaleur fournie augmente et la température ne varie plus : ce sont <mark>deux notions différentes mais liées</mark>. Une même quantité de <mark>chaleur</mark> provoque une élévation de <mark>température</mark> différente suivant la <mark>masse</mark> du liquide chauffé et suivant sa <mark>nature</mark>.";
 
 function interp(col, t) {
   if (t <= 0) return TAB4[0][col];
@@ -293,15 +365,20 @@ export default function mount(root) {
   // ---------- Réglages ----------
   const ui = panel(panelEl);
   ui.title('Chaleur et température');
+  const faits = new Set();
+  const gd = guide(panelEl, PAS, { onRecommencer: () => { faits.clear(); setMode('A'); } });
   const cMode = ui.choice({ label: 'Expérience', value: 'A', onChange: (v) => setMode(v), options: [
     { value: 'A', label: 'Manip. 4' }, { value: 'B', label: 'Manip. 5' }, { value: 'C', label: 'Interpréter des données' }] });
-  cMode.el.querySelectorAll('button').forEach((b) => { b.style.minHeight = '40px'; });
+  const bModeB = cMode.el.querySelectorAll('button')[1];
   const box = document.createElement('div'); box.style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(box);
 
   function buildPanel(m) {
     box.innerHTML = '';
     const mu = panel(box), Md = MODES[m];
-    const [bPlay] = mu.buttons([{ label: 'Chauffer', primary: true, onClick: togglePlay }, { label: 'Recommencer', onClick: restart }]);
+    // « Continuer » (3e bouton, près de « Chauffer ») mène à la prochaine expérience pas encore faite ; il n'apparaît qu'à la fin
+    const [bPlay, , bNext] = mu.buttons([{ label: 'Chauffer', primary: true, onClick: togglePlay }, { label: 'Remettre à zéro', onClick: restart },
+      { label: '', onClick: () => { const n = ORDRE.find((x, i) => !faits.has(i)); if (n) setMode(n); } }]);
+    bNext.style.display = 'none';
     const sT = mu.slider({ label: 'Temps de chauffe', min: 0, max: Md.dur, step: Md.step, value: s.t, format: (v) => fmtT(m, v), onInput: (v) => { s.play = false; s.t = v; } });
     const gHeat = gauge(box, m === 'A' ? 'Chaleur fournie à chaque bécher' : m === 'B' ? 'Chaleur fournie au bécher 1' : 'Chaleur fournie à chaque récipient', 'linear-gradient(90deg,#ffe45c,#ff5a36)');
     const gTemp = m === 'B' ? gauge(box, 'Température du bécher 1', 'linear-gradient(90deg,#3d8bff,#ffc94d,#ff5a36)') : null;
@@ -309,8 +386,25 @@ export default function mount(root) {
     if (m === 'A') rows = table(box, ['', 'thermomètre 1<br>(50 mL)', 'thermomètre 2<br>(100 mL)'], LIGNES4.map((l) => [l, '…', '…']));
     else if (m === 'B') rows = table(box, ['Temps', 'Température (°C)'], LIGNES5.map((l) => [l, '…']));
     else rows = table(box, ['Liquide', 'Masse', 'Durée', 'Temp. initiale', 'Temp. finale'], DONNEES.map((d) => [d.liq, d.m + ' g', '5 min', '20 °C', '…']));
-    const bNext = m === 'A' ? mu.buttons([{ label: 'Continuer : manipulation 5 →', onClick: () => setMode('B') }])[0] : null;
     P = { bPlay, sT, gHeat, gTemp, rows, bNext, cache: {} };
+  }
+  // Le guide : ce qui se passe, puis la prochaine action (une seule mise en avant : Chauffer, puis Continuer)
+  function majGuide(end) {
+    const c = P.cache, i = ORDRE.indexOf(s.mode);
+    if (end) faits.add(i);
+    const suivant = ORDRE.find((x, k) => !faits.has(k)), fini = !suivant;
+    const k = end ? 'fin' : s.t <= 0 && !s.play ? '0' : !s.play ? 'p' : s.mode === 'B' && s.t >= EB ? '2' : '1';
+    let html = k === 'p' ? CONS.p : CONS[s.mode + k];
+    if (end && !fini) html += ` <b>${ORDRE.indexOf(suivant) + 1}.</b> Touche « Continuer : ${NOM[suivant]} ».`;
+    if (end && fini) html = FIN;
+    gd.set(fini && end ? -1 : end ? ORDRE.indexOf(suivant) : i, faits, html, fini && end);
+    const next = end && !fini && suivant !== s.mode, cle = [next, end, k, suivant, faits.has(0)].join();
+    if (c.guide === cle) return; c.guide = cle;
+    P.bNext.style.display = next ? '' : 'none';
+    if (next) P.bNext.textContent = `Continuer : ${NOM[suivant]} →`;
+    P.bNext.classList.toggle('primary', next); gd.appel(P.bNext, next);
+    P.bPlay.classList.toggle('primary', !end); gd.appel(P.bPlay, k === '0' || k === 'p');
+    gd.verrou(bModeB, !faits.has(0) && s.mode !== 'B', "Manip. 5 : fais d'abord la manip. 4, elle la prolonge.", cMode.el);
   }
   function togglePlay() {
     if (s.t >= MODES[s.mode].dur - 1e-6) { s.t = 0; rig.units.forEach((u) => u.reset()); }
@@ -342,7 +436,7 @@ export default function mount(root) {
         r.style.background = s.mode !== 'C' && on && i === nR - 1 ? 'rgba(255,228,92,.16)' : '';
       });
     }
-    if (P.bNext && c.next !== end) { c.next = end; P.bNext.style.display = end ? '' : 'none'; }
+    majGuide(end);
   }
   function phase() {
     const d = MODES[s.mode].dur;
@@ -378,5 +472,5 @@ export default function mount(root) {
   if (et) { s.t = clamp(+et || 0, 0, MODES[s.mode].dur); P.sT.set(s.t); }
   if (ep === '1') s.play = true;
 
-  return { dispose() { if (ctl) ctl.removeEventListener('start', onStart); clearRig(); st.dispose(); } };
+  return { dispose() { if (ctl) ctl.removeEventListener('start', onStart); clearRig(); gd.dispose(); st.dispose(); } };
 }

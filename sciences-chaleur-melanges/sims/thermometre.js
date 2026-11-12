@@ -3,6 +3,61 @@
 // 100 parties égales → échelle Celsius. Ensuite, mode libre : on mesure les objets du cours.
 import { THREE, C, layout, createStage, panel, explain, beaker, ground, molecules, liquidMaterial, glassMaterial, tempColor, rand } from './kit.js';
 
+// ---------- Guide pas à pas ----------
+// Composant local, IDENTIQUE dans chaine-energie, thermoscope, thermometre et deux-bechers (à mettre en commun dans kit.js).
+//   const g = guide(panelEl, ['Étape 1', 'Étape 2'], { avant: noeud, onRecommencer });
+//   g.set(cur, faits, html, fin) : étape en cours (−1 = fini), Set des étapes faites, retour + consigne (HTML)
+//   g.appel(bouton, on) : l'action principale pulse · g.zone(el, on) : cadre la zone à manipuler
+//   g.verrou(el, on, pourquoi, apres) : grise une commande ET dit pourquoi, juste en dessous (ou sous `apres`)
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.gd.gd-fini{background:rgba(255,228,92,.1)}
+.gd-pas{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.gd-pas li{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;font:600 13px/1.2 var(--texte);color:#9d96cc;border:1.5px solid rgba(255,255,255,.14)}
+.gd-pas li b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.12);color:#cfc8ff;font-size:12.5px}
+.gd-pas li.fait{color:#fff;border-color:rgba(255,228,92,.45)}.gd-pas li.fait b{background:var(--fluo);color:var(--encre)}
+.gd-pas li.cur{color:var(--encre);background:var(--fluo);border-color:var(--fluo)}.gd-pas li.cur b{background:var(--encre);color:var(--fluo)}
+.gd-msg{margin:0;font:500 14.5px/1.4 var(--texte);color:#fff}.gd-msg b{color:var(--fluo)}.gd mark{color:var(--encre)}
+.gd .sim-btn{align-self:flex-start}
+.gd-appel{box-shadow:0 0 0 3px rgba(255,228,92,.85);animation:gd-appel 1.4s ease-in-out infinite}
+@keyframes gd-appel{50%{box-shadow:0 0 0 8px rgba(255,228,92,.22)}}
+.gd-zone{outline:2px dashed rgba(255,228,92,.75);outline-offset:3px;border-radius:12px}
+.gd-lock{opacity:.45}.gd-lock button{cursor:not-allowed}
+.gd-pourquoi{flex-basis:100%;margin:-4px 0 0;font-size:13.5px;color:#ffd9a8}
+`;
+function guide(parent, noms, o = {}) {
+  let css = document.getElementById('gd-style');
+  if (!css) { css = document.createElement('style'); css.id = 'gd-style'; css.textContent = GD_CSS; document.head.appendChild(css); }
+  css.dataset.n = (+css.dataset.n || 0) + 1;
+  const box = document.createElement('div'); box.className = 'gd';
+  box.innerHTML = `<ol class="gd-pas" aria-label="Les étapes">${noms.map((n, i) => `<li><b>${i + 1}</b><span>${n}</span></li>`).join('')}</ol><p class="gd-msg" aria-live="polite"></p>`;
+  const lis = [...box.querySelectorAll('li')], msg = box.querySelector('.gd-msg'), raisons = new Map();
+  let bR = null, cle = '';
+  if (o.onRecommencer) {
+    bR = document.createElement('button'); bR.type = 'button'; bR.className = 'sim-btn'; bR.textContent = '↺ Recommencer'; bR.hidden = true;
+    bR.addEventListener('click', o.onRecommencer); box.appendChild(bR);
+  }
+  parent.insertBefore(box, o.avant || null);
+  return {
+    el: box,
+    set(cur, faits, html, fin = false) {
+      const k = cur + '|' + [...faits].join(',') + '|' + html + fin; if (k === cle) return; cle = k;
+      lis.forEach((li, i) => { const f = faits.has(i); li.className = f ? 'fait' : i === cur ? 'cur' : ''; li.firstChild.textContent = f ? '✓' : i + 1; if (i === cur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+      msg.innerHTML = html; box.classList.toggle('gd-fini', fin); if (bR) bR.hidden = !fin;
+    },
+    appel(b, on) { b.classList.toggle('gd-appel', !!on); },
+    zone(e, on) { e.classList.toggle('gd-zone', !!on); },
+    verrou(e, on, pourquoi = '', apres = e) {
+      e.classList.toggle('gd-lock', !!on);
+      (e.tagName === 'BUTTON' ? [e] : e.querySelectorAll('button')).forEach((b) => { b.disabled = !!on; });
+      let p = raisons.get(e);
+      if (on && !p) { p = document.createElement('p'); p.className = 'gd-pourquoi'; raisons.set(e, p); apres.after(p); }
+      if (p) { p.hidden = !on; p.textContent = '🔒 ' + pourquoi; }
+    },
+    dispose() { box.remove(); raisons.forEach((p) => p.remove()); css.dataset.n = +css.dataset.n - 1; if (+css.dataset.n <= 0) css.remove(); },
+  };
+}
+
 // Hauteur du liquide dans le tube (repère local du thermomètre) : de −20 °C (Y0) à 120 °C (Y1).
 const TMIN = -20, TMAX = 120, Y0 = 0.2, Y1 = 2.55;
 const yOf = (T) => Y0 + ((T - TMIN) / (TMAX - TMIN)) * (Y1 - Y0);
@@ -12,7 +67,9 @@ const Y_HAUT = 1.62;                                 // thermomètre levé, au-d
 const T_POSTE = { ice: 0, boil: 100 };
 const ease = (p) => p * p * (3 - 2 * p);
 const BOUTON = ['1. Plonger dans la glace fondante', 'Marquer le repère 0', "2. Placer dans la vapeur de l'eau en ébullition", 'Marquer le repère 100', '3. Diviser en 100 parties égales'];
-const ETAPE = ['1 sur 3 : repère 0', '1 sur 3 : repère 0', '2 sur 3 : repère 100', '2 sur 3 : repère 100', '3 sur 3 : 100 parties', '3 sur 3 : 100 parties', 'gradué ✓'];
+// Le parcours guidé (« Je retiens », p. 7) : repère 0 → repère 100 → 100 parties → mesurer
+const PAS = ['Repère 0', 'Repère 100', '100 parties', 'Mesure'];
+const FIN = "<b>✓ Bravo !</b> Le <mark>thermomètre</mark> est un thermoscope gradué qui permet de <mark>repérer la température</mark>. Dans nos pays, l'<mark>échelle Celsius</mark> est utilisée. À la pression atmosphérique normale, le repère 0 correspond à la température de la <mark>glace fondante</mark> et le repère 100 à celle de l'<mark>eau en ébullition</mark>.";
 
 const TXT = {
   start: "Ce thermomètre n'a pas encore de graduation : pour l'instant, c'est un simple <mark>thermoscope</mark>. Pour <mark>uniformiser les comparaisons</mark>, il faut une <mark>échelle</mark>, donc <mark>deux repères</mark>.",
@@ -226,8 +283,9 @@ export default function mount(root) {
   // ---------- Réglages ----------
   const ui = panel(panelEl);
   ui.title('Gradue ton thermomètre');
-  const rStep = ui.readout('Étape');
-  const [bMain] = ui.buttons([{ label: BOUTON[0], primary: true, onClick: action }, { label: 'Recommencer', onClick: reset }]);
+  const gd = guide(panelEl, PAS, { onRecommencer: reset });
+  const faits = new Set();
+  const [bMain, bRec] = ui.buttons([{ label: BOUTON[0], primary: true, onClick: action }, { label: '↺ Recommencer', onClick: reset }]);
   const freeBox = document.createElement('div'); freeBox.style.cssText = 'display:none;flex-direction:column;gap:12px'; panelEl.appendChild(freeBox);
   const fu = panel(freeBox);
   const cObj = fu.choice({ label: 'Repère la température avec ton thermomètre', value: null, onChange: pick, options: [
@@ -238,7 +296,6 @@ export default function mount(root) {
   const rLevel = ui.readout('Niveau du liquide');
   const rTemp = ui.readout('Le thermomètre indique'); rTemp.el.style.display = 'none';
   const cLiq = ui.choice({ label: 'Liquide du réservoir', value: 'alcool', onChange: setLiquid, options: [{ value: 'alcool', label: 'alcool coloré' }, { value: 'mercure', label: 'mercure' }] });
-  [cObj, cLiq].forEach((c) => c.el.querySelectorAll('button').forEach((b) => { b.style.minHeight = '40px'; }));
 
   let cache = {};
   const once = (k, v, fn) => { if (cache[k] !== v) { cache[k] = v; fn(v); } };
@@ -257,6 +314,7 @@ export default function mount(root) {
     cObj.set(s.want === 'boil' ? 'ebul' : null); cache.temp = null;
   }
   function reset() {
+    faits.clear();
     Object.assign(s, { step: 0, mark0: false, mark100: false, div: 0, ext: 0, drawn: '', want: 'none', air: 20, obj: null });
     freeBox.style.display = 'none'; rTemp.el.style.display = 'none';
     cGrad.show(false); [L0, L100, LV, objL].forEach((L) => L.show(false));
@@ -287,6 +345,31 @@ export default function mount(root) {
       case 5: return TXT.divide;
       default: return !s.obj ? TXT.done : !inPlace && s.obj !== 'air' ? TXT.move : TXT[s.obj];
     }
+  }
+  // Le guide : ce qui vient de se passer, puis la prochaine action (le bouton principal pulse quand il est prêt)
+  function majGuide(inPlace, Te) {
+    const free = s.step === 6, attente = (s.step === 1 || s.step === 3) && !s.stable;
+    if (s.mark0) faits.add(0);
+    if (s.mark100) faits.add(1);
+    if (free) faits.add(2);
+    if (free && s.obj && s.stable) faits.add(3);
+    const etape = [0, 1, 2, 3].find((i) => !faits.has(i)) ?? -1;
+    const bouge = (s.T > Te ? '▼ Le liquide se <mark>contracte</mark> et descend… ' : '▲ Le liquide se <mark>dilate</mark> et monte… ') + "Attends qu'il ne bouge plus.";
+    let html;
+    switch (s.step) {
+      case 0: html = '<b>1.</b> Il faut deux repères. Touche « Plonger dans la glace fondante » : ce sera le premier.'; break;
+      case 1: html = !inPlace ? 'Le thermomètre descend dans la glace fondante…' : s.stable ? '✓ Le niveau ne bouge plus. <b>Marque le repère 0.</b>' : bouge; break;
+      case 2: html = "✓ Repère 0 marqué ! <b>2.</b> Touche « Placer dans la vapeur de l'eau en ébullition » : ce sera le deuxième repère."; break;
+      case 3: html = !inPlace ? "Le thermomètre passe dans la vapeur de l'eau en ébullition…" : s.stable ? '✓ Le niveau ne bouge plus. <b>Marque le repère 100.</b>' : bouge; break;
+      case 4: html = '✓ Repère 100 marqué ! <b>3.</b> Touche « Diviser en 100 parties égales ».'; break;
+      case 5: html = "On divise l'espace entre 0 et 100 en 100 parties égales…"; break;
+      default: html = etape < 0 ? FIN : '✓ Ton thermomètre est gradué ! <b>4.</b> Repère une température : choisis un objet ci-dessous, ou règle la température du milieu.';
+    }
+    gd.set(etape, faits, html, etape < 0);
+    once('dis', attente, (v) => gd.verrou(bMain, v, 'Attends que le thermomètre soit en place et que le niveau du liquide ne bouge plus.'));
+    gd.appel(bMain, s.step < 5 && !attente);
+    gd.zone(cObj.el, free && etape === 3);
+    once('rec', s.step > 0 && etape >= 0, (v) => { bRec.style.display = v ? '' : 'none'; });   // à la fin, « Recommencer » est dans le guide
   }
   // cadrage : tout le thermomètre et ses étiquettes, quelle que soit la forme de l'écran
   function fit() {
@@ -343,8 +426,7 @@ export default function mount(root) {
     objL.show(open && inPlace && (s.obj === 'corps' || s.obj === 'montagne'));
     // 5) réglages et explication
     once('btn', s.step < 5 ? BOUTON[s.step] : '', (v) => { bMain.textContent = v; bMain.style.display = v ? '' : 'none'; });
-    once('dis', (s.step === 1 || s.step === 3) && !s.stable, (v) => { bMain.disabled = v; });
-    once('etape', ETAPE[s.step], (v) => rStep.set(v));
+    majGuide(inPlace, Te);
     once('lvl', !inPlace ? 'on le déplace' : s.stable ? 'stable ✓' : s.T > Te ? 'il descend ▼' : 'il monte ▲', (v) => rLevel.set(v));
     if (free) once('temp', nb(s.T) + ' °C', (v) => { rTemp.set(v); LV.set('◀ ' + v); });
     ex.set(texte(inPlace));
@@ -364,5 +446,5 @@ export default function mount(root) {
     drawBoard();
   }
 
-  return { dispose() { gone = true; if (ctl) ctl.removeEventListener('start', onStart); st.dispose(); } };
+  return { dispose() { gone = true; if (ctl) ctl.removeEventListener('start', onStart); gd.dispose(); st.dispose(); } };
 }

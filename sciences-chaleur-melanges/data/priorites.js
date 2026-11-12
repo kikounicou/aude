@@ -41,7 +41,7 @@ export const PRIO = {
       ['Thermomètre = thermoscope gradué', 'Il permet de repérer la température, en degrés Celsius.'],
     ],
     prof: [
-      ['Annote le schéma d\'un thermomètre.', 'De haut en bas : le tube capillaire, le vide d\'air, une graduation, le réservoir de mercure ou d\'alcool coloré.', 'Schéma à légender'],
+      ['Annote le schéma d\'un thermomètre.', 'De haut en bas : le tube capillaire, le vide d\'air, une graduation, le réservoir de mercure ou d\'alcool coloré.', 'Schéma à légender', { schema: 'thermometre' }],
       ['Comment a-t-on gradué le thermomètre ?', 'Avec deux repères : le repère 0 correspond à la température de la glace fondante et le repère 100 à la température de l\'eau en ébullition, à la pression atmosphérique normale.', 'Explication'],
       ['Quelle différence entre un thermoscope et un thermomètre ?', 'Le thermomètre est un thermoscope gradué : il permet de repérer la température, alors que le thermoscope permet seulement de comparer.', 'Comparaison'],
     ],
@@ -72,7 +72,7 @@ export const PRIO = {
       ['Le cycle de l\'eau', 'Évaporation, condensation, solidification, fusion. L\'énergie vient du Soleil.'],
     ],
     prof: [
-      ['Complète le triangle : écris le nom de chaque changement d\'état.', 'Solide → liquide : fusion. Liquide → solide : solidification. Liquide → gaz : vaporisation. Gaz → liquide : condensation. Solide → gaz : sublimation. Gaz → solide : condensation.', 'Schéma à compléter'],
+      ['Complète le triangle : écris le nom de chaque changement d\'état.', 'Solide → liquide : fusion. Liquide → solide : solidification. Liquide → gaz : vaporisation. Gaz → liquide : condensation. Solide → gaz : sublimation. Gaz → solide : condensation.', 'Schéma à compléter', { schema: 'triangle' }],
       ['Du givre apparaît sur un bloc réfrigérant sorti du congélateur. Interprète et nomme le phénomène.', 'L\'eau contenue dans l\'air ambiant passe de l\'état gazeux à l\'état solide : c\'est une condensation.', 'Observation → phénomène'],
       ['Quelle est la différence entre l\'évaporation et l\'ébullition ?', 'Ce sont deux vaporisations (liquide → gazeux). L\'évaporation se fait à la surface libre du liquide ; l\'ébullition se fait au sein même du liquide.', 'Comparaison'],
       ['Modélise les 3 états de la matière.', 'Solide : molécules serrées et rangées. Liquide : molécules proches mais désordonnées. Gazeux : molécules très espacées, dans tout l\'espace.', 'Modélisation'],
@@ -102,10 +102,10 @@ export const PRIO = {
       ['Pendant le palier : 2 états en même temps', 'Liquide + gazeux à l\'ébullition ; liquide + solide à la solidification.'],
     ],
     prof: [
-      ['Sur ce graphique, quelle est la variable contrôlée ? la variable dépendante ? leurs unités ?', 'La variable contrôlée est le temps (axe horizontal, en minutes). La variable dépendante est la température (axe vertical, en degrés Celsius).', 'Lire un graphique'],
+      ['Sur ce graphique, quelle est la variable contrôlée ? la variable dépendante ? leurs unités ?', 'La variable contrôlée est le temps (axe horizontal, en minutes). La variable dépendante est la température (axe vertical, en degrés Celsius).', 'Lire un graphique', { graphe: 'pure' }],
       ['Décris la courbe de l\'ébullition de l\'eau pure.', 'D\'abord la température de l\'eau s\'élève ; ensuite elle reste constante : c\'est un palier. Pendant ce temps, l\'eau passe de l\'état liquide à l\'état gazeux : elle bout. Cette température est la température d\'ébullition.', 'Décrire une courbe'],
       ['Pourquoi la température ne monte-t-elle plus pendant le palier, alors qu\'on chauffe toujours ?', 'Parce que l\'énergie apportée est utilisée pour effectuer le changement d\'état : l\'eau passe de l\'état liquide à l\'état gazeux.', 'Explication'],
-      ['Voici deux graphiques : l\'un a un palier, l\'autre pas. Lequel est celui de l\'eau salée ?', 'Celui sans palier : l\'eau salée est un mélange, sa température continue de monter. L\'eau pure, un corps pur, présente un palier.', 'Comparer deux graphiques'],
+      ['Voici deux graphiques : l\'un a un palier, l\'autre pas. Lequel est celui de l\'eau salée ?', 'Celui sans palier : l\'eau salée est un mélange, sa température continue de monter. L\'eau pure, un corps pur, présente un palier.', 'Comparer deux graphiques', { graphe: 'deux' }],
       ['Quelles variables sont maintenues constantes lors de l\'étude de l\'ébullition ?', 'Le débit d\'énergie thermique et la masse d\'eau chauffée.', 'Restitution'],
     ],
   },
@@ -147,7 +147,7 @@ export const PRIO = {
       ['Le principe de la distillation', 'Chauffer, évaporer, condenser la vapeur en la refroidissant, récolter.'],
     ],
     prof: [
-      ['Légende le schéma de l\'appareil à distillation.', 'Le bouchon, le ballon à fond plat, le liquide, la plaque chauffante, le tube réfrigérant, la sortie d\'eau froide, l\'entrée d\'eau froide, le berlin, le distillat.', 'Schéma à légender'],
+      ['Légende le schéma de l\'appareil à distillation.', 'Le bouchon, le ballon à fond plat, le liquide, la plaque chauffante, le tube réfrigérant, la sortie d\'eau froide, l\'entrée d\'eau froide, le berlin, le distillat.', 'Schéma à légender', { schema: 'distillation' }],
       ['Explique le principe de la distillation.', 'Il faut chauffer le mélange jusqu\'à ce que le liquide dont la température d\'évaporation est la plus basse s\'évapore. Ensuite, il faut condenser cette vapeur en la refroidissant pour pouvoir récolter le liquide évaporé.', 'Explication'],
       ['Quelle méthode utilises-tu pour séparer : a) de l\'eau et de l\'huile ; b) du sable et des cailloux ; c) le sel de l\'eau salée ?', 'a) La décantation (deux liquides non miscibles). b) Le tamisage. c) L\'évaporation.', 'Choisir une méthode'],
       ['Comment « fabriquer » de l\'eau pure à partir d\'eau de mer ?', 'On chauffe l\'eau de mer pour évaporer l\'eau. La vapeur va dans le tube, qui la refroidit et la transforme en eau pure. C\'est une distillation.', 'Explication'],

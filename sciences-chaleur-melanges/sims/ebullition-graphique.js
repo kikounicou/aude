@@ -20,6 +20,75 @@ const SPEED = 0.85; // minutes du cours par seconde
 const tMaxOf = (k) => DATA[k].t[DATA[k].t.length - 1];
 const fmt = (v) => String(Math.round(v * 10) / 10).replace('.', ',').replace('-', '−');
 
+// Parcours guidé, dans l'ordre du cours. Une étape est faite quand sa courbe est tracée jusqu'au bout.
+const ETAPES = [
+  { k: 'pure', nom: 'Eau pure', obs: 'la température à partir de 10 minutes.', bravo: "Eau pure : un <mark>palier</mark>, la température reste constante pendant que l'eau bout." },
+  { k: 'salee', nom: 'Eau salée', obs: 'y a-t-il un palier ?', bravo: "Eau salée : pas de palier, la température <mark>continue de monter</mark>." },
+  { k: 'cmp', nom: 'Comparer', obs: 'les deux courbes, sur la même échelle.', bravo: "Un palier pour l'eau pure, pas pour l'eau salée : le premier est un <mark>corps pur</mark>, le deuxième un <mark>mélange</mark>." },
+  { k: 'grenadine', nom: 'Eau-grenadine', obs: "combien d'états pendant l'ébullition ? Un palier ?", bravo: "Eau-grenadine : 2 états (liquide et gazeux), mais pas de palier : c'est un <mark>mélange</mark>." },
+  { k: 'solid', nom: 'Solidification', obs: 'la courbe descend, puis un palier.', bravo: "Solidification : un <mark>palier</mark>, l'eau passe de l'état liquide à l'état solide." },
+];
+const FIN = '<p class="gd-q">Parcours réussi : 5/5 ✓</p><p>Quand la température n\'évolue plus, on parle de <mark>palier</mark>. Lors de l\'ébullition, on observe simultanément 2 états : liquide et gazeux. ' +
+  'Si en plus on observe un palier, on est en présence d\'un <mark>corps pur</mark> (l\'eau pure) ; sinon, d\'un <mark>mélange</mark> (l\'eau salée, l\'eau-grenadine).</p><p class="gd-l2">Tu peux maintenant tout manipuler librement.</p>';
+const CLE = 'sciences2e.ebullition-graphique';
+const lireMemo = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } };
+const ecrireMemo = (o) => { try { localStorage.setItem(CLE, JSON.stringify(Object.assign(lireMemo(), o))); } catch { /* navigation privée */ } };
+
+// ---------- Guide pas à pas : copie locale, IDENTIQUE dans cycle-eau.js, ebullition-graphique.js et propagation.js
+// (même allure que la mission d'etats-matiere ; à mettre en commun dans kit.js) ----------
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:9px 12px 10px;color:#fff;font:500 14.5px/1.35 var(--texte)}
+.gd p{margin:0}.gd b{color:var(--fluo);font-weight:700}.gd .gd-l2{color:#cfc8ff;font-size:13.5px;margin-top:3px}
+.gd-num{display:inline-block;background:var(--fluo);color:var(--encre);border-radius:6px;padding:0 6px;margin-right:6px;font-weight:800}
+.gd-ok{margin-top:6px;color:#8fe3bb;font-size:13.5px}.gd-ok.ko{color:#ffb4a3}.gd mark{color:var(--encre)}
+.gd-prog{display:flex;gap:4px;margin-top:8px}.gd-prog i{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.16)}
+.gd-prog i.ok{background:var(--fluo)}.gd-prog i.cur{background:rgba(255,228,92,.42)}
+.gd-aide{margin-top:6px;color:#a9a2d6;font-size:12.5px}
+.gd.gd-fin{background:var(--nuit);border-color:var(--fluo)}.gd .gd-q{font:700 16.5px/1.25 var(--titre);margin-bottom:6px}.gd.gd-fin p+p{margin-top:6px}
+.gd .sim-btns{margin-top:10px}
+.gd-n{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin-right:6px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;font:800 12px/1 var(--texte);vertical-align:1px}.gd-n[hidden]{display:none}
+.gd-appel .gd-n{background:var(--fluo);color:var(--encre)}.on>.gd-n,.primary>.gd-n{background:var(--encre);color:#fff}.gd-fait .gd-n{background:var(--ok);color:#fff}
+.gd-tard{opacity:.5}
+.gd-appel{outline:2px solid var(--fluo);outline-offset:2px;animation:gd-appel 1.3s ease-in-out infinite}@keyframes gd-appel{50%{box-shadow:0 0 0 7px rgba(255,228,92,.45)}}
+.sim-slider.gd-appel{border-radius:12px;padding:4px 8px;margin:-4px -8px}
+`;
+function injecterGuide(id) {
+  let s = document.getElementById(id);
+  if (!s) { s = document.createElement('style'); s.id = id; s.textContent = GD_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+// Carte du parcours, posée juste après `apres` : étape en cours (Fais / Observe), retour de la dernière action, progression ; puis la conclusion.
+function guide(parent, apres) {
+  const el = document.createElement('div'); el.className = 'gd'; el.setAttribute('aria-live', 'polite');
+  parent.insertBefore(el, apres ? apres.nextSibling : parent.firstChild);
+  let cle = '';
+  return {
+    el,
+    etape({ i, total, faits, fais, obs = '', ok = '', aide = '' }) {
+      const k = [i, total, [...faits], fais, obs, ok, aide].join('|'); if (k === cle) return; cle = k;
+      el.className = 'gd';
+      el.innerHTML = `<p><span class="gd-num">${i + 1}/${total}</span><b>Fais :</b> ${fais}</p>` + (obs ? `<p class="gd-l2"><b>Observe :</b> ${obs}</p>` : '') +
+        (ok ? `<p class="gd-ok${ok[0] === '✗' ? ' ko' : ''}">${ok}</p>` : '') + `<span class="gd-prog">${Array.from({ length: total }, (_, j) => `<i class="${faits.has(j) ? 'ok' : j === i ? 'cur' : ''}"></i>`).join('')}</span>` +
+        (aide ? `<p class="gd-aide">${aide}</p>` : '');
+    },
+    fin(html, refaire) {
+      if (cle === 'fin' + html) return; cle = 'fin' + html;
+      el.className = 'gd gd-fin'; el.innerHTML = html + '<div class="sim-btns"><button type="button" class="sim-btn">↺ Refaire le parcours</button></div>';
+      el.querySelector('button').addEventListener('click', refaire);
+    },
+  };
+}
+// Numéro d'étape posé sur une commande. États : 'fait' (✓), 'appel' (prochaine action : clignote), 'tard' (pâle, étape à venir,
+// mais toujours utilisable), '' (neutre), 'off' (parcours terminé : plus de numéro).
+function marquer(elt, n) { const s = document.createElement('span'); s.className = 'gd-n'; s.textContent = n; s.setAttribute('aria-hidden', 'true'); (elt.querySelector('.sim-slider-top > span') || elt).prepend(s); return { el: elt, n: String(n), s }; }
+function etatMarque(m, etat, pourquoi = '') {
+  m.el.classList.toggle('gd-fait', etat === 'fait'); m.el.classList.toggle('gd-appel', etat === 'appel'); m.el.classList.toggle('gd-tard', etat === 'tard');
+  m.s.hidden = etat === 'off'; const tx = etat === 'fait' ? '✓' : m.n; if (m.s.textContent !== tx) m.s.textContent = tx;
+  if (etat === 'tard') m.el.title = pourquoi; else m.el.removeAttribute('title');
+}
+const AIDE = 'Boutons pâles : étapes à venir (tu peux déjà les essayer).';
+
 // Interpolation linéaire entre les points du tableau
 function theta(k, t) {
   const T = DATA[k].t, H = DATA[k].th;
@@ -256,9 +325,10 @@ export default function mount(root) {
   }
   const keys = () => (cmp ? ['pure', 'salee'] : [key]);
 
-  // réglages
+  // réglages (la carte du parcours vient juste sous le titre)
+  const retirerGuide = injecterGuide('gd-style-eb');
   const ui = panel(panelEl);
-  ui.title('Le graphique de l\'ébullition : palier ou pas ?');
+  const gd = guide(panelEl, ui.title('Le graphique de l\'ébullition : palier ou pas ?'));
   const choice = ui.choice({
     label: 'Le liquide', value: 'pure',
     options: [{ value: 'pure', label: 'Eau pure' }, { value: 'salee', label: 'Eau salée' }, { value: 'grenadine', label: 'Eau-grenadine' }, { value: 'solid', label: 'Solidification' }],
@@ -280,6 +350,35 @@ export default function mount(root) {
   vocab.innerHTML = '<summary style="cursor:pointer;min-height:28px"><b>Les variables du graphique</b></summary><b>Variable contrôlée</b> : le temps (axe horizontal, en minutes).<br><b>Variable dépendante</b> : la température (axe vertical, en °C).<br><b>Variables maintenues constantes</b> : le débit d\'énergie thermique et la masse d\'eau chauffée.';
   panelEl.appendChild(vocab);
   let graph = null, graphCfg = '';
+  // le graphique remonte juste sous les boutons : il reste à l'écran pendant qu'il se trace
+  bPlay.parentElement.after(gTitle, gWrap, legend);
+
+  // parcours guidé : un numéro par étape sur sa commande (les 4 liquides et « Comparer »)
+  const opt = {}; choice.el.querySelectorAll('button').forEach((b) => { opt[b.dataset.v] = b; });
+  const M = ETAPES.map((e, j) => marquer(e.k === 'cmp' ? bCmp : opt[e.k], j + 1));
+  let guideOn = !lireMemo().fini, dernier = '';
+  const faits = new Set();
+  function majGuide() {
+    const finCourbe = t >= tMax - 1e-6, cle = cmp ? 'cmp' : key;
+    if (guideOn && finCourbe) {          // la courbe est tracée jusqu'au bout : l'étape de ce liquide est faite
+      const j = ETAPES.findIndex((e) => e.k === cle);
+      if (j >= 0 && !faits.has(j)) { faits.add(j); dernier = '✓ ' + ETAPES[j].bravo; }
+      if (faits.size === ETAPES.length) { guideOn = false; ecrireMemo({ fini: true }); }
+    }
+    const i = guideOn ? ETAPES.findIndex((_, j) => !faits.has(j)) : -1, e = ETAPES[i];
+    const pret = i >= 0 && e.k === cle;                 // le bon liquide est choisi : il reste à chauffer
+    ETAPES.forEach((x, j) => etatMarque(M[j], i < 0 ? 'off' : faits.has(j) ? 'fait' : j === i ? (pret ? '' : 'appel') : x.k === cle ? '' : 'tard',
+      `Étape ${j + 1} : après « ${j ? ETAPES[j - 1].nom : ''} »`));
+    // une seule action principale : Chauffer seulement quand c'est la prochaine chose à faire
+    bPlay.classList.toggle('primary', i < 0 || (pret && !playing)); bPlay.classList.toggle('gd-appel', pret && !playing);
+    if (i < 0) { gd.fin(FIN, refaireParcours); return; }
+    // consignes courtes (une ligne) : la carte ne change pas de hauteur au moment du clic, les boutons ne bougent pas sous le doigt
+    const verbe = e.k === 'solid' ? 'Refroidir' : 'Chauffer';
+    const fais = !pret ? (e.k === 'cmp' ? 'Appuie sur « ⇄ Comparer ».' : `Choisis « ${e.nom} ».`)
+      : playing ? 'Regarde la courbe se tracer.' : t > 0 ? `▶ ${verbe} pour continuer.` : `Appuie sur ▶ ${verbe}.`;
+    gd.etape({ i, total: ETAPES.length, faits, fais, obs: e.obs, ok: dernier, aide: i < ETAPES.length - 1 ? AIDE : '' });
+  }
+  function refaireParcours() { faits.clear(); dernier = ''; guideOn = true; ecrireMemo({ fini: false }); setMode('pure', false); }
 
   function makeGraph() {
     const solid = !cmp && key === 'solid';
@@ -366,6 +465,7 @@ export default function mount(root) {
     L.bulles.show(!cmp && boil0); L.gaz.show(!cmp && boil0);
     L.glace.show(!cmp && key === 'solid' && ph0 !== 'refroidit'); L.froid.show(!cmp && key === 'solid' && (t > 0 || playing));
     bPlay.textContent = playing ? '❚❚ Pause' : key === 'solid' && !cmp ? '▶ Refroidir' : '▶ Chauffer';
+    majGuide();
   }
 
   const step = st.onFrame((dt, time) => {
@@ -410,7 +510,7 @@ export default function mount(root) {
       st.renderer.domElement.removeEventListener('pointerdown', stopCam);
       st.renderer.domElement.removeEventListener('wheel', stopCam);
       if (graph) graph.dispose();
-      st.dispose();
+      st.dispose(); retirerGuide();
     },
   };
 }

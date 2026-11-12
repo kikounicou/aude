@@ -104,6 +104,7 @@ const ETAPES = [
     ok: "Oui ! Dans ton cours, la <mark>condensation</mark> sert deux fois : gaz → liquide ET gaz → solide." },
 ];
 const TOUTES = new Set(ETAPES.map((e) => e.fl)), AUCUNE = new Set();
+const SENS = { fusion: 1, solidification: -1, vaporisation: 1, condL: -1 };   // bouton à mettre en avant : 1 Chauffer, −1 Refroidir
 const CLE = 'sciences2e.etats-matiere';
 const lire = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } };
 const ecrire = (o) => { try { localStorage.setItem(CLE, JSON.stringify(Object.assign(lire(), o))); } catch { /* navigation privée */ } };
@@ -132,6 +133,8 @@ const CSS = `
 .em-z.froid{border-color:var(--froid);background:rgba(28,44,96,.9)}.em-z.chaud{border-color:var(--chaud);background:rgba(96,32,26,.9)}
 .em-z.froid.on{background:var(--froid)}.em-z.chaud.on{background:var(--chaud)}
 .em-z.appel{animation:em-appel 1.3s ease-in-out infinite}@keyframes em-appel{50%{box-shadow:0 0 0 8px rgba(255,90,54,.4)}}
+.em-z.froid.appel{animation-name:em-appel-f}@keyframes em-appel-f{50%{box-shadow:0 0 0 8px rgba(61,139,255,.5)}}
+.sim-labels .sim-label.cliquable.em-attend{animation:em-appel-l 1.3s ease-in-out infinite}@keyframes em-appel-l{50%{box-shadow:0 0 0 7px rgba(255,228,92,.55)}}
 .sim-labels .sim-label.em-indice{background:var(--fluo);color:var(--encre);border-color:var(--fluo);margin-top:-20px;font-weight:700;animation:em-doux 1.6s ease-in-out infinite}
 @keyframes em-doux{50%{opacity:.55}}
 .em-vise{font-weight:600;opacity:.75}
@@ -810,10 +813,15 @@ export default function mount(root) {
     const tx2 = attend ? '❄ bloc réfrigérant · <b>touche-le</b>' : 'bloc réfrigérant'; if (tx2 !== txtBloc) { txtBloc = tx2; lblBloc.set(tx2); }
     if (attend) pBloc.set(0, -0.16, 0.3); else pBloc.set(-0.5, 0.36, 0.3);
     lblTige.show(tige.visible && tigeMat.opacity > 0.5 && !!scen && !scen.fin); lblBloc.show(bloc.visible && blocMat.opacity > 0.2);
+    lblTige.el.classList.toggle('em-attend', !!attend && scen.type === 'subli'); lblBloc.el.classList.toggle('em-attend', !!attend && scen.type === 'givre');
     lblGivre.show(!!(scen && scen.type === 'givre' && scen.n > 12));
     // zones de la plaque et indice
     if (indice === 2 && tps - tIndice > 7) indice = 0;
     lblZones.show(zonesOn); lblIndice.show(zonesOn && indice > 0);
+    // le bon bouton clignote tant que l'élève n'agit pas dans le sens demandé par l'étape (une seule action mise en avant)
+    const sens = mission && mis.phase === 'faire' && !scen ? SENS[ETAPES[mis.i].fl] || 0 : 0, agit = sens && (auto === sens || rate * sens > 0.3 || !!geste);
+    zoneC.classList.toggle('appel', zonesOn && (sens ? sens === 1 && !agit : indice === 1));
+    zoneF.classList.toggle('appel', zonesOn && sens === -1 && !agit);
     // panneau
     const te = scen ? (scen.type === 'subli' ? '−18&nbsp;°C (glaçon)' : 'air 20&nbsp;°C · bloc très froid') : fmt(Taff) + '&nbsp;°C';
     const etat = [pres.S && 'solide', pres.L && 'liquide', pres.G && 'gazeux'].filter(Boolean).join(' + ');

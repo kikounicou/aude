@@ -125,3 +125,54 @@ footer.pied a { font-weight: 600; text-underline-offset: 3px; }
 .w-famille summary { cursor: pointer; font-weight: 600; font-size: 14.5px; color: var(--encre2); }
 .w-famille p { color: var(--encre2); font-size: 14.5px; margin: 8px 0 10px; }
 .w-famille video { width: 100%; aspect-ratio: 16/9; border-radius: 14px; background: var(--nuit); display: block; }
+
+/* ---------- accueil : mode d'emploi, liste unique des chapitres ---------- */
+.chemin-liste { list-style: none; margin: 0 0 6px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.chemin-liste li { background: var(--carte); border: 1px solid var(--trait); border-radius: var(--r); padding: 14px 16px; position: relative; }
+.chemin-liste li:not(:last-child)::after { content: "→"; position: absolute; right: -11px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--encre2); z-index: 1; }
+.chemin-liste i { font: 800 15px/28px var(--titre); font-style: normal; width: 28px; height: 28px; border-radius: 50%; background: var(--chaud); color: #fff; display: inline-block; text-align: center; margin-bottom: 8px; }
+.chemin-liste b { display: block; font: 700 19px/1.2 var(--titre); }
+.chemin-liste span { color: var(--encre2); font-size: 14.5px; line-height: 1.35; display: block; margin-top: 2px; }
+.tri { display: inline-flex; gap: 4px; background: var(--papier2); border-radius: 99px; padding: 4px; margin-bottom: 14px; max-width: 100%; }
+.tri button { border: 0; background: transparent; border-radius: 99px; padding: 9px 16px; font-weight: 700; font-size: 15px; color: var(--encre2); min-height: 44px; }
+.tri button.on { background: var(--encre); color: var(--papier); }
+.theme-nom { font: 800 clamp(22px, 3vw, 30px)/1.15 var(--titre); margin: 22px 0 12px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.theme-nom span { font: 700 12px/1 var(--texte); letter-spacing: .12em; text-transform: uppercase; background: var(--accent); color: #fff; padding: 6px 9px; border-radius: 6px; }
+.theme-nom small { font: 600 14px/1 var(--texte); color: var(--encre2); letter-spacing: 0; }
+.carte-haut { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.pastille.cours { background: #fff1c2; color: #7a5200; }
+.carte-contenu { font-size: 13px; font-weight: 600; color: var(--encre2); border-top: 1px dashed var(--trait); padding-top: 8px; }
+
+/* ---------- page chapitre : fil d'Ariane, position, onglets en étapes ---------- */
+.chap-tete nav.fil { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; color: var(--encre2); font-weight: 600; }
+.chap-tete nav.fil a { color: inherit; text-decoration: none; padding: 4px 0; }
+.chap-tete nav.fil a:hover { color: var(--encre); text-decoration: underline; }
+.chap-tete nav.fil b { color: var(--encre); }
+.fil-points { display: flex; gap: 5px; margin: 10px 0 2px; }
+.fil-points a { width: 26px; height: 8px; border-radius: 99px; background: var(--trait); display: block; }
+.fil-points a.ok { background: var(--ok); }
+.fil-points a.ici { background: var(--accent); width: 44px; }
+.fil-points a[data-theme="6"].ici { background: var(--menthe); }
+.fil-points a:hover { outline: 2px solid var(--encre); outline-offset: 1px; }
+.onglets button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; }
+.onglets button i { font: 800 12px/20px var(--texte); font-style: normal; width: 20px; height: 20px; border-radius: 50%; background: var(--papier2); color: var(--encre2); text-align: center; flex: none; }
+.onglets button.on i { background: rgba(255,255,255,.28); color: #fff; }
+.onglets button.fait:not(.on) i { background: var(--ok-bg); color: var(--ok); }
+body.quiz-en-cours .nav-chap { display: none; }
+@media (max-width: 860px) {
+  .chemin-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chemin-liste li:nth-child(2)::after { display: none; }
+  .tri { display: flex; }
+  .tri button { flex: 1; padding: 8px 10px; font-size: 14px; }
+  .fil-points a { width: 16px; } .fil-points a.ici { width: 28px; }
+}
+
+/* visuels des questions de contrôle */
+.w-prof-vis { margin: 4px 0 10px; }
+.w-prof-vis .schema { max-width: 520px; margin: 0; }
+.w-prof-vis svg { width: 100%; height: auto; display: block; }
+.w-prof-vis.un-g { max-width: 360px; }
+.w-prof-vis.deux-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 640px; }
+.w-prof-vis.un-g svg, .w-prof-vis.deux-g svg { border: 1px solid var(--trait); border-radius: 10px; }
+.w-prof-r .legende-liste { margin-bottom: 10px; }
+@media (max-width: 520px) { .w-prof-vis.deux-g { grid-template-columns: minmax(0, 1fr); } }

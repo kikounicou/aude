@@ -54,6 +54,73 @@ const EXP = {
   test: "Mode « Me tester » : touche un <b>?</b> et choisis le changement d'état qui se produit à cet endroit. Il y a 5 points à trouver.",
 };
 const RESERVOIRS = [['mers et océans', 'liquide'], ['glaciers et calottes glaciaires', 'solide'], ['eaux souterraines', 'liquide'], ['lacs et rivières', 'liquide'], ['atmosphère', 'gazeux']];
+// Parcours guidé : 1 découvrir les 5 étiquettes → 2 couper puis rallumer le soleil → 3 se tester. Retour court après chaque étiquette :
+const VU = {     // [article, nom, passage, où on le voit]
+  solid: ['la ', 'solidification', 'liquide → solide', 'neige, grêle'], fusion: ['la ', 'fusion', 'solide → liquide', 'le glacier fond'],
+  evapRiv: ["l'", 'évaporation', 'liquide → gaz', 'rivière, lac, végétaux'], evapMer: ["l'", 'évaporation', 'liquide → gaz', 'la mer'],
+  cond: ['la ', 'condensation', 'gaz → liquide', 'les nuages'],
+};
+const vuCourt = (id) => { const [, n, p] = VU[id]; return n[0].toUpperCase() + n.slice(1) + ' (' + p + ')'; };
+const NOMS_ETAPES = ['Découvrir', 'Soleil', 'Me tester'];
+
+const CLE = 'sciences2e.cycle-eau';
+const lireMemo = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch { return {}; } };
+const ecrireMemo = (o) => { try { localStorage.setItem(CLE, JSON.stringify(Object.assign(lireMemo(), o))); } catch { /* navigation privée */ } };
+
+// ---------- Guide pas à pas : copie locale, IDENTIQUE dans cycle-eau.js, ebullition-graphique.js et propagation.js
+// (même allure que la mission d'etats-matiere ; à mettre en commun dans kit.js) ----------
+const GD_CSS = `
+.gd{background:rgba(20,18,38,.6);border:1.5px solid rgba(255,228,92,.55);border-radius:14px;padding:9px 12px 10px;color:#fff;font:500 14.5px/1.35 var(--texte)}
+.gd p{margin:0}.gd b{color:var(--fluo);font-weight:700}.gd .gd-l2{color:#cfc8ff;font-size:13.5px;margin-top:3px}
+.gd-num{display:inline-block;background:var(--fluo);color:var(--encre);border-radius:6px;padding:0 6px;margin-right:6px;font-weight:800}
+.gd-ok{margin-top:6px;color:#8fe3bb;font-size:13.5px}.gd-ok.ko{color:#ffb4a3}.gd mark{color:var(--encre)}
+.gd-prog{display:flex;gap:4px;margin-top:8px}.gd-prog i{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.16)}
+.gd-prog i.ok{background:var(--fluo)}.gd-prog i.cur{background:rgba(255,228,92,.42)}
+.gd-aide{margin-top:6px;color:#a9a2d6;font-size:12.5px}
+.gd.gd-fin{background:var(--nuit);border-color:var(--fluo)}.gd .gd-q{font:700 16.5px/1.25 var(--titre);margin-bottom:6px}.gd.gd-fin p+p{margin-top:6px}
+.gd .sim-btns{margin-top:10px}
+.gd-n{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;margin-right:6px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;font:800 12px/1 var(--texte);vertical-align:1px}.gd-n[hidden]{display:none}
+.gd-appel .gd-n{background:var(--fluo);color:var(--encre)}.on>.gd-n,.primary>.gd-n{background:var(--encre);color:#fff}.gd-fait .gd-n{background:var(--ok);color:#fff}
+.gd-tard{opacity:.5}
+.gd-appel{outline:2px solid var(--fluo);outline-offset:2px;animation:gd-appel 1.3s ease-in-out infinite}@keyframes gd-appel{50%{box-shadow:0 0 0 7px rgba(255,228,92,.45)}}
+.sim-slider.gd-appel{border-radius:12px;padding:4px 8px;margin:-4px -8px}
+`;
+function injecterGuide(id) {
+  let s = document.getElementById(id);
+  if (!s) { s = document.createElement('style'); s.id = id; s.textContent = GD_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+// Carte du parcours, posée juste après `apres` : étape en cours (Fais / Observe), retour de la dernière action, progression ; puis la conclusion.
+function guide(parent, apres) {
+  const el = document.createElement('div'); el.className = 'gd'; el.setAttribute('aria-live', 'polite');
+  parent.insertBefore(el, apres ? apres.nextSibling : parent.firstChild);
+  let cle = '';
+  return {
+    el,
+    etape({ i, total, faits, fais, obs = '', ok = '', aide = '' }) {
+      const k = [i, total, [...faits], fais, obs, ok, aide].join('|'); if (k === cle) return; cle = k;
+      el.className = 'gd';
+      el.innerHTML = `<p><span class="gd-num">${i + 1}/${total}</span><b>Fais :</b> ${fais}</p>` + (obs ? `<p class="gd-l2"><b>Observe :</b> ${obs}</p>` : '') +
+        (ok ? `<p class="gd-ok${ok[0] === '✗' ? ' ko' : ''}">${ok}</p>` : '') + `<span class="gd-prog">${Array.from({ length: total }, (_, j) => `<i class="${faits.has(j) ? 'ok' : j === i ? 'cur' : ''}"></i>`).join('')}</span>` +
+        (aide ? `<p class="gd-aide">${aide}</p>` : '');
+    },
+    fin(html, refaire) {
+      if (cle === 'fin' + html) return; cle = 'fin' + html;
+      el.className = 'gd gd-fin'; el.innerHTML = html + '<div class="sim-btns"><button type="button" class="sim-btn">↺ Refaire le parcours</button></div>';
+      el.querySelector('button').addEventListener('click', refaire);
+    },
+  };
+}
+// Numéro d'étape posé sur une commande. États : 'fait' (✓), 'appel' (prochaine action : clignote), 'tard' (pâle, étape à venir,
+// mais toujours utilisable), '' (neutre), 'off' (parcours terminé : plus de numéro).
+function marquer(elt, n) { const s = document.createElement('span'); s.className = 'gd-n'; s.textContent = n; s.setAttribute('aria-hidden', 'true'); (elt.querySelector('.sim-slider-top > span') || elt).prepend(s); return { el: elt, n: String(n), s }; }
+function etatMarque(m, etat, pourquoi = '') {
+  m.el.classList.toggle('gd-fait', etat === 'fait'); m.el.classList.toggle('gd-appel', etat === 'appel'); m.el.classList.toggle('gd-tard', etat === 'tard');
+  m.s.hidden = etat === 'off'; const tx = etat === 'fait' ? '✓' : m.n; if (m.s.textContent !== tx) m.s.textContent = tx;
+  if (etat === 'tard') m.el.title = pourquoi; else m.el.removeAttribute('title');
+}
+const AIDE = 'Boutons pâles : étapes à venir (tu peux déjà les essayer).';
 
 export default function mount(root) {
   const { stageEl, panelEl, explainEl } = layout(root);
@@ -233,6 +300,8 @@ export default function mount(root) {
 
   // ---------- étiquettes : 5 points du schéma du cours, réservoirs, soleil ----------
   let mode = 'decouvrir', rep = {}, ouvert = null, sel = null, selT = 0;
+  let guideOn = !lireMemo().fini, dernier = '', soleilVu = false, scoreTest = -1;      // parcours guidé
+  const faits = new Set(), vus = new Set();
   for (const pt of POINTS) {
     pt.lbl = st.label('', new THREE.Vector3(...pt.p), { onClick: () => clic(pt) });
     pt.lbl.el.classList.add('ce-pt');
@@ -249,17 +318,56 @@ export default function mount(root) {
     st.label('atmosphère (gazeux)', new THREE.Vector3(1.4, 5.3, -1.6), { cls: 'discret' }),
   ];
 
-  // ---------- réglages ----------
+  // ---------- réglages (la carte du parcours vient juste sous le titre) ----------
+  const retirerGuide = injecterGuide('gd-style-ce');
   const ui = panel(panelEl);
-  ui.title("Le cycle de l'eau");
+  const gd = guide(panelEl, ui.title("Le cycle de l'eau"));
   const choixMode = ui.choice({ label: 'Mode', options: [{ value: 'decouvrir', label: 'Découvrir' }, { value: 'tester', label: 'Me tester' }], value: 'decouvrir', onChange: (v) => setMode(v) });
-  const slS = ui.slider({ label: "Soleil (apport d'énergie)", min: 0, max: 100, step: 1, value: 70, unit: '%', onInput: (v) => { soleil = v / 100; sel = null; ex.set(v === 0 ? EXP.sansSoleil : EXP.soleil); } });
+  const slS = ui.slider({ label: "Soleil (apport d'énergie)", min: 0, max: 100, step: 1, value: 70, unit: '%', onInput: (v) => {
+    soleil = v / 100; sel = null; ex.set(v === 0 ? EXP.sansSoleil : EXP.soleil);
+    if (v === 0 && !soleilVu) { soleilVu = true; dernier = "✓ Sans soleil, plus d'apport d'énergie : le cycle s'arrête."; }
+    else if (soleilVu && v >= 30 && guideOn && !faits.has(1)) dernier = "✓ Le cycle repart : l'énergie vient du <mark>SOLEIL</mark>.";
+  } });
+  slS.input.addEventListener('change', () => majGuide());     // la carte se met à jour quand on lâche le curseur (rien ne bouge pendant le geste)
   const roScore = ui.readout('Score');
   const [bRe] = ui.buttons([{ label: 'Recommencer le test', onClick: () => setMode('tester') }]);
   const tab = document.createElement('table'); tab.className = 'sim-table';
   tab.innerHTML = '<tr><th style="text-align:left">Les cinq grands réservoirs</th><th>état de l\'eau</th></tr>' + RESERVOIRS.map(([r, e]) => `<tr><td style="text-align:left">${r}</td><td>${e}</td></tr>`).join('');
   panelEl.appendChild(tab);
   ui.note("Au cours de ce cycle, l'eau subit plusieurs changements d'état : l'évaporation (océans, végétaux…), la condensation (nuages…), la solidification (neige, grêle…), la fusion (glaciers…).");
+
+  // ---------- parcours guidé : un numéro par étape sur sa commande ----------
+  const opt = {}; choixMode.el.querySelectorAll('button').forEach((b) => { opt[b.dataset.v] = b; });
+  const M = [marquer(opt.decouvrir, 1), marquer(slS.el, 2), marquer(opt.tester, 3)];
+  const finHtml = () => '<p class="gd-q">Parcours réussi : 3/3 ✓</p><p>L\'eau circule entre <mark>cinq grands réservoirs</mark> en effectuant un <mark>cycle</mark>. ' +
+    'Au cours de ce cycle, l\'eau subit plusieurs changements d\'état : l\'<mark>évaporation</mark>, la <mark>condensation</mark>, la <mark>solidification</mark>, la <mark>fusion</mark>.</p>' +
+    '<p>L\'apport d\'énergie dans le cycle de l\'eau provient du <mark>SOLEIL</mark>.</p>' +
+    (scoreTest >= 0 ? `<p class="gd-l2">Ton test : ${scoreTest}/5${scoreTest < 5 ? '. Appuie sur « Recommencer le test » pour faire mieux.' : '. Parfait !'}</p>` : '<p class="gd-l2">Tu peux maintenant tout manipuler librement.</p>');
+  function majGuide() {
+    const nRep = Object.keys(rep).length;
+    if (guideOn) {
+      if (vus.size === POINTS.length) faits.add(0);
+      if (soleilVu && soleil >= 0.3) faits.add(1);
+      if (scoreTest >= 0) faits.add(2);
+      if (faits.size === 3) { guideOn = false; ecrireMemo({ fini: true }); }
+    }
+    const i = guideOn ? [0, 1, 2].findIndex((j) => !faits.has(j)) : -1;
+    const choisi = [mode === 'decouvrir', false, mode === 'tester'];      // la commande de l'étape est déjà dans le bon état
+    M.forEach((m, j) => etatMarque(m, i < 0 ? 'off' : faits.has(j) ? 'fait' : j === i ? (choisi[j] ? '' : 'appel') : choisi[j] ? '' : 'tard',
+      `Étape ${j + 1} : après « ${NOMS_ETAPES[j - 1] || ''} »`));
+    // dans le paysage, les étiquettes qui restent à toucher clignotent
+    for (const pt of POINTS) pt.lbl.el.classList.toggle('gd-appel', (i === 0 && mode === 'decouvrir' && !vus.has(pt.id)) || (i === 2 && mode === 'tester' && !(pt.id in rep)));
+    if (i < 0) { gd.fin(finHtml(), refaireParcours); return; }
+    let fais, obs;
+    if (i === 0) { fais = mode === 'decouvrir' ? 'Touche les 5 étiquettes jaunes du paysage.' : 'Repasse sur « Découvrir ».'; obs = `le changement d'état à chaque endroit (${vus.size}/5).`; }
+    else if (i === 1) { fais = soleilVu ? 'Regarde, puis remets du soleil.' : 'Glisse « Soleil » jusqu\'à 0 %.'; obs = 'les nuages, la rivière, le glacier.'; }
+    else { fais = mode === 'tester' ? 'Touche un « ? » et choisis la réponse.' : 'Touche « Me tester ».'; obs = mode === 'tester' ? `${nRep}/5 réponses · score : ${score()}/5.` : '5 endroits à trouver.'; }
+    gd.etape({ i, total: 3, faits, fais, obs, ok: dernier, aide: i < 2 ? AIDE : '' });
+  }
+  function refaireParcours() {
+    faits.clear(); vus.clear(); soleilVu = false; scoreTest = -1; dernier = ''; guideOn = true; ecrireMemo({ fini: false });
+    slS.set(70); soleil = 0.7; choixMode.set('decouvrir'); setMode('decouvrir');
+  }
 
   // Fenêtre de question (mode « Me tester »), posée sur la scène, du côté opposé au point touché
   const quiz = document.createElement('div');
@@ -273,7 +381,7 @@ export default function mount(root) {
 
   function majLabel(pt) {
     const e = pt.lbl.el; e.classList.remove('juste', 'faux', 'fluo');
-    if (mode === 'decouvrir') { pt.lbl.set(NOMS2[pt.rep]); e.classList.add('fluo'); e.style.fontSize = ''; e.style.padding = ''; }
+    if (mode === 'decouvrir') { pt.lbl.set(NOMS2[pt.rep] + (vus.has(pt.id) ? ' ✓' : '')); e.classList.add('fluo'); e.style.fontSize = ''; e.style.padding = ''; }
     else if (pt.id in rep) { pt.lbl.set(NOMS2[pt.rep]); e.classList.add(rep[pt.id] ? 'juste' : 'faux'); e.style.fontSize = ''; e.style.padding = ''; }
     else { pt.lbl.set('?'); e.style.fontSize = '18px'; e.style.padding = '6px 13px'; }
     e.style.borderColor = mode === 'tester' && !(pt.id in rep) ? '#ffe45c' : ''; e.style.borderWidth = mode === 'tester' && !(pt.id in rep) ? '2px' : '';
@@ -284,10 +392,15 @@ export default function mount(root) {
     POINTS.forEach(majLabel);
     roScore.el.style.display = bRe.parentElement.style.display = m === 'tester' ? '' : 'none';
     roScore.set('0 / 5'); ex.set(m === 'tester' ? EXP.test : EXP.intro);
+    majGuide();
   }
   function fermer() { quiz.style.display = 'none'; if (ouvert) ouvert.lbl.el.style.outline = ''; ouvert = null; }
   function clic(pt) {
-    if (mode === 'decouvrir' || pt.id in rep) { sel = pt.id; selT = 6; ex.set(EXP[pt.id]); return; }
+    if (mode === 'decouvrir' || pt.id in rep) {
+      sel = pt.id; selT = 6; ex.set(EXP[pt.id]);
+      if (mode === 'decouvrir' && guideOn && !faits.has(0)) { vus.add(pt.id); majLabel(pt); dernier = `✓ ${vuCourt(pt.id)} : ${VU[pt.id][3]}. ${vus.size}/5`; majGuide(); }
+      return;
+    }
     fermer(); ouvert = pt; pt.lbl.el.style.outline = '3px solid #ffe45c'; quiz.style.display = '';
     const r = pt.lbl.el.getBoundingClientRect(), rs = stageEl.getBoundingClientRect(), enBas = r.top + r.height / 2 - rs.top > rs.height * 0.5;
     quiz.style.top = enBas ? '8px' : ''; quiz.style.bottom = enBas ? '' : '8px';
@@ -296,8 +409,11 @@ export default function mount(root) {
     const pt = ouvert; if (!pt) return; fermer();
     const ok = v === pt.rep; rep[pt.id] = ok; majLabel(pt); roScore.set(score() + ' / 5');
     let html = (ok ? '<b>Juste !</b> ' : `<b>Pas tout à fait.</b> Ici, c'est ${BONNE[pt.rep]}. `) + EXP[pt.id];
-    if (Object.keys(rep).length === POINTS.length) html += `<br><b>Résultat : ${score()} / 5.</b> ${score() === 5 ? 'Parfait !' : 'Appuie sur « Recommencer le test » pour faire mieux.'}`;
+    if (Object.keys(rep).length === POINTS.length) { html += `<br><b>Résultat : ${score()} / 5.</b> ${score() === 5 ? 'Parfait !' : 'Appuie sur « Recommencer le test » pour faire mieux.'}`; scoreTest = score(); }
     ex.set(html);
+    const [art, nom, pas] = VU[pt.id];    // retour court, visible juste sous la scène même sur téléphone
+    dernier = ok ? `✓ Juste ! ${vuCourt(pt.id)}.` : `✗ Pas tout à fait : ici, c'est ${art}${nom} (${pas}).`;
+    majGuide();
   }
   if (q.get('mode') === 'tester') choixMode.set('tester');
   setMode(choixMode.value);
@@ -357,5 +473,5 @@ export default function mount(root) {
   st.onFrame(image);
   for (let k = 0; k < (+q.get('ff') || 0) * 30; k++) maj(1 / 30);   // essai : avance rapide
 
-  return { dispose() { st.dispose(); quiz.remove(); css.remove(); } };
+  return { dispose() { st.dispose(); quiz.remove(); css.remove(); retirerGuide(); } };
 }

@@ -1,6 +1,82 @@
 // distillation.js — « L'appareil à distillation » (thème 6, méthode 5 ; schéma « à bien connaître »).
 // Le ballon chauffe, la vapeur monte, se condense dans le tube réfrigérant si l'eau froide circule, et tombe dans le berlin.
+// Guidé en 5 étapes : le mélange → ouvrir l'eau froide → chauffer → récolter puis arrêter de chauffer → conclure.
 import { THREE, C, layout, createStage, panel, explain, glassMaterial, liquidMaterial, beaker, ground, molecules, tempColor, clamp, lerp, rand } from './kit.js';
+
+// ---------- Guidage par étapes : composant local, IDENTIQUE dans melanges, separations, distillation et dissolution
+// (candidat pour kit.js). Chaque étape est un bloc numéroté qui porte ses commandes : l'étape en cours est surlignée et sa
+// commande principale clignote doucement, les étapes faites sont cochées (et restent manipulables), les suivantes sont
+// grisées ; si on touche une commande grisée, elle dit pourquoi et l'étape en cours s'allume. ----------
+const GX_CSS = `
+.gx-etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.gx-e{border:1.5px solid rgba(255,255,255,.13);border-radius:14px;padding:9px 10px 10px;display:flex;flex-direction:column;gap:9px;transition:border-color .25s,background-color .25s}
+.gx-t{display:flex;align-items:center;gap:9px;font:600 14.5px/1.25 var(--texte);color:#cfc8ff}
+.gx-n{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);font:800 13px/1 var(--texte);color:#fff}
+.gx-c{display:flex;flex-direction:column;gap:10px}.gx-c:empty{display:none}
+.gx-info{margin:0;font-size:14px;line-height:1.4;color:#f4f1ff}.gx-info:empty{display:none}.gx-info mark{color:var(--encre)}
+.gx-pq{margin:0;font-size:13px;line-height:1.35;color:#b9b1e6;display:none}
+.gx-e.cur{border-color:var(--fluo);background:rgba(255,228,92,.07)}
+.gx-e.cur .gx-n{background:var(--fluo);border-color:var(--fluo);color:var(--encre)}
+.gx-e.cur .gx-t{color:#fff;font-weight:700}
+.gx-e.fait .gx-n{border-color:var(--fluo);color:var(--fluo)}
+.gx-e.verrou .gx-t{color:#8f88bf}.gx-e.verrou .gx-n{border-style:dashed;border-color:#6f6a9a;color:#8f88bf}
+.gx-e.verrou .gx-c{opacity:.42;filter:saturate(.3)}
+.gx-e.verrou:not(.suite):not(.dit) .gx-c,.gx-e.fait .gx-c:not(:has(button:enabled,input:enabled)){display:none}
+.gx-e.verrou.suite .gx-pq,.gx-e.verrou.dit .gx-pq{display:block}.gx-e.dit .gx-pq{color:#fff;font-weight:700}
+.gx-e.appel{animation:gx-appel .9s ease-out}@keyframes gx-appel{25%{box-shadow:0 0 0 6px rgba(255,228,92,.45)}}
+.gx-go{animation:gx-go 1.7s ease-in-out infinite}.gx-go:disabled{animation:none}.sim-seg button.gx-go{border-color:var(--fluo)}.sim-slider.gx-go{border-radius:12px}
+@keyframes gx-go{50%{box-shadow:0 0 0 6px rgba(255,228,92,.3)}}
+.gx-fin{font-weight:700;color:var(--fluo)}
+`;
+function gxStyle() {      // injecté une fois, retiré au dernier dispose() (plusieurs expériences peuvent partager la page)
+  let s = document.getElementById('gx-style');
+  if (!s) { s = document.createElement('style'); s.id = 'gx-style'; s.textContent = GX_CSS; document.head.appendChild(s); }
+  s.dataset.n = (+s.dataset.n || 0) + 1;
+  return () => { s.dataset.n = +s.dataset.n - 1; if (+s.dataset.n <= 0) s.remove(); };
+}
+/**
+ * const E = etapes(parent, [{ t:'Agite le tube', pq:"D'abord l'étape 1 : …", avant:false }, …]);   (avant : le retour au-dessus des commandes)
+ * E.c(i) : conteneur des commandes de l'étape i (à donner à panel()) ; E.go(i, el, jaune=true) : commande principale ;
+ * E.set(i) : étape en cours (i = nombre d'étapes → tout est fait) ; E.info(i, html) : retour sous l'étape ; E.titre(i, html).
+ */
+function etapes(parent, liste) {
+  const ol = document.createElement('ol'); ol.className = 'gx-etapes'; parent.appendChild(ol);
+  let cur = -1;
+  const B = liste.map((e, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<div class="gx-t"><span class="gx-n" aria-hidden="true"></span><span></span></div><div class="gx-c"></div><p class="gx-info" aria-live="polite"></p><p class="gx-pq"></p>';
+    const [t, c, info, pq] = li.children;
+    t.lastChild.innerHTML = e.t; pq.textContent = '🔒 ' + (e.pq || `D'abord l'étape ${i}.`);
+    if (e.avant) li.insertBefore(info, c);
+    const signaler = () => {      // une commande grisée ne fait rien… mais dit pourquoi, et l'étape en cours s'allume
+      li.classList.add('dit'); const k = B[cur]; if (k) { k.li.classList.remove('appel'); void k.li.offsetWidth; k.li.classList.add('appel'); }
+    };
+    li.addEventListener('click', (ev) => { if (li.classList.contains('verrou')) { ev.stopPropagation(); ev.preventDefault(); signaler(); } }, true);
+    li.addEventListener('pointerdown', () => { if (li.classList.contains('verrou')) signaler(); }, true);   // un curseur désactivé n'émet pas de click
+    ol.appendChild(li);
+    return { li, t: t.lastChild, n: t.firstChild, c, info, go: [] };
+  });
+  const api = {
+    el: ol,
+    c: (i) => B[i].c,
+    titre(i, html) { const b = B[i]; if (b.vt !== html) { b.vt = html; b.t.innerHTML = html; } },      // n'écrit que si ça change
+    info(i, html) { const b = B[i]; if (b.vi !== html) { b.vi = html; b.info.innerHTML = html; } },
+    go(i, el, jaune = true) { B[i].go.push([el, jaune]); const c = cur; cur = -1; api.set(c); },
+    get cur() { return cur; },
+    set(c) {
+      if (c === cur) return; cur = c;
+      B.forEach((b, i) => {
+        const st = i < c ? 'fait' : i === c ? 'cur' : 'verrou';
+        b.li.className = 'gx-e ' + st + (i === c + 1 ? ' suite' : '');
+        b.n.textContent = i < c ? '✓' : String(i + 1);
+        if (i === c) b.li.setAttribute('aria-current', 'step'); else b.li.removeAttribute('aria-current');
+        b.c.querySelectorAll('input').forEach((x) => { x.disabled = st === 'verrou'; });
+        for (const [el, jaune] of b.go) { el.classList.toggle('gx-go', i === c); if (jaune) el.classList.toggle('primary', i === c); }
+      });
+    },
+  };
+  return api;
+}
 
 const V3 = (x, y, z = 0) => new THREE.Vector3(x, y, z);
 // Les légendes EXACTES du schéma dessiné du cours
@@ -31,6 +107,7 @@ function liquidGeo(h) {
 }
 
 export default function mount(root) {
+  const retirerStyle = gxStyle();
   const { stageEl, panelEl, explainEl } = layout(root);
   const st = createStage(stageEl, { camera: { pos: [-0.4, 2.8, 7.2], target: [-0.4, 1.4, 0], fov: 40 }, maxDistance: 18 });
   const S = st.scene, ex = explain(explainEl);
@@ -143,13 +220,25 @@ export default function mount(root) {
   const part = () => { const e = document.createElement('div'); e.style.cssText = 'display:flex;flex-direction:column;gap:12px'; panelEl.appendChild(e); return e; };
   const modeC = ui.choice({ options: [{ value: 'exp', label: "Faire l'expérience" }, { value: 'test', label: 'Me tester sur la légende' }], value: 'exp', onChange: (v) => setMode(v) });
   const expEl = part(), testEl = part(), ue = panel(expEl), ut = panel(testEl);
-  const mixC = ue.choice({ label: 'Le mélange dans le ballon', options: [{ value: 'sel', label: 'Eau de mer (eau salée)' }, { value: 'alcool', label: 'Eau + alcool' }], value: 'sel', onChange: (v) => { mix = v; reset(); } });
-  const heatS = ue.slider({ label: 'Chauffage (la plaque chauffante)', min: 0, max: 100, step: 5, value: 0, format: (v) => (v ? v + ' %' : 'éteint') });
-  const [btnEau] = ue.buttons([{ label: "Ouvrir l'eau froide", primary: true, onClick: () => setWater(!waterOn) }, { label: 'Recommencer', onClick: () => reset() }]);
-  // relevés en tuiles (compact, pour laisser la place à la scène)
+  // L'expérience, étape par étape (l'eau froide AVANT de chauffer, comme au labo ; ensuite tout reste libre)
+  const E = etapes(expEl, [
+    { t: 'Le mélange dans le ballon' },
+    { t: "Ouvre l'eau froide du tube réfrigérant" },
+    { t: 'Chauffe : allume la plaque chauffante', pq: "D'abord l'étape 2 : ouvre l'eau froide, sinon la vapeur ne sera pas refroidie." },
+    { t: 'Récolte le distillat, puis arrête de chauffer', pq: "D'abord l'étape 3 : chauffe jusqu'à l'ébullition." },
+    { t: 'Conclus', pq: "D'abord l'étape 4 : récolte le distillat, puis remets le chauffage à 0.", avant: true },
+  ]);
+  const ue0 = panel(E.c(0));
+  const mixC = ue0.choice({ options: [{ value: 'sel', label: 'Eau de mer (eau salée)' }, { value: 'alcool', label: 'Eau + alcool' }], value: 'sel', onChange: (v) => { mix = v; reset(); } });
+  const [btnEau] = panel(E.c(1)).buttons([{ label: "Ouvrir l'eau froide", onClick: () => setWater(!waterOn) }]);
+  const heatS = panel(E.c(2)).slider({ label: 'Chauffage (la plaque chauffante)', min: 0, max: 100, step: 5, value: 0, format: (v) => (v ? v + ' %' : 'éteint') });
+  const [btnRe] = panel(E.c(4)).buttons([{ label: 'Recommencer', onClick: () => reset() }]);
+  E.go(1, btnEau); E.go(2, heatS.el, false); E.set(1);   // le mélange est déjà choisi : on commence par l'eau froide
+  let eauOuverte = false, aBouilli = false, etapeFin = false;   // étapes franchies (on peut ensuite fermer l'eau, rechauffer…)
+  // relevés en tuiles (compact, pour laisser la place à la scène), sous le chauffage
   const grid = document.createElement('div');
   grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px';
-  expEl.appendChild(grid);
+  E.c(2).appendChild(grid);
   const tile = (name) => {
     const e = document.createElement('div');
     e.style.cssText = 'background:rgba(255,255,255,.07);border-radius:12px;padding:6px 9px;font-size:12px;color:#cfc8ff;line-height:1.25';
@@ -159,7 +248,7 @@ export default function mount(root) {
     return { el: e, set(tx, sub = '') { v.textContent = tx; s.textContent = sub; } };
   };
   const rT = tile('Température du liquide'), rB = tile('Dans le ballon'), rD = tile('Distillat récolté'), rL = tile('Vapeur perdue');
-  const noteMix = ue.note('');
+  const noteMix = ue0.note('');
   const cours = document.createElement('details');
   cours.className = 'sim-note';
   cours.innerHTML = '<summary style="min-height:40px;display:flex;align-items:center;font-weight:700;color:#fff;cursor:pointer">▸ Ce que dit le cours</summary>'
@@ -172,16 +261,17 @@ export default function mount(root) {
   const qEl = ut.note('');
   ut.buttons(LEG.map((n) => ({ label: n, onClick: () => answer(n) })));
   const rScore = ut.readout('Score');
-  ut.buttons([{ label: 'Recommencer le test', primary: true, onClick: () => startTest() }]);
+  const [btnTest] = ut.buttons([{ label: 'Recommencer le test', onClick: () => startTest() }]);
 
   const put = (r, tx, sub = '') => { const k = tx + '|' + sub; if (r._v !== k) { r._v = k; r.set(tx, sub); } };   // n'écrit que si ça change
   function setWater(on) {
     waterOn = on; btnEau.textContent = on ? "Fermer l'eau froide" : "Ouvrir l'eau froide";
-    btnEau.classList.toggle('primary', !on); btnEau.classList.toggle('on', on);
+    btnEau.classList.toggle('on', on); if (on) eauOuverte = true;
   }
   function reset() {
     Wb = mix === 'sel' ? V0 : V0 * 0.7; Ab = V0 - Wb; Wd = Ad = lost = acc = 0; T = 20; done = false;
     P.forEach((p) => { p.st = 0; }); heatS.set(0); setWater(false); setLevel(H0);
+    eauOuverte = aBouilli = etapeFin = false;
     noteMix.innerHTML = mix === 'sel'
       ? "<b>L'eau de mer</b> : du sel dissout dans l'eau, un mélange homogène (une solution aqueuse)."
       : "<b>L'eau et l'alcool</b> sont deux liquides miscibles ; l'alcool a la température d'ébullition la plus basse (pour aller plus loin : environ 78 °C, contre 100 °C pour l'eau). En vrai, les deux sont incolores : les couleurs servent à les suivre.";
@@ -297,7 +387,31 @@ export default function mount(root) {
     const quoi = mix === 'sel' ? "de l'eau pure" : pur >= 0.55 ? "surtout de l'alcool" : pur >= 0.3 ? 'alcool + eau' : "surtout de l'eau";
     put(rT, Math.round(T) + ' °C'); put(rB, Math.round(vB) + ' mL'); put(rD, Math.round(vd) + ' mL', vd >= 1 ? quoi : '');
     put(rL, Math.round(lost) + ' mL'); rL.el.style.display = lost >= 1 ? '' : 'none';
+    guider(heat, vd, x, pur);
     if (mode === 'exp') ex.set(texte(heat, vd, x, pur));
+  }
+
+  // Étapes : où en est l'élève, et un retour court sous l'étape en cours. Une étape franchie le reste.
+  function guider(heat, vd, x, pur) {
+    if (boiling) aBouilli = true;
+    if (aBouilli && ((vd >= 1 && heat === 0) || done)) etapeFin = true;
+    const c = etapeFin ? 4 : aBouilli || vd >= 1 ? 3 : eauOuverte ? 2 : 1, alc = mix === 'alcool', reussie = !alc || pur >= 0.55;
+    E.set(c);
+    E.titre(3, alc ? 'Récolte le distillat, puis arrête de chauffer avant 100 °C' : 'Récolte le distillat, puis arrête de chauffer');
+    E.info(1, waterOn ? "L'eau froide circule : elle entre en bas et sort en haut." : eauOuverte ? "⚠ L'eau froide est fermée : la vapeur n'est plus refroidie." : '');
+    E.info(2, c !== 2 || heat === 0 ? '' : Teq <= Teb ? "Trop faible : le liquide n'atteint pas sa température d'ébullition. Pousse le curseur." : 'Le liquide chauffe… il ne bout pas encore.');
+    E.info(3, c !== 3 ? '' : boiling && cool <= 0.6 ? "⚠ La vapeur s'échappe : ouvre l'eau froide (étape 2) !"
+      : boiling && alc && x <= 0.03 ? "⚠ Presque tout l'alcool est parti, la température monte : remets le chauffage à 0 !"
+        : boiling && alc ? "Des gouttes tombent dans le berlin : surtout de l'alcool. Remets le chauffage à 0 avant que la température monte vers 100 °C."
+          : boiling ? 'Des gouttes tombent dans le berlin : le distillat. Quand tu en as assez, remets le chauffage à 0.'
+            : heat === 0 ? 'Le chauffage est éteint : il ne bout plus.' : '');
+    E.info(4, !etapeFin ? '' : (!alc ? "✓ Le distillat est de l'eau pure : le sel est resté dans le ballon."
+      : reussie ? "✓ Le distillat est surtout de l'alcool : séparé de l'eau grâce aux températures d'ébullition différentes."
+        : "✗ Le distillat contient beaucoup d'eau : tu as chauffé trop longtemps. Recommence et arrête plus tôt.")
+      + (reussie ? "<br>➜ Essaie l'autre mélange (étape 1), ou teste-toi sur la légende, en haut." : ''));
+    // une seule action principale : recommencer si c'est raté, sinon le test de la légende
+    btnRe.classList.toggle('primary', etapeFin && !reussie);
+    modeC.el.querySelector('[data-v=test]').classList.toggle('gx-go', mode === 'exp' && etapeFin && reussie);
   }
 
   function texte(heat, vd, x, pur) {
@@ -318,14 +432,14 @@ export default function mount(root) {
     if (vd >= 1) return mix === 'sel' ? 'Tu as arrêté de chauffer. Dans <mark>le berlin</mark> : <mark>le distillat</mark>, de l\'eau pure. Le sel est resté dans le ballon.' : finAlc;
     if (waterOn) return "L'eau froide circule dans la double paroi du <mark>tube réfrigérant</mark> : elle entre en bas (<mark>entrée d'eau froide</mark>) et sort en haut (<mark>sortie d'eau froide</mark>). Maintenant, chauffe le ballon.";
     return mix === 'sel'
-      ? "Le ballon contient de l'eau de mer : un <mark>mélange homogène</mark>. Pour la distiller, allume <mark>la plaque chauffante</mark> (curseur « Chauffage ») et ouvre l'eau froide du <mark>tube réfrigérant</mark>."
-      : "Le ballon contient de l'eau et de l'alcool : deux liquides <mark>miscibles</mark>, un <mark>mélange homogène</mark>. Allume <mark>la plaque chauffante</mark> et ouvre l'eau froide du <mark>tube réfrigérant</mark>.";
+      ? "Le ballon contient de l'eau de mer : un <mark>mélange homogène</mark>. Pour la distiller, ouvre d'abord l'eau froide du <mark>tube réfrigérant</mark> (étape 2), puis allume <mark>la plaque chauffante</mark>."
+      : "Le ballon contient de l'eau et de l'alcool : deux liquides <mark>miscibles</mark>, un <mark>mélange homogène</mark>. Ouvre d'abord l'eau froide du <mark>tube réfrigérant</mark> (étape 2), puis allume <mark>la plaque chauffante</mark>.";
   }
 
   // --- Mode « Me tester sur la légende » : les étiquettes deviennent des numéros
-  let order = [], cur = 0, score = 0, res = {};
+  let order = [], cur = 0, score = 0, res = {}, retour = '';
   function startTest() {
-    order = LEG.map((_, i) => i).sort(() => Math.random() - 0.5); cur = 0; score = 0; res = {};
+    order = LEG.map((_, i) => i).sort(() => Math.random() - 0.5); cur = 0; score = 0; res = {}; retour = '';
     ex.set("Les étiquettes sont devenues des numéros. Pour chaque numéro, touche le bon nom dans la liste. Tu peux tourner l'appareil avec le doigt.");
     drawTest();
   }
@@ -336,13 +450,15 @@ export default function mount(root) {
       if (r === undefined) { o.L.set('<b>' + n + '</b>'); o.L.el.className = 'sim-label' + (n === cur + 1 ? ' fluo' : ''); }
       else { o.L.set(n + '. ' + LEG[i] + (r ? ' ✓' : ' ✗')); o.L.el.className = 'sim-label' + (r ? '' : ' chaud'); }
     });
-    qEl.innerHTML = cur < LEG.length ? 'Quel est le nom du <b>n° ' + (cur + 1) + '</b> (en jaune) ?' : '<b>Test terminé !</b>';
+    qEl.innerHTML = retour + (cur < LEG.length ? 'Quel est le nom du <b>n° ' + (cur + 1) + '</b> (en jaune) ? Touche-le dans la liste.' : '<b>Test terminé !</b>');
     rScore.set(score + ' / ' + LEG.length);
+    btnTest.classList.toggle('primary', cur >= LEG.length);   // en cours de test, l'action principale est de répondre
   }
   function answer(name) {
     if (mode !== 'test' || cur >= LEG.length) return;
     const i = order[cur], ok = name === LEG[i];
     res[i] = ok; if (ok) score++;
+    retour = (ok ? '<b style="color:#7ee2a8">✓ Oui</b> : ' : '<b style="color:#ff9b85">✗ Non</b> : ') + 'le n° ' + (cur + 1) + ', c\'est <b style="color:#fff">' + LEG[i] + '</b>.<br>';
     let msg = ok ? 'Oui ! Le n° ' + (cur + 1) + ', c\'est <mark>' + LEG[i] + '</mark>.' : 'Non : le n° ' + (cur + 1) + ', c\'est <mark>' + LEG[i] + '</mark> (pas « ' + name + ' »).';
     cur++;
     if (cur >= LEG.length) msg += ' <b>Score : ' + score + ' / ' + LEG.length + '.</b> ' + (score === LEG.length ? 'Parfait, tu connais le schéma !' : 'Recommence le test pour viser 9 / 9.');
@@ -367,5 +483,5 @@ export default function mount(root) {
     if (etat === 'test') { setMode('test'); answer(LEG[order[0]]); answer('le berlin'); }
   }
 
-  return { dispose() { st.dispose(); } };
+  return { dispose() { st.dispose(); retirerStyle(); } };
 }

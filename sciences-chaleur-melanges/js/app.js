@@ -103,8 +103,8 @@ function accueil() {
       <p>Tout ton cours des thèmes 5 et 6 : expliqué en clair, avec des expériences 3D à manipuler et des exercices qui t'expliquent
       tes erreurs. Les mots surlignés <mark>comme ça</mark> sont ceux à retenir.</p>
       <div class="hero-cta">
-        <a class="btn chaud" href="#/examen">Contrôle blanc</a>
-        <a class="btn ghost" href="#/c/${prochainChapitre().id}">${nbOk ? 'Continuer' : 'Commencer'} : ${prochainChapitre().titre}</a>
+        <a class="btn chaud" href="#/c/${prochainChapitre().id}">${nbOk ? 'Continuer' : 'Commencer'} : ${prochainChapitre().titre} →</a>
+        <a class="btn ghost" href="#/examen">Contrôle blanc</a>
       </div>
     </div>
     <div class="hero-art"><canvas id="heroCanvas"></canvas><span>Glisse ton doigt : tu chauffes les molécules.</span></div>
@@ -115,37 +115,66 @@ function accueil() {
     <div class="tuile"><b>${CHAPITRES.filter((c) => avancement(c).pct >= 80).length}<small style="font-size:16px;color:var(--encre2)"> / ${CHAPITRES.length}</small></b><span>chapitres maîtrisés</span></div>
     <div class="tuile"><b>${TOUTES.filter(ratee).length}</b><span>erreurs à refaire</span></div>
   </section>`;
-  // Plan express : dans quel ordre réviser la veille, et combien de temps
-  const plan = h('section', 'plan');
-  const ordre = CHAPITRES.slice().sort((a, b) => b.etoiles - a.etoiles || CHAPITRES.indexOf(a) - CHAPITRES.indexOf(b));
-  const total = CHAPITRES.reduce((n, c) => n + (c.minutes || 0), 0);
-  const total3 = ordre.filter((c) => c.etoiles === 3).reduce((n, c) => n + (c.minutes || 0), 0);
-  plan.innerHTML = `<div class="theme-titre"><span class="kicker">La veille du contrôle</span><h2>Le plan express</h2></div>
-    <p class="plan-intro">Tu as déjà travaillé le cours : inutile de tout relire. Fais les chapitres <b>★★★ d'abord</b>. Pour chacun : la case
-    « Si tu n'as que 10 minutes », puis « L'essentiel ★ » dans S'entraîner. Compte environ <b>${total} minutes</b> pour tout, ou
-    <b>${total3} minutes</b> pour les ★★★ seulement.</p>`;
-  const lp = h('div', 'plan-liste');
-  ordre.forEach((c) => {
-    const ess = (QUESTIONS[c.id] || []).filter((q) => q.prio), okE = ess.filter(reussie).length, fait = ess.length && okE === ess.length;
-    const coches = (c.prio || []).filter((_, i) => P.coche[c.id + ':' + i]).length;
-    const a = h('a', 'plan-item' + (fait ? ' fait' : ''), `<span class="plan-et">${'★'.repeat(c.etoiles)}</span><span class="plan-t"><b>${c.titre}</b><small>${(c.prio || []).map((p) => p[0]).join(' · ')}</small></span><span class="plan-m">${c.minutes || 5} min</span><span class="plan-a">${fait ? '✓ acquis' : `${coches}/${(c.prio || []).length} cochés · ${okE}/${ess.length} ★`}</span>`);
-    a.href = '#/c/' + c.id; a.dataset.theme = c.theme; lp.appendChild(a);
-  });
-  plan.appendChild(lp); w.appendChild(plan);
+  // Comment se servir du site : le même chemin dans chaque chapitre.
+  w.appendChild(h('section', 'chemin', `<div class="theme-titre"><span class="kicker">Mode d'emploi</span><h2>Dans chaque chapitre, quatre étapes</h2></div>
+    <ol class="chemin-liste">
+      <li><i>1</i><b>Regarde</b><span>la capsule vidéo d'une minute</span></li>
+      <li><i>2</i><b>Comprends</b><span>la leçon, avec les mots de ton cours</span></li>
+      <li><i>3</i><b>Manipule</b><span>l'expérience en 3D</span></li>
+      <li><i>4</i><b>Entraîne-toi</b><span>chaque erreur est expliquée</span></li>
+    </ol>`));
 
-  for (const t of [5, 6]) {
-    const sec = h('section'); sec.dataset.theme = t;
-    sec.innerHTML = `<div class="theme-titre"><span class="kicker">Thème ${t}</span><h2>${THEMES[t].titre}</h2></div>`;
-    const cartes = h('div', 'cartes');
-    CHAPITRES.filter((c) => c.theme === t).forEach((c) => {
-      const a = avancement(c), n = CHAPITRES.indexOf(c) + 1;
-      const el = h('a', 'carte', `<div class="num">${String(n).padStart(2, '0')}</div><h3>${c.titre}</h3><p>${c.accroche}</p>
-        <div class="pied"><span title="Importance pour le contrôle">${'★'.repeat(c.etoiles)}${'☆'.repeat(3 - c.etoiles)}</span><div class="jauge"><i style="width:${a.pct}%"></i></div><span>${a.ok}/${a.total}</span></div>`);
-      el.href = '#/c/' + c.id; el.dataset.theme = t;
-      cartes.appendChild(el);
-    });
-    sec.appendChild(cartes); w.appendChild(sec);
+  // Les chapitres : UNE liste, deux rangements (ordre du cours, ou les plus importants d'abord pour la veille du contrôle).
+  const CLE_TRI = 'rs2e-tri';
+  let tri = 'cours'; try { tri = localStorage.getItem(CLE_TRI) === 'prio' ? 'prio' : 'cours'; } catch { /* navigation privée */ }
+  const sec = h('section', 'chapitres');
+  sec.innerHTML = `<div class="theme-titre"><span class="kicker">Les chapitres</span><h2>Choisis ton chapitre</h2></div>
+    <div class="tri" role="group" aria-label="Ranger les chapitres">
+      <button type="button" data-tri="cours">Dans l'ordre du cours</button>
+      <button type="button" data-tri="prio">Les plus importants d'abord</button>
+    </div><div class="tri-zone"></div>`;
+  const zone = sec.querySelector('.tri-zone');
+  const etat = (c) => { const a = avancement(c); return a.pct >= 80 ? ['ok', '✓ acquis'] : a.ok || P.lu[c.id] ? ['cours', 'en cours'] : ['', 'à commencer']; };
+  const contenu = (c) => [c.video ? 'capsule vidéo' : '', c.sims.length ? (c.sims.length > 1 ? `${c.sims.length} expériences 3D` : 'expérience 3D') : '', `${(QUESTIONS[c.id] || []).length} exercices`].filter(Boolean).join(' · ');
+  function dessiner() {
+    sec.querySelectorAll('.tri button').forEach((b) => { const on = b.dataset.tri === tri; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    zone.innerHTML = '';
+    if (tri === 'prio') {
+      const ordre = CHAPITRES.slice().sort((a, b) => b.etoiles - a.etoiles || CHAPITRES.indexOf(a) - CHAPITRES.indexOf(b));
+      const total = CHAPITRES.reduce((n, c) => n + (c.minutes || 0), 0);
+      const total3 = ordre.filter((c) => c.etoiles === 3).reduce((n, c) => n + (c.minutes || 0), 0);
+      zone.appendChild(h('p', 'plan-intro', `<b>Pour la veille du contrôle.</b> Tu as déjà travaillé le cours : inutile de tout relire. Fais les chapitres <b>★★★ d'abord</b>. Dans chacun : la case
+        « Si tu n'as que 10 minutes », puis « L'essentiel ★ » dans S'entraîner. Compte environ <b>${total3} minutes</b> pour les ★★★, <b>${total} minutes</b> pour tout.`));
+      const lp = h('div', 'plan-liste');
+      ordre.forEach((c) => {
+        const ess = (QUESTIONS[c.id] || []).filter((q) => q.prio), okE = ess.filter(reussie).length, fait = ess.length && okE === ess.length;
+        const coches = (c.prio || []).filter((_, i) => P.coche[c.id + ':' + i]).length;
+        const a = h('a', 'plan-item' + (fait ? ' fait' : ''), `<span class="plan-et" title="Importance pour le contrôle">${'★'.repeat(c.etoiles)}</span><span class="plan-t"><b>${c.titre}</b><small>${(c.prio || []).map((p) => p[0]).join(' · ')}</small></span><span class="plan-m">${c.minutes || 5} min</span><span class="plan-a">${fait ? '✓ acquis' : `${coches}/${(c.prio || []).length} cochés · ${okE}/${ess.length} ★`}</span>`);
+        a.href = '#/c/' + c.id; a.dataset.theme = c.theme; lp.appendChild(a);
+      });
+      zone.appendChild(lp);
+    } else {
+      for (const t of [5, 6]) {
+        const bloc = h('div', 'theme-bloc'); bloc.dataset.theme = t;
+        const liste = CHAPITRES.filter((c) => c.theme === t);
+        bloc.innerHTML = `<h3 class="theme-nom"><span>Thème ${t}</span>${THEMES[t].titre}<small>${liste.length} chapitres</small></h3>`;
+        const cartes = h('div', 'cartes');
+        liste.forEach((c) => {
+          const a = avancement(c), n = CHAPITRES.indexOf(c) + 1, [cls, mot] = etat(c);
+          const el = h('a', 'carte', `<div class="carte-haut"><div class="num">${String(n).padStart(2, '0')}</div><span class="pastille ${cls}">${mot}</span></div><h3>${c.titre}</h3><p>${c.accroche}</p>
+            <div class="carte-contenu">${contenu(c)}</div>
+            <div class="pied"><span title="Importance pour le contrôle">${'★'.repeat(c.etoiles)}${'☆'.repeat(3 - c.etoiles)}</span><div class="jauge"><i style="width:${a.pct}%"></i></div><span>${a.ok}/${a.total}</span></div>`);
+          el.href = '#/c/' + c.id; el.dataset.theme = t;
+          cartes.appendChild(el);
+        });
+        bloc.appendChild(cartes); zone.appendChild(bloc);
+      }
+    }
+    typographie(zone);
   }
+  sec.querySelectorAll('.tri button').forEach((b) => (b.onclick = () => { tri = b.dataset.tri; try { localStorage.setItem(CLE_TRI, tri); } catch { /* rien */ } dessiner(); }));
+  dessiner();
+  w.appendChild(sec);
   app.appendChild(w);
   heroAnimation(document.getElementById('heroCanvas'));
 }
@@ -156,12 +185,14 @@ function chapitre(id, onglet) {
   if (!c) return accueil();
   document.body.dataset.theme = String(c.theme);
   const idx = CHAPITRES.indexOf(c), suivant = CHAPITRES[idx + 1], prec = CHAPITRES[idx - 1];
-  const tete = h('div', 'wrap chap-tete', `<a class="fil" href="#/">← Thème ${c.theme} · ${THEMES[c.theme].titre}</a>
+  const tete = h('div', 'wrap chap-tete', `<nav class="fil" aria-label="Où suis-je ?"><a href="#/">Accueil</a><span>›</span><a href="#/">Thème ${c.theme} · ${THEMES[c.theme].titre}</a><span>›</span><b>Chapitre ${idx + 1} sur ${CHAPITRES.length}</b></nav>
+    <div class="fil-points" aria-hidden="true">${CHAPITRES.map((x, k) => `<a href="#/c/${x.id}" title="${x.titre}" class="${k === idx ? 'ici' : avancement(x).pct >= 80 ? 'ok' : ''}" data-theme="${x.theme}"></a>`).join('')}</div>
     <h1>${c.titre}</h1><p>${c.accroche} <span title="Importance pour le contrôle" style="color:var(--chaud);white-space:nowrap">${'★'.repeat(c.etoiles)}</span></p>`);
   const ONG = [['comprendre', 'Comprendre'], ...(c.sims.length ? [['experience', c.sims.length > 1 ? 'Expériences 3D' : 'Expérience 3D']] : []), ['exercices', 'S\'entraîner'], ['mots', 'Mots à retenir']];
   if (!ONG.some((o) => o[0] === onglet)) onglet = 'comprendre';
+  const faite = { comprendre: !!P.lu[id], experience: c.sims.length > 0 && c.sims.every((x) => P.sims[x.id]), exercices: avancement(c).pct >= 80, mots: false };
   const barre = h('div', 'onglets'); const bw = h('div', 'wrap'); barre.appendChild(bw);
-  ONG.forEach(([k, nom]) => { const b = h('button', k === onglet ? 'on' : '', nom); b.type = 'button'; b.onclick = () => { location.hash = `#/c/${id}/${k}`; }; bw.appendChild(b); });
+  ONG.forEach(([k, nom], n) => { const b = h('button', (k === onglet ? 'on' : '') + (faite[k] ? ' fait' : ''), `<i>${faite[k] ? '✓' : n + 1}</i>${nom}`); b.type = 'button'; if (k === onglet) b.setAttribute('aria-current', 'step'); b.onclick = () => { location.hash = `#/c/${id}/${k}`; }; bw.appendChild(b); });
   const corps = h('div', 'wrap');
   app.append(tete, barre, corps);
 
@@ -209,7 +240,7 @@ function chapitre(id, onglet) {
     corps.appendChild(h('p', '', 'Touche une carte pour la retourner. Essaie de dire la définition <b>avant</b> de regarder.'));
     corps.appendChild(grilleMots(c.mots));
   }
-  const bas = h('div', 'wrap hero-cta'); bas.style.margin = '26px auto 0'; bas.style.justifyContent = 'space-between';
+  const bas = h('div', 'wrap hero-cta nav-chap'); bas.style.margin = '26px auto 0'; bas.style.justifyContent = 'space-between';
   bas.innerHTML = (prec ? `<a class="btn ghost petit" href="#/c/${prec.id}">← ${prec.titre}</a>` : '<span></span>') + (suivant ? `<a class="btn ghost petit" href="#/c/${suivant.id}">${suivant.titre} →</a>` : '<a class="btn ghost petit" href="#/examen">Contrôle blanc →</a>');
   app.appendChild(bas);
 }
