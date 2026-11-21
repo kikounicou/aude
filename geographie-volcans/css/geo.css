@@ -1,0 +1,10 @@
+/* Révision géographie 2e — ce qui diffère du site modèle (chargé en dernier). */
+:root {
+  --nuit: #1b1218;      /* basalte : les fonds sombres tirent vers le brun-rouge, plus vers le bleu nuit */
+  --nuit2: #3a1c22;
+  --menthe: #1f8f6a;
+}
+[data-theme="3"] { --accent: var(--chaud); }
+.logo i { background: conic-gradient(from 200deg, #5a2a78, var(--chaud), var(--tiede), #5a2a78); }
+/* Schéma montré dans une question (q.vis) : un peu plus petit que dans la leçon */
+.q > .schema { max-width: 560px; margin: 6px auto 12px; }

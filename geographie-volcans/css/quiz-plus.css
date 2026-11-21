@@ -1,0 +1,106 @@
+/* Exercices : compléments du moteur js/quiz.js. À charger APRÈS app.css.
+   Barre d'actions (Vérifier · Voir la réponse · Passer, puis « Question suivante → »), glisser-déposer, verdicts,
+   cibles tactiles de 44 px. */
+
+/* ---------- tête de série ---------- */
+.quiz-tete { min-height: 44px; }
+.q-stop { flex: none; min-height: 44px; padding: 0 14px; border: 1.5px solid var(--trait); border-radius: 99px; background: var(--carte); color: var(--encre2); font-weight: 600; font-size: 14px; }
+.q-stop:hover { border-color: var(--encre); color: var(--encre); }
+.q .type { flex-wrap: wrap; row-gap: 4px; }
+.q .type + div > .aide:first-child { margin-top: 0; }   /* pas de titre (texte à trous) : la consigne ne colle pas au type */
+.q:focus, .q h3:focus { outline: none; }
+.q h3:focus-visible { outline: 3px solid var(--froid); outline-offset: 4px; }
+
+/* ---------- barre d'actions, en bas de la carte (collée en bas de l'écran si la carte dépasse : voir quiz.js) ---------- */
+.q-actions-place { margin: 18px -22px -22px; }
+.q-actions.barre { margin: 0; padding: 12px 22px 18px; gap: 8px 10px; background: var(--carte); border-radius: 0 0 21px 21px; }
+.q-actions.barre.colle { position: fixed; bottom: 0; z-index: 45; border-radius: 18px 18px 0 0; box-shadow: 0 -1px 0 var(--trait), 0 -16px 32px -20px rgba(29, 27, 47, .55); }
+.q-actions.barre.colle::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: env(safe-area-inset-bottom, 0px); background: var(--carte); }
+body.glisse-en-cours .q-actions.barre.colle { opacity: .3; pointer-events: none; }
+.q-manque { flex: 1 1 100%; color: var(--ko); font-weight: 600; font-size: 15px; }
+.q-manque:empty { display: none; }
+.q-manque.secoue { animation: q-secoue .35s; }
+@keyframes q-secoue { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.q-sec { display: flex; flex: none; gap: 2px; margin-left: auto; }
+.q-lien { min-height: 44px; padding: 0 12px; border: 0; border-radius: 99px; background: transparent; color: var(--encre2); font-weight: 600; font-size: 15px; text-decoration: underline; text-decoration-color: rgba(91, 85, 111, .45); text-underline-offset: 4px; }
+.q-lien:hover { background: var(--papier2); color: var(--encre); }
+.btn.pas-pret { opacity: .45; }
+.btn.pas-pret:hover { transform: none; box-shadow: none; }
+
+/* le bouton pour continuer : l'élément le plus visible de l'écran, toujours au même endroit */
+.btn.suivant { min-height: 56px; min-width: 280px; padding: 12px 28px; justify-content: center; border-color: var(--encre); background: var(--accent); color: var(--encre); font-size: 19px; box-shadow: 4px 4px 0 var(--encre); }
+.btn.suivant:hover { transform: translate(-1px, -2px); box-shadow: 5px 6px 0 var(--encre); }
+.btn.suivant:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--encre); }
+
+/* ---------- verdict ---------- */
+.retour .lib { display: block; margin-bottom: 3px; font: 700 12px/1.2 var(--texte); letter-spacing: .08em; text-transform: uppercase; color: var(--encre2); }
+.retour .bonne { margin: 8px 0 6px; }
+.retour .note { display: block; margin: 6px 0; }
+.retour .expl { display: block; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(29, 27, 47, .2); }
+.retour b.v + .expl { margin-top: 2px; padding-top: 0; border-top: 0; }
+.retour.vu { background: #e8f1ff; border: 1px solid var(--froid); }
+.retour.vu b.v { color: #1a56c4; }
+.revoir-note { display: block; margin-top: 8px; color: var(--encre2); font-size: 14px; }
+/* « Voir la réponse » : la réponse s'affiche en bleu (ni vert « réussi », ni rouge « raté ») */
+button.revele, .puce.revele, input.revele, .cible.revele { border-color: var(--froid) !important; background: #e8f1ff !important; color: var(--encre); }
+.ordre .ligne.revele { border-color: var(--froid); background: #f3f8ff; }
+/* ce qui manque quand on clique « Vérifier » trop tôt */
+.q input.a-completer, .q .cible.a-completer:not(.prochaine) { border-color: var(--ko) !important; }
+/* réponse figée : plus de survol qui bouge */
+.fige button { cursor: default; }
+.choix.fige button:hover, .vf.fige button:hover { transform: none; }
+
+/* ---------- cibles tactiles (44 px) ---------- */
+.puce, .bac .puce, .cible { min-height: 44px; }
+.ordre .ligne button { flex: none; width: 44px; height: 44px; }
+
+/* ---------- cases + banque de mots : la case bleue reçoit le prochain mot touché ---------- */
+.cible.prochaine { border-color: var(--froid); background: #eef5ff; box-shadow: 0 0 0 3px rgba(47, 123, 255, .16); }
+
+/* ---------- classer ---------- */
+.bac-t { min-height: 32px; margin: 0; padding: 2px 0 4px; border: 0; background: none; color: inherit; text-align: left; font: 700 14px/1.2 var(--titre); }
+.bac-t b { font: inherit; }
+.attend .bac { border-color: var(--froid); }
+.attend-retour > .banque { min-height: 52px; outline: 2px dashed var(--froid); outline-offset: 4px; border-radius: 10px; }
+.attend-retour > .banque::after { content: "↩ touche ici pour le remettre"; align-self: center; color: #1a56c4; font-size: 14px; font-weight: 600; }
+div:not(.attend-retour):not(.fige) > .banque:empty::before { content: "Tout est placé. Tu peux vérifier."; align-self: center; color: var(--encre2); font-size: 14px; }
+.fige > .banque:empty { display: none; }
+
+/* ---------- remettre dans l'ordre ---------- */
+.ordre .ligne { position: relative; }
+.ordre .ligne .poignee { flex: none; width: 40px; align-self: stretch; margin: -6px 0 -6px -6px; display: grid; place-items: center; border-radius: 8px; color: var(--encre2); font-size: 20px; line-height: 1; touch-action: none; cursor: grab; }
+.ordre .ligne .poignee:hover { background: var(--papier2); color: var(--encre); }
+.fige .ordre .poignee { opacity: .25; cursor: default; }
+.ordre .ligne.insere-avant::before, .ordre .ligne.insere-apres::after { content: ""; position: absolute; left: 4px; right: 4px; height: 4px; border-radius: 4px; background: var(--froid); }
+.ordre .ligne.insere-avant::before { top: -7px; }
+.ordre .ligne.insere-apres::after { bottom: -7px; }
+.ordre .ligne.bouge { animation: q-bouge .7s; }
+@keyframes q-bouge { from { background: var(--fluo); } to { background: #fff; } }
+
+/* ---------- glisser-déposer ---------- */
+.glissable { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.puce.glissable, .cible.pleine.glissable { touch-action: none; cursor: grab; }   /* la page défile partout ailleurs */
+.paires button.glisse-x { touch-action: pan-y; }                                  /* relier : glisser de côté, défiler de haut en bas */
+.ordre .ligne.glissable { cursor: grab; }
+.ordre .ligne button { cursor: pointer; }
+.fige .glissable, .banque.fige .puce, .glissable:disabled { touch-action: auto; cursor: default; }
+.en-glisse { opacity: .35; }
+.cible.vise, .paires button.vise { border-style: solid !important; border-color: var(--froid) !important; background: #e8f1ff !important; box-shadow: 0 0 0 3px rgba(47, 123, 255, .28); }
+.bac.vise { border-style: solid; box-shadow: 0 0 0 3px rgba(47, 123, 255, .28); }
+.banque.vise { outline: 3px dashed var(--froid); outline-offset: 4px; border-radius: 10px; background: #f3f8ff; }
+.fantome { max-width: min(86vw, 440px); padding: 9px 14px; border: 2px solid var(--encre); border-radius: 12px; background: #fff; color: var(--encre); font: 700 16px/1.25 var(--texte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 16px 34px -12px rgba(29, 27, 47, .6); rotate: -2deg; }
+.fantome.large { white-space: normal; font-weight: 600; rotate: -1deg; }
+body.glisse-en-cours, body.glisse-en-cours * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+
+/* ---------- écran de score ---------- */
+.fin .score small { font-size: .3em; font-weight: 700; color: var(--encre2); vertical-align: middle; letter-spacing: 0; }
+.fin .score:focus { outline: none; }
+.fin .revoir small { color: var(--encre2); }
+
+@media (max-width: 860px) {
+  .q-actions-place { margin: 14px -16px -16px; }
+  .q-actions.barre { padding: 10px 16px 14px; }
+  .q-actions.barre .btn { flex: 1 1 120px; justify-content: center; }
+  .q-lien { padding: 0 8px; font-size: 14px; }
+  .btn.suivant { flex: 1 1 100%; min-width: 0; }
+}
