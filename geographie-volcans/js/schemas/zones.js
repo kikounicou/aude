@@ -4,7 +4,7 @@
 //   - la grande coupe du « Retenons », en deux versions : les emplacements et les couches, puis les cinq cases du bas.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }.
 // La géographie (GEO) est partagée avec l'animation sims/zones-globe.js : mêmes formes, mêmes couleurs.
-import { ENCRE, TXT, wrap } from './_outils.js';
+import { ENCRE, TXT, wrap } from './outils.js';
 
 /* =====================================================================================================================
    1. Géographie très simplifiée, en [longitude, latitude] (degrés ; ouest et sud négatifs).

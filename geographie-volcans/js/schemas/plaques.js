@@ -1,6 +1,6 @@
 // Schémas du chapitre 1 (cours/01) : croquis du Chili, dérive des continents, bloc des plaques à légender.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
-import { ENCRE, TXT, pin, wrap } from './_outils.js';
+import { ENCRE, TXT, pin, wrap } from './outils.js';
 
 /* ---------- croquis : le Chili en Amérique du Sud ---------- */
 const AMSUD = '148,34 176,22 214,26 236,40 262,44 296,62 318,84 352,104 372,124 368,148 350,176 340,206 318,226 296,236 284,262 262,274 250,300 236,318 228,344 214,362 212,384 198,388 188,366 182,330 180,296 176,262 172,226 164,196 140,170 120,140 112,112 120,88 132,62';

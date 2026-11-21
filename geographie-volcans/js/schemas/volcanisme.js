@@ -4,7 +4,7 @@
 //    rouge = le magma qui monte et les boucles de convection. Chacun existe en trois formes : avec numéros (à légender),
 //    « pas à pas » (quatre cases, le trait nouveau surligné) et en icône (sans numéros).
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
-import { ENCRE, TXT, pin, wrap } from './_outils.js';
+import { ENCRE, TXT, pin, wrap } from './outils.js';
 
 export const BLEU = '#2747b8';
 export const ROUGE = '#d62839';

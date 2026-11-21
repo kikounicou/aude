@@ -1,7 +1,7 @@
 // Schémas du chapitre 2 (cours/02) : la Terre en coupe (trois couches), l'épaisseur de la croûte, le schéma du cours.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
 // Aucun identifiant SVG (clipPath, dégradé) : un même schéma peut être affiché deux fois sur une page.
-import { ENCRE, TXT, pin, wrap } from './_outils.js';
+import { ENCRE, TXT, pin, wrap } from './outils.js';
 
 /* Couleurs du schéma du cours : jaune au centre, orange, rouge, puis la croûte plus claire. Mêmes couleurs dans l'animation 3D et la capsule. */
 const COUL = { graine: '#ffd93d', liquide: '#f08a2c', manteau: '#d8432c', croute: '#f4c26b', ocean: '#3d7fc4', terre: '#7fb25d' };

@@ -1,6 +1,6 @@
 // Schémas du chapitre 6 (cours/05) : la coupe schématique d'un volcan (10 étiquettes) et les deux types de volcans.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
-import { ENCRE, TXT, wrap } from './_outils.js';
+import { ENCRE, TXT, wrap } from './outils.js';
 
 // Pastille un peu plus grande que pin() d'_outils.js : dix étiquettes doivent rester lisibles sur un téléphone.
 const gpin = (n, x, y, tx, ty) =>

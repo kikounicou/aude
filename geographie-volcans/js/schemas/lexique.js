@@ -1,7 +1,7 @@
 // Schémas du chapitre 5 (cours/04 : le lexique ; note manuscrite du haut de la page 20 : « Pourquoi le Chili ? »).
 // Un petit dessin par mot du lexique, mêmes couleurs que le chapitre 1 : croûte verte, manteau violet, magma rouge orangé.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
-import { ENCRE, TXT, pin, wrap } from './_outils.js';
+import { ENCRE, TXT, pin, wrap } from './outils.js';
 
 const CROUTE = '#4f9d57', CROUTE2 = '#3f8f4a', CLAIRE = '#a9df7c', MANTEAU = '#b877c9', MAGMA = '#ff5a36', MER = '#cfe8f7';
 const GRIS = '#5b556f';

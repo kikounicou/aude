@@ -1,7 +1,7 @@
 // Schémas du chapitre 7 (cours/06) : les trois volcans du Chili, d'après les photos du cours (Osorno, Calbuco, Villarica),
 // ce que chacun rejette, et le bouchon du Villarica.
 // SCHEMAS[id] = { titre, labels: [...dans l'ordre des numéros], svg }   ·   labels vide = simple illustration.
-import { ENCRE, TXT, pin, wrap } from './_outils.js';
+import { ENCRE, TXT, pin, wrap } from './outils.js';
 
 const NOTE = (x, y, t, c = '#5b556f') => `<text x="${x}" y="${y}" font-size="11.5" fill="${c}" font-family="sans-serif" font-style="italic">${t}</text>`;
 /** Nuage en boules : ombre décalée, corps, reflet. l = [[cx, cy, r], …] */
