@@ -47,6 +47,9 @@ la croûte, tout au-dessus.</p>
 <li>d'environ <mark>20 kilomètres</mark> sous les océans ;</li>
 <li>seulement <mark>quelques kilomètres</mark> au niveau des rifts et des dorsales.</li>
 </ul>
+<p class="astuce" style="border:2px solid var(--chaud)"><b>Vérifie bien dans ta farde</b> les chiffres du noyau (« 16 % du volume de la Terre et
+67 % de sa masse ») : ils sont recopiés d'après une photo de ta feuille, et il n'est pas sûr qu'ils soient exacts.
+Si ta feuille dit autre chose, <b>c'est ta feuille qui a raison</b>.</p>
 <p class="astuce">Le noyau ne prend que 16 % du volume de la Terre, mais il fait 67 % de sa masse. Et attention : pour le noyau, on
 donne un <b>rayon</b> (du centre jusqu'au manteau) ; pour le manteau et la croûte, une <b>épaisseur</b>.</p>
 </div>

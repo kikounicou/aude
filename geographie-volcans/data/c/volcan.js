@@ -55,6 +55,9 @@ qu'il faut savoir compléter.</p>
 <tr><th>Localisation</th><td><mark>entre les plaques</mark> : à l'intersection des plaques → subduction</td><td><mark>au milieu d'une plaque</mark></td></tr>
 </table>
 {{schema:volcan-types}}
+<p class="astuce" style="border:2px solid var(--chaud)"><b>Vérifie bien dans ta farde</b> la ligne « Localisation » du tableau (volcan explosif :
+entre les plaques ; volcan effusif : au milieu d'une plaque) : elle est recopiée d'après une photo de ta feuille, et il n'est
+pas sûr qu'elle soit exacte. Si ta feuille dit autre chose, <b>c'est ta feuille qui a raison</b>.</p>
 <p style="font-size:14px;color:var(--encre2)">Ton cours cite le mot <i>lahar</i> sans l'expliquer : retiens-le tel quel, dans les produits du volcan explosif.
 Les documents A et B de ton cours (et la vidéo) décrivent ces deux types
 de volcans : ils ne sont pas repris ici, relis-les dans ta farde.</p>
